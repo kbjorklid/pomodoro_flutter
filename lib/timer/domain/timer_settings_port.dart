@@ -1,4 +1,4 @@
 abstract class TimerSettingsPort {
-  Future<int> get workDurationSeconds;
-  Future<int> get restDurationSeconds;
+  Future<Duration> get workDuration;
+  Future<Duration> get restDuration;
 }

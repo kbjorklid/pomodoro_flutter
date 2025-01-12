@@ -19,8 +19,8 @@ class TimerNotifier extends StateNotifier<TimerState> {
   }
 
   Future<void> _initialize() async {
-    final initialDuration = await _settings.workDurationSeconds;
-    state = state.copyWith(remainingSeconds: initialDuration);
+    final initialDuration = await _settings.workDuration;
+    state = state.copyWith(remainingSeconds: initialDuration.inSeconds);
   }
 
   bool get mounted => _mounted;
@@ -62,7 +62,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
 
   Future<void> updateTimerFromSettings() async {
     final duration = await _getInitialDuration(state.timerType);
-    state = state.copyWith(remainingSeconds: duration);
+    state = state.copyWith(remainingSeconds: duration.inSeconds);
   }
 
   Future<void> checkAndUpdateSettings() async {
@@ -71,10 +71,10 @@ class TimerNotifier extends StateNotifier<TimerState> {
     }
   }
 
-  Future<int> _getInitialDuration(TimerType type) async {
+  Future<Duration> _getInitialDuration(TimerType type) async {
     return type == TimerType.work
-        ? await _settings.workDurationSeconds
-        : await _settings.restDurationSeconds;
+        ? await _settings.workDuration
+        : await _settings.restDuration;
   }
 
   Future<void> switchTimerType() async {
@@ -83,11 +83,11 @@ class TimerNotifier extends StateNotifier<TimerState> {
         ? TimerType.rest
         : TimerType.work;
     final duration = await (newType == TimerType.work
-        ? _settings.workDurationSeconds
-        : _settings.restDurationSeconds);
+        ? _settings.workDuration
+        : _settings.restDuration);
     state = TimerState(
       timerType: newType,
-      remainingSeconds: duration,
+      remainingSeconds: duration.inSeconds,
       isRunning: false,
     );
   }
