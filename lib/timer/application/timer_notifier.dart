@@ -7,20 +7,16 @@ import 'package:pomodoro_app2/timer/domain/timer_type.dart';
 class TimerNotifier extends StateNotifier<TimerState> {
   static final int _workDurationSeconds = 25 * 60;
   static final int _restDurationSeconds = 5 * 60;
+
   Timer? _timer;
   TimerNotifier()
-      : super(TimerState(
-          timerType: TimerType.work,
-          remainingSeconds: _workDurationSeconds,
-          isRunning: false,
-        ));
+      : super(_buildInitialState(TimerType.work));
 
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
   }
-
 
   void toggleTimer() {
     if (state.isRunning) {
@@ -30,7 +26,6 @@ class TimerNotifier extends StateNotifier<TimerState> {
     }
   }
 
-
   void _stopTimer() {
     _timer?.cancel();
     state = state.copyWith(isRunning: false);
@@ -38,6 +33,10 @@ class TimerNotifier extends StateNotifier<TimerState> {
 
   void _startTimer() {
     state = state.copyWith(isRunning: true);
+    _startTimerTicks();
+  }
+
+  void _startTimerTicks() {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (state.remainingSeconds > 0) {
         state = state.copyWith(remainingSeconds: state.remainingSeconds - 1);
@@ -52,10 +51,15 @@ class TimerNotifier extends StateNotifier<TimerState> {
     final newType = state.timerType == TimerType.work
         ? TimerType.rest
         : TimerType.work;
-    state = state.copyWith(
-      timerType: newType,
-      remainingSeconds: newType == TimerType.work
-          ? _workDurationSeconds : _restDurationSeconds,
+    state = _buildInitialState(newType);
+  }
+
+  static TimerState _buildInitialState(TimerType timerType) {
+    final duration = (timerType == TimerType.work) ?
+        _workDurationSeconds : _restDurationSeconds;
+    return TimerState(
+      timerType: timerType,
+      remainingSeconds: duration,
       isRunning: false,
     );
   }
