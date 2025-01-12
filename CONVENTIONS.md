@@ -83,7 +83,7 @@ Some specific coding principles to follow:
 - Each provider should be in its own file.
 - Prefer subclassing widgets and encapsulating logic in them.
 - Prefer package-imports over relative imports.
-
+- Write succinct class-level documentation for all classes.
 
 ## Flutter Library choices
 
