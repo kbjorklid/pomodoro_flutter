@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
+import 'package:pomodoro_app2/timer/domain/timer_type.dart';
 
 class TimerNotifier extends StateNotifier<TimerState> {
   Timer? _timer;

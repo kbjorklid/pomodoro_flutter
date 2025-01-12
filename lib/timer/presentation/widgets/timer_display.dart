@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timer_label.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
+import 'package:pomodoro_app2/timer/domain/timer_type.dart';
 
 class TimerDisplay extends ConsumerWidget {
   const TimerDisplay({super.key});

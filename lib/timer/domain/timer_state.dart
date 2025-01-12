@@ -1,8 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:pomodoro_app2/timer/domain/timer_type.dart';
 
 part 'timer_state.freezed.dart';
-
-enum TimerType { work, rest }
 
 @freezed
 class TimerState with _$TimerState {
