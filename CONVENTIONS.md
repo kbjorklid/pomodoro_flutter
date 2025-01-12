@@ -100,3 +100,7 @@ Some specific coding principles to follow:
 # Git conventions
 
 - Use conventional commits style commit messages
+
+# Avoiding problems (LLM/Aider)
+
+- Do not add a file called 'dart'.

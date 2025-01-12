@@ -11,9 +11,16 @@ class TimerNotifier extends StateNotifier<TimerState> {
   TimerNotifier(this._settings)
       : super(TimerState(
           timerType: TimerType.work,
-          remainingSeconds: _settings.workDurationSeconds,
+          remainingSeconds: 25 * 60, // Default while loading
           isRunning: false,
-        ));
+        )) {
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    final initialDuration = await _settings.workDurationSeconds;
+    state = state.copyWith(remainingSeconds: initialDuration);
+  }
 
   @override
   void dispose() {
@@ -49,19 +56,16 @@ class TimerNotifier extends StateNotifier<TimerState> {
     });
   }
 
-  void switchTimerType() {
+  Future<void> switchTimerType() async {
     _timer?.cancel();
     final newType = state.timerType == TimerType.work
         ? TimerType.rest
         : TimerType.work;
-    state = _buildInitialState(newType);
-  }
-
-  TimerState _buildInitialState(TimerType timerType) {
-    final duration = (timerType == TimerType.work) ?
-      _settings.workDurationSeconds : _settings.restDurationSeconds;
-    return TimerState(
-      timerType: timerType,
+    final duration = await (newType == TimerType.work
+        ? _settings.workDurationSeconds
+        : _settings.restDurationSeconds);
+    state = TimerState(
+      timerType: newType,
       remainingSeconds: duration,
       isRunning: false,
     );
