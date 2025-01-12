@@ -52,6 +52,9 @@ lib/settings/infrastructure/
 - Providers should be in the **presentation** layer
 - State classes used by StateNotifier classes should be in the **domain** layer
 
+### Test code organization
+- unit tests should go to /test/unit -directory
+- Tests should have same directory structure as the code they are testing
 
 ## Layer principles
 
@@ -79,6 +82,7 @@ Some specific coding principles to follow:
 
 - Each provider should be in its own file.
 - Prefer subclassing widgets and encapsulating logic in them.
+- Prefer package-imports over relative imports.
 
 
 ## Flutter Library choices
