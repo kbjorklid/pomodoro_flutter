@@ -7,7 +7,7 @@ import 'package:pomodoro_app2/settings/presentation/providers/settings_repositor
 
 import 'package:pomodoro_app2/settings/infrastructure/settings_repository.dart';
 
-final timerProvider = StateNotifierProvider.autoDispose<TimerNotifier, TimerState>((ref) {
+final timerProvider = StateNotifierProvider<TimerNotifier, TimerState>((ref) {
   final settingsRepository = ref.watch(settingsRepositoryProvider);
   final notifier = TimerNotifier(TimerSettingsAdapter(settingsRepository));
   
