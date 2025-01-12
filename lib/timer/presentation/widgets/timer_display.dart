@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pomodoro_app2/timer/domain/timer_state.dart';
+import 'package:pomodoro_app2/timer/presentation/widgets/timer_label.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
+import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 
 class TimerDisplay extends ConsumerWidget {
   const TimerDisplay({super.key});
@@ -11,16 +12,10 @@ class TimerDisplay extends ConsumerWidget {
     final timerState = ref.watch(timerProvider);
     final timerNotifier = ref.read(timerProvider.notifier);
 
-    final minutes = (timerState.remainingSeconds ~/ 60).toString().padLeft(2, '0');
-    final seconds = (timerState.remainingSeconds % 60).toString().padLeft(2, '0');
-
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
-          '$minutes:$seconds',
-          style: const TextStyle(fontSize: 48),
-        ),
+        const TimerLabel(),
         const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
