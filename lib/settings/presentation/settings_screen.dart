@@ -38,6 +38,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       workDuration = duration;
     });
+    // Notify listeners that settings have changed
+    ref.invalidate(settingsRepositoryProvider);
   }
 
   Future<void> _saveRestDuration(Duration duration) async {
@@ -46,6 +48,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       restDuration = duration;
     });
+    // Notify listeners that settings have changed
+    ref.invalidate(settingsRepositoryProvider);
   }
 
   @override
