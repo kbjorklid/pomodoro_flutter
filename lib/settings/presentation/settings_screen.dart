@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
+import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -64,28 +65,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Work Duration: ${workDuration.inMinutes} minutes'),
-            Slider(
-              value: workDuration.inMinutes.toDouble(),
-              min: 1,
-              max: 60,
-              divisions: 59,
-              label: '${workDuration.inMinutes} minutes',
-              onChanged: (value) {
-                _saveWorkDuration(Duration(minutes: value.toInt()));
-              },
+            DurationSlider(
+              label: 'Work Duration',
+              duration: workDuration,
+              minDuration: const Duration(minutes: 1),
+              maxDuration: const Duration(minutes: 60),
+              onChanged: _saveWorkDuration,
             ),
             const SizedBox(height: 20),
-            Text('Rest Duration: ${restDuration.inMinutes} minutes'),
-            Slider(
-              value: restDuration.inMinutes.toDouble(),
-              min: 1,
-              max: 30,
-              divisions: 29,
-              label: '${restDuration.inMinutes} minutes',
-              onChanged: (value) {
-                _saveRestDuration(Duration(minutes: value.toInt()));
-              },
+            DurationSlider(
+              label: 'Rest Duration',
+              duration: restDuration,
+              minDuration: const Duration(minutes: 1),
+              maxDuration: const Duration(minutes: 30),
+              onChanged: _saveRestDuration,
             ),
           ],
         ),
