@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pomodoro_app2/timer/presentation/widgets/start_pause_button.dart';
-import 'package:pomodoro_app2/timer/presentation/widgets/switch_timer_button.dart';
+import 'package:pomodoro_app2/timer/presentation/widgets/timercontrols/start_pause_button.dart';
+import 'package:pomodoro_app2/timer/presentation/widgets/timercontrols/switch_timer_button.dart';
 
 class TimerControls extends ConsumerWidget {
   const TimerControls({super.key});
