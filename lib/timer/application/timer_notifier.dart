@@ -2,15 +2,18 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timer_type.dart';
-
+import 'package:pomodoro_app2/timer/domain/timer_settings_port.dart';
 
 class TimerNotifier extends StateNotifier<TimerState> {
-  static final int _workDurationSeconds = 25 * 60;
-  static final int _restDurationSeconds = 5 * 60;
-
+  final TimerSettingsPort _settings;
   Timer? _timer;
-  TimerNotifier()
-      : super(_buildInitialState(TimerType.work));
+
+  TimerNotifier(this._settings)
+      : super(TimerState(
+          timerType: TimerType.work,
+          remainingSeconds: _settings.workDurationSeconds,
+          isRunning: false,
+        ));
 
   @override
   void dispose() {
@@ -54,13 +57,14 @@ class TimerNotifier extends StateNotifier<TimerState> {
     state = _buildInitialState(newType);
   }
 
-  static TimerState _buildInitialState(TimerType timerType) {
+  TimerState _buildInitialState(TimerType timerType) {
     final duration = (timerType == TimerType.work) ?
-        _workDurationSeconds : _restDurationSeconds;
+      _settings.workDurationSeconds : _settings.restDurationSeconds;
     return TimerState(
       timerType: timerType,
       remainingSeconds: duration,
       isRunning: false,
     );
   }
+
 }
