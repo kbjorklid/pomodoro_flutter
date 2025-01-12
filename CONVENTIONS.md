@@ -96,3 +96,7 @@ Some specific coding principles to follow:
 - 'json_serializable' for serialization
 - 'golden_toolkit'
 - 'go_router' for routing
+
+# Git conventions
+
+- Use conventional commits style commit messages
