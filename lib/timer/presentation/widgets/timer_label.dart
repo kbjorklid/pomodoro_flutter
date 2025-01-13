@@ -8,7 +8,7 @@ class TimerLabel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timerState = ref.watch(timerProvider);
-    final minutes = (timerState.remainingTime.inMinutes).toString().padLeft(2, '0');
+    final minutes = (timerState.remainingTime.inMinutes).toString();
     final seconds = (timerState.remainingTime.inSeconds % 60).toString().padLeft(2, '0');
 
     return Text(
