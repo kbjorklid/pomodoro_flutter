@@ -7,7 +7,6 @@ import 'package:pomodoro_app2/timer/domain/timer_settings_port.dart';
 class TimerNotifier extends StateNotifier<TimerState> {
   final TimerSettingsPort _settings;
   Timer? _timer;
-  bool _mounted = true;
 
   TimerNotifier(this._settings)
       : super(TimerState(
@@ -23,11 +22,8 @@ class TimerNotifier extends StateNotifier<TimerState> {
     state = state.copyWith(remainingTime: initialDuration);
   }
 
-  bool get mounted => _mounted;
-
   @override
   void dispose() {
-    _mounted = false;
     _timer?.cancel();
     super.dispose();
   }
@@ -66,7 +62,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
   }
 
   Future<void> checkAndUpdateSettings() async {
-    if (!state.isRunning) {
+    if (!state.isRunning && mounted) {
       await updateTimerFromSettings();
     }
   }
