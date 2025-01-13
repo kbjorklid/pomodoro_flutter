@@ -16,8 +16,9 @@ final _privateConstructorUsedError = UnsupportedError(
 
 /// @nodoc
 mixin _$TimerState {
-  TimerType get timerType => throw _privateConstructorUsedError;
-  int get remainingSeconds => throw _privateConstructorUsedError;
+  TimerType get timerType =>
+      throw _privateConstructorUsedError; // Modify the type of this to duration AI!
+  Duration get remainingTime => throw _privateConstructorUsedError;
   bool get isRunning => throw _privateConstructorUsedError;
 
   /// Create a copy of TimerState
@@ -33,7 +34,7 @@ abstract class $TimerStateCopyWith<$Res> {
           TimerState value, $Res Function(TimerState) then) =
       _$TimerStateCopyWithImpl<$Res, TimerState>;
   @useResult
-  $Res call({TimerType timerType, int remainingSeconds, bool isRunning});
+  $Res call({TimerType timerType, Duration remainingTime, bool isRunning});
 }
 
 /// @nodoc
@@ -52,7 +53,7 @@ class _$TimerStateCopyWithImpl<$Res, $Val extends TimerState>
   @override
   $Res call({
     Object? timerType = null,
-    Object? remainingSeconds = null,
+    Object? remainingTime = null,
     Object? isRunning = null,
   }) {
     return _then(_value.copyWith(
@@ -60,10 +61,10 @@ class _$TimerStateCopyWithImpl<$Res, $Val extends TimerState>
           ? _value.timerType
           : timerType // ignore: cast_nullable_to_non_nullable
               as TimerType,
-      remainingSeconds: null == remainingSeconds
-          ? _value.remainingSeconds
-          : remainingSeconds // ignore: cast_nullable_to_non_nullable
-              as int,
+      remainingTime: null == remainingTime
+          ? _value.remainingTime
+          : remainingTime // ignore: cast_nullable_to_non_nullable
+              as Duration,
       isRunning: null == isRunning
           ? _value.isRunning
           : isRunning // ignore: cast_nullable_to_non_nullable
@@ -80,7 +81,7 @@ abstract class _$$TimerStateImplCopyWith<$Res>
       __$$TimerStateImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({TimerType timerType, int remainingSeconds, bool isRunning});
+  $Res call({TimerType timerType, Duration remainingTime, bool isRunning});
 }
 
 /// @nodoc
@@ -97,7 +98,7 @@ class __$$TimerStateImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? timerType = null,
-    Object? remainingSeconds = null,
+    Object? remainingTime = null,
     Object? isRunning = null,
   }) {
     return _then(_$TimerStateImpl(
@@ -105,10 +106,10 @@ class __$$TimerStateImplCopyWithImpl<$Res>
           ? _value.timerType
           : timerType // ignore: cast_nullable_to_non_nullable
               as TimerType,
-      remainingSeconds: null == remainingSeconds
-          ? _value.remainingSeconds
-          : remainingSeconds // ignore: cast_nullable_to_non_nullable
-              as int,
+      remainingTime: null == remainingTime
+          ? _value.remainingTime
+          : remainingTime // ignore: cast_nullable_to_non_nullable
+              as Duration,
       isRunning: null == isRunning
           ? _value.isRunning
           : isRunning // ignore: cast_nullable_to_non_nullable
@@ -122,19 +123,20 @@ class __$$TimerStateImplCopyWithImpl<$Res>
 class _$TimerStateImpl implements _TimerState {
   const _$TimerStateImpl(
       {required this.timerType,
-      required this.remainingSeconds,
+      required this.remainingTime,
       required this.isRunning});
 
   @override
   final TimerType timerType;
+// Modify the type of this to duration AI!
   @override
-  final int remainingSeconds;
+  final Duration remainingTime;
   @override
   final bool isRunning;
 
   @override
   String toString() {
-    return 'TimerState(timerType: $timerType, remainingSeconds: $remainingSeconds, isRunning: $isRunning)';
+    return 'TimerState(timerType: $timerType, remainingTime: $remainingTime, isRunning: $isRunning)';
   }
 
   @override
@@ -144,15 +146,15 @@ class _$TimerStateImpl implements _TimerState {
             other is _$TimerStateImpl &&
             (identical(other.timerType, timerType) ||
                 other.timerType == timerType) &&
-            (identical(other.remainingSeconds, remainingSeconds) ||
-                other.remainingSeconds == remainingSeconds) &&
+            (identical(other.remainingTime, remainingTime) ||
+                other.remainingTime == remainingTime) &&
             (identical(other.isRunning, isRunning) ||
                 other.isRunning == isRunning));
   }
 
   @override
   int get hashCode =>
-      Object.hash(runtimeType, timerType, remainingSeconds, isRunning);
+      Object.hash(runtimeType, timerType, remainingTime, isRunning);
 
   /// Create a copy of TimerState
   /// with the given fields replaced by the non-null parameter values.
@@ -166,13 +168,13 @@ class _$TimerStateImpl implements _TimerState {
 abstract class _TimerState implements TimerState {
   const factory _TimerState(
       {required final TimerType timerType,
-      required final int remainingSeconds,
+      required final Duration remainingTime,
       required final bool isRunning}) = _$TimerStateImpl;
 
   @override
-  TimerType get timerType;
+  TimerType get timerType; // Modify the type of this to duration AI!
   @override
-  int get remainingSeconds;
+  Duration get remainingTime;
   @override
   bool get isRunning;
 
