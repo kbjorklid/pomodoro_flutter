@@ -12,6 +12,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
       : super(TimerState(
           timerType: TimerType.work,
           remainingTime: const Duration(minutes: 25), // Default while loading
+          totalTime: const Duration(minutes: 25),
           isRunning: false,
         )) {
     _initialize();
@@ -19,7 +20,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
 
   Future<void> _initialize() async {
     final initialDuration = await _settings.workDuration;
-    state = state.copyWith(remainingTime: initialDuration);
+    state = state.copyWith(remainingTime: initialDuration, totalTime: initialDuration);
   }
 
   @override
@@ -58,7 +59,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
 
   Future<void> updateTimerFromSettings() async {
     final duration = await _getInitialDuration(state.timerType);
-    state = state.copyWith(remainingTime: duration);
+    state = state.copyWith(remainingTime: duration, totalTime: duration);
   }
 
   Future<void> checkAndUpdateSettings() async {
@@ -84,6 +85,7 @@ class TimerNotifier extends StateNotifier<TimerState> {
     state = TimerState(
       timerType: newType,
       remainingTime: duration,
+      totalTime: duration,
       isRunning: false,
     );
   }

@@ -7,7 +7,7 @@ part 'timer_state.freezed.dart';
 class TimerState with _$TimerState {
   const factory TimerState({
     required TimerType timerType,
-    // Modify the type of this to duration AI!
+    required Duration totalTime,
     required Duration remainingTime,
     required bool isRunning,
   }) = _TimerState;
