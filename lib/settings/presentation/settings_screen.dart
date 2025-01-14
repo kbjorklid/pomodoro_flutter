@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
+import 'package:pomodoro_app2/timer/domain/sound.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -13,6 +14,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Duration workDuration = const Duration(minutes: 25); // Initialize with default
   Duration restDuration = const Duration(minutes: 5);  // Initialize with default
+  Sound selectedSound = Sound.ding;
   bool isLoading = true;
 
   @override
@@ -25,10 +27,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final repository = ref.read(settingsRepositoryProvider);
     final loadedWorkDuration = await repository.getWorkDuration();
     final loadedRestDuration = await repository.getRestDuration();
+    final loadedSelectedSound = await repository.getSelectedSound();
     
     setState(() {
       workDuration = loadedWorkDuration;
       restDuration = loadedRestDuration;
+      selectedSound = loadedSelectedSound;
       isLoading = false;
     });
   }
@@ -40,6 +44,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       workDuration = duration;
     });
     // Notify listeners that settings have changed
+    ref.invalidate(settingsRepositoryProvider);
+  }
+
+  Future<void> _saveSelectedSound(Sound? sound) async {
+    if (sound == null) return;
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setSelectedSound(sound);
+    setState(() {
+      selectedSound = sound;
+    });
     ref.invalidate(settingsRepositoryProvider);
   }
 
@@ -79,6 +93,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               minDuration: const Duration(minutes: 1),
               maxDuration: const Duration(minutes: 30),
               onChanged: _saveRestDuration,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Text('Sound: '),
+                DropdownButton<Sound>(
+                  value: selectedSound,
+                  items: Sound.values.map((sound) => DropdownMenuItem(
+                    value: sound,
+                    child: Text(sound.name),
+                  )).toList(),
+                  onChanged: _saveSelectedSound,
+                ),
+              ],
             ),
           ],
         ),

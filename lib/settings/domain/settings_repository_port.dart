@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:pomodoro_app2/timer/domain/sound.dart';
 
 abstract class SettingsRepositoryPort {
   Future<Duration> getWorkDuration();
@@ -6,4 +7,7 @@ abstract class SettingsRepositoryPort {
   
   Future<Duration> getRestDuration();
   Future<void> setRestDuration(Duration duration);
+
+  Future<Sound> getSelectedSound();
+  Future<void> setSelectedSound(Sound sound);
 }
