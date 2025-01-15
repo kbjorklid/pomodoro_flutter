@@ -58,14 +58,14 @@ class TimerNotifier extends StateNotifier<TimerState> {
   }
 
   Future<void> updateTimerFromSettings() async {
-    if (mounted) {
+    if (super.mounted) {
       final duration = await _getInitialDuration(state.timerType);
       state = state.copyWith(remainingTime: duration, totalTime: duration);
     }
   }
 
   Future<void> checkAndUpdateSettings() async {
-    if (!state.isRunning) {
+    if (mounted && !state.isRunning) {
       await updateTimerFromSettings();
     }
   }

@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
 
-import 'package:pomodoro_app2/timer/domain/sound.dart';
+import 'package:pomodoro_app2/sound/domain/sound.dart';
 
 class SettingsRepository implements SettingsRepositoryPort {
   static const _workDurationKey = 'work_duration';

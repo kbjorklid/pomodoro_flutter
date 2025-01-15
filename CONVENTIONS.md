@@ -67,7 +67,7 @@ lib/settings/infrastructure/
 
 ### Application layer
 - Use Case classes should be named "*UseCase". For example, "StartTimerUseCase"
-- Use Case classes should have a single public method called either 'execute' ore 'query', depending whether the use case is a command or a query.
+- Use Case classes should have a single public method called either 'execute' or 'query', depending whether the use case is a command or a query.
 - Use Case classes should have a single constructor that takes all dependencies as parameters.
 
 
@@ -83,7 +83,7 @@ Some specific coding principles to follow:
 - Each provider should be in its own file.
 - Prefer subclassing widgets and encapsulating logic in them.
 - Prefer package-imports over relative imports.
-- Write succinct class-level documentation for all classes.
+- Write succinct class-level documentation comments for all classes, enums and such.
 
 ## Flutter Library choices
 
