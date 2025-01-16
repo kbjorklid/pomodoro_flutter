@@ -9,10 +9,10 @@ class SwitchTimerButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timerState = ref.watch(timerProvider);
-    final timerNotifier = ref.read(timerProvider.notifier);
+    final timerService = ref.read(timerProvider.notifier);
 
     return ElevatedButton(
-      onPressed: timerNotifier.switchTimerType,
+      onPressed: timerService.switchTimerType,
       child: Text(timerState.timerType == TimerType.work
           ? 'Switch to Rest'
           : 'Switch to Work'),

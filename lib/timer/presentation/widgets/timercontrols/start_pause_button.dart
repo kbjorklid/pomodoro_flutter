@@ -8,10 +8,10 @@ class StartPauseButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final timerState = ref.watch(timerProvider);
-    final timerNotifier = ref.read(timerProvider.notifier);
+    final timerService = ref.read(timerProvider.notifier);
 
     return ElevatedButton(
-      onPressed: timerNotifier.toggleTimer,
+      onPressed: timerService.toggleTimer,
       child: Text(timerState.isRunning ? 'Pause' : 'Start'),
     );
   }
