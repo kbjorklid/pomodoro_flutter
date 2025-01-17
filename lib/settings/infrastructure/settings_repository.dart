@@ -20,17 +20,18 @@ class SettingsRepository implements SettingsRepositoryPort {
   }
 
   @override
-  Future<Sound> getSelectedSound() async {
+  Future<Sound> getTimerEndSound() async {
     final prefs = await SharedPreferences.getInstance();
     final soundName = prefs.getString(_selectedSoundKey);
     if (soundName == null) {
       return Sound.ding;
     }
+    //
     return Sound.values.firstWhere((e) => e.name == soundName, orElse: () => Sound.ding);
   }
 
   @override
-  Future<void> setSelectedSound(Sound sound) async {
+  Future<void> setTimerEndSound(Sound sound) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_selectedSoundKey, sound.name);
   }

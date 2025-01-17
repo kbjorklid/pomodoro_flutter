@@ -27,7 +27,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final repository = ref.read(settingsRepositoryProvider);
     final loadedWorkDuration = await repository.getWorkDuration();
     final loadedRestDuration = await repository.getRestDuration();
-    final loadedSelectedSound = await repository.getSelectedSound();
+    final loadedSelectedSound = await repository.getTimerEndSound();
     
     setState(() {
       workDuration = loadedWorkDuration;
@@ -50,7 +50,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _saveSelectedSound(Sound? sound) async {
     if (sound == null) return;
     final repository = ref.read(settingsRepositoryProvider);
-    await repository.setSelectedSound(sound);
+    await repository.setTimerEndSound(sound);
     setState(() {
       selectedSound = sound;
     });

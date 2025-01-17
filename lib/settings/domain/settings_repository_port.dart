@@ -8,6 +8,6 @@ abstract class SettingsRepositoryPort {
   Future<Duration> getRestDuration();
   Future<void> setRestDuration(Duration duration);
 
-  Future<Sound> getSelectedSound();
-  Future<void> setSelectedSound(Sound sound);
+  Future<Sound> getTimerEndSound();
+  Future<void> setTimerEndSound(Sound sound);
 }
