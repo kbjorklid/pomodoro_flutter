@@ -19,7 +19,7 @@ mixin _$TimerState {
   TimerType get timerType => throw _privateConstructorUsedError;
   Duration get totalTime => throw _privateConstructorUsedError;
   Duration get remainingTime => throw _privateConstructorUsedError;
-  bool get isRunning => throw _privateConstructorUsedError;
+  TimerStatus get status => throw _privateConstructorUsedError;
 
   /// Create a copy of TimerState
   /// with the given fields replaced by the non-null parameter values.
@@ -38,7 +38,7 @@ abstract class $TimerStateCopyWith<$Res> {
       {TimerType timerType,
       Duration totalTime,
       Duration remainingTime,
-      bool isRunning});
+      TimerStatus status});
 }
 
 /// @nodoc
@@ -59,7 +59,7 @@ class _$TimerStateCopyWithImpl<$Res, $Val extends TimerState>
     Object? timerType = null,
     Object? totalTime = null,
     Object? remainingTime = null,
-    Object? isRunning = null,
+    Object? status = null,
   }) {
     return _then(_value.copyWith(
       timerType: null == timerType
@@ -74,10 +74,10 @@ class _$TimerStateCopyWithImpl<$Res, $Val extends TimerState>
           ? _value.remainingTime
           : remainingTime // ignore: cast_nullable_to_non_nullable
               as Duration,
-      isRunning: null == isRunning
-          ? _value.isRunning
-          : isRunning // ignore: cast_nullable_to_non_nullable
-              as bool,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as TimerStatus,
     ) as $Val);
   }
 }
@@ -94,7 +94,7 @@ abstract class _$$TimerStateImplCopyWith<$Res>
       {TimerType timerType,
       Duration totalTime,
       Duration remainingTime,
-      bool isRunning});
+      TimerStatus status});
 }
 
 /// @nodoc
@@ -113,7 +113,7 @@ class __$$TimerStateImplCopyWithImpl<$Res>
     Object? timerType = null,
     Object? totalTime = null,
     Object? remainingTime = null,
-    Object? isRunning = null,
+    Object? status = null,
   }) {
     return _then(_$TimerStateImpl(
       timerType: null == timerType
@@ -128,10 +128,10 @@ class __$$TimerStateImplCopyWithImpl<$Res>
           ? _value.remainingTime
           : remainingTime // ignore: cast_nullable_to_non_nullable
               as Duration,
-      isRunning: null == isRunning
-          ? _value.isRunning
-          : isRunning // ignore: cast_nullable_to_non_nullable
-              as bool,
+      status: null == status
+          ? _value.status
+          : status // ignore: cast_nullable_to_non_nullable
+              as TimerStatus,
     ));
   }
 }
@@ -143,7 +143,7 @@ class _$TimerStateImpl implements _TimerState {
       {required this.timerType,
       required this.totalTime,
       required this.remainingTime,
-      required this.isRunning});
+      required this.status});
 
   @override
   final TimerType timerType;
@@ -152,11 +152,11 @@ class _$TimerStateImpl implements _TimerState {
   @override
   final Duration remainingTime;
   @override
-  final bool isRunning;
+  final TimerStatus status;
 
   @override
   String toString() {
-    return 'TimerState(timerType: $timerType, totalTime: $totalTime, remainingTime: $remainingTime, isRunning: $isRunning)';
+    return 'TimerState(timerType: $timerType, totalTime: $totalTime, remainingTime: $remainingTime, status: $status)';
   }
 
   @override
@@ -170,13 +170,12 @@ class _$TimerStateImpl implements _TimerState {
                 other.totalTime == totalTime) &&
             (identical(other.remainingTime, remainingTime) ||
                 other.remainingTime == remainingTime) &&
-            (identical(other.isRunning, isRunning) ||
-                other.isRunning == isRunning));
+            (identical(other.status, status) || other.status == status));
   }
 
   @override
   int get hashCode =>
-      Object.hash(runtimeType, timerType, totalTime, remainingTime, isRunning);
+      Object.hash(runtimeType, timerType, totalTime, remainingTime, status);
 
   /// Create a copy of TimerState
   /// with the given fields replaced by the non-null parameter values.
@@ -192,7 +191,7 @@ abstract class _TimerState implements TimerState {
       {required final TimerType timerType,
       required final Duration totalTime,
       required final Duration remainingTime,
-      required final bool isRunning}) = _$TimerStateImpl;
+      required final TimerStatus status}) = _$TimerStateImpl;
 
   @override
   TimerType get timerType;
@@ -201,7 +200,7 @@ abstract class _TimerState implements TimerState {
   @override
   Duration get remainingTime;
   @override
-  bool get isRunning;
+  TimerStatus get status;
 
   /// Create a copy of TimerState
   /// with the given fields replaced by the non-null parameter values.
