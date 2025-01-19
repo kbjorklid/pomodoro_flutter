@@ -8,21 +8,7 @@ class SoundPlayerAdapter implements SoundPlayerPort {
 
   @override
   Future<void> playSound(NotificationSound sound) async {
-    String soundFile;
-    switch (sound) {
-      case NotificationSound.chicken:
-        soundFile = 'chicken.wav';
-        break;
-      case NotificationSound.ding:
-        soundFile = 'ding.wav';
-        break;
-      case NotificationSound.gentle:
-        soundFile = 'gentle.wav';
-        break;
-      case NotificationSound.jingle:
-        soundFile = 'jingle.wav';
-        break;
-    }
+    String soundFile = '{sound.name}.wav';
     String soundPath = '$_soundAssetPath$soundFile';
     await _audioPlayer.play(AssetSource(soundPath));
   }
