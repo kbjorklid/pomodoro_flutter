@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pomodoro_app2/timer/application/timer_service.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
-
-import '../../domain/timer_state.dart';
 
 class TimerLabel extends ConsumerWidget {
   const TimerLabel({super.key});

@@ -1,5 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
-import 'package:pomodoro_app2/sound/domain/sound.dart';
+import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 import 'package:pomodoro_app2/sound/domain/sound_player_port.dart';
 
 class SoundPlayerAdapter implements SoundPlayerPort {
@@ -7,19 +7,19 @@ class SoundPlayerAdapter implements SoundPlayerPort {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
-  Future<void> playSound(Sound sound) async {
+  Future<void> playSound(NotificationSound sound) async {
     String soundFile;
     switch (sound) {
-      case Sound.chicken:
+      case NotificationSound.chicken:
         soundFile = 'chicken.wav';
         break;
-      case Sound.ding:
+      case NotificationSound.ding:
         soundFile = 'ding.wav';
         break;
-      case Sound.gentle:
+      case NotificationSound.gentle:
         soundFile = 'gentle.wav';
         break;
-      case Sound.jingle:
+      case NotificationSound.jingle:
         soundFile = 'jingle.wav';
         break;
     }

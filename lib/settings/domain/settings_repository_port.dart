@@ -1,5 +1,4 @@
-import 'package:flutter/foundation.dart';
-import 'package:pomodoro_app2/sound/domain/sound.dart';
+import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
 abstract class SettingsRepositoryPort {
   Future<Duration> getWorkDuration();
@@ -8,6 +7,7 @@ abstract class SettingsRepositoryPort {
   Future<Duration> getRestDuration();
   Future<void> setRestDuration(Duration duration);
 
-  Future<Sound> getTimerEndSound();
-  Future<void> setTimerEndSound(Sound sound);
+  Future<NotificationSound> getTimerEndSound();
+
+  Future<void> setTimerEndSound(NotificationSound sound);
 }

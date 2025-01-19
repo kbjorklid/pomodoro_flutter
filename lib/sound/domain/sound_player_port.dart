@@ -1,5 +1,5 @@
-import 'package:pomodoro_app2/sound/domain/sound.dart';
+import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
 abstract class SoundPlayerPort {
-  Future<void> playSound(Sound sound);
+  Future<void> playSound(NotificationSound sound);
 }

@@ -1,10 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:pomodoro_app2/timer/application/timer_service.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
-
-import '../../domain/timer_state.dart';
+import 'package:pomodoro_app2/timer/application/timer_service.dart';
+import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 
 TimerService? _timerService;
 
@@ -27,7 +26,6 @@ final timerStateProvider = StreamProvider<TimerState>((ref) {
     controller.close();
   });
 
-  // Add initial state
   controller.add(timerService.state);
 
   return controller.stream;

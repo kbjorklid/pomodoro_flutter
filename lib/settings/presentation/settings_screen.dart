@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
-import 'package:pomodoro_app2/sound/domain/sound.dart';
+import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -14,7 +14,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Duration workDuration = const Duration(minutes: 25); // Initialize with default
   Duration restDuration = const Duration(minutes: 5);  // Initialize with default
-  Sound selectedSound = Sound.ding;
+  NotificationSound selectedSound = NotificationSound.ding;
   bool isLoading = true;
 
   @override
@@ -47,7 +47,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ref.invalidate(settingsRepositoryProvider);
   }
 
-  Future<void> _saveSelectedSound(Sound? sound) async {
+  Future<void> _saveSelectedSound(NotificationSound? sound) async {
     if (sound == null) return;
     final repository = ref.read(settingsRepositoryProvider);
     await repository.setTimerEndSound(sound);
@@ -98,11 +98,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Row(
               children: [
                 const Text('Sound: '),
-                DropdownButton<Sound>(
+                DropdownButton<NotificationSound>(
                   value: selectedSound,
-                  items: Sound.values.map((sound) => DropdownMenuItem(
-                    value: sound,
-                    child: Text(sound.toString()),
+                  items: NotificationSound.values
+                      .map((sound) => DropdownMenuItem(
+                            value: sound,
+                            child: Text(sound.toString()),
                   )).toList(),
                   onChanged: _saveSelectedSound,
                 ),

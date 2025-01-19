@@ -1,7 +1,6 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
-
-import 'package:pomodoro_app2/sound/domain/sound.dart';
+import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsRepository implements SettingsRepositoryPort {
   static const _workDurationKey = 'work_duration';
@@ -20,18 +19,17 @@ class SettingsRepository implements SettingsRepositoryPort {
   }
 
   @override
-  Future<Sound> getTimerEndSound() async {
+  Future<NotificationSound> getTimerEndSound() async {
     final prefs = await SharedPreferences.getInstance();
     final soundName = prefs.getString(_selectedSoundKey);
     if (soundName == null) {
-      return Sound.ding;
+      return NotificationSound.ding;
     }
-    //
-    return Sound.values.firstWhere((e) => e.name == soundName, orElse: () => Sound.ding);
+    return NotificationSound.fromName(soundName);
   }
 
   @override
-  Future<void> setTimerEndSound(Sound sound) async {
+  Future<void> setTimerEndSound(NotificationSound sound) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_selectedSoundKey, sound.name);
   }
