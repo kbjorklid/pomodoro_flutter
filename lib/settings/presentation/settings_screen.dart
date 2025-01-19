@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
+import 'package:pomodoro_app2/settings/presentation/widgets/sound_selector.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -95,19 +96,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onChanged: _saveRestDuration,
             ),
             const SizedBox(height: 20),
-            Row(
-              children: [
-                const Text('Sound: '),
-                DropdownButton<NotificationSound>(
-                  value: selectedSound,
-                  items: NotificationSound.values
-                      .map((sound) => DropdownMenuItem(
-                            value: sound,
-                            child: Text(sound.toString()),
-                  )).toList(),
-                  onChanged: _saveSelectedSound,
-                ),
-              ],
+            SoundSelector(
+              selectedSound: selectedSound,
+              onChanged: _saveSelectedSound,
             ),
           ],
         ),
