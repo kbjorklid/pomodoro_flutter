@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:pomodoro_app2/timer/domain/timer_type.dart';
+import 'package:pomodoro_app2/core/domain/timer_type.dart';
 
 part 'timer_state.freezed.dart';
 

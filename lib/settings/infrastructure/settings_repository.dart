@@ -44,10 +44,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<Duration> getRestDuration() async {
     final prefs = await SharedPreferences.getInstance();
     final seconds = prefs.getInt(_restDurationKey);
-    //return seconds != null
-    //    ? Duration(seconds: seconds)
-    //    : _defaultRestDuration;
-    return Duration(seconds: 5);
+    return seconds != null ? Duration(seconds: seconds) : _defaultRestDuration;
   }
 
   @override

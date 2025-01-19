@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
-import 'package:pomodoro_app2/timer/domain/timer_type.dart';
-
-import '../../../domain/timer_state.dart';
 
 class SwitchTimerButton extends ConsumerWidget {
   const SwitchTimerButton({super.key});

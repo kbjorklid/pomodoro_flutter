@@ -1,4 +1,0 @@
-enum TimerType {
-  work,
-  rest,
-}

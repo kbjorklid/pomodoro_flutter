@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/settings/infrastructure/settings_repository.dart';
 import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
-import 'package:pomodoro_app2/timer/domain/timer_type.dart';
 
 class _TimerRuntimeState {
   TimerType _timerType = TimerType.work;
