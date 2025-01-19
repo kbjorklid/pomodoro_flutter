@@ -1,5 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:pomodoro_app2/history/domain/timer_session.dart';
+import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
 import 'package:pomodoro_app2/history/infrastructure/timer_session_adapter.dart';
 
@@ -27,11 +28,11 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   }
 
   @override
-  Future<List<TimerSession>> getSessionsInRange(DateTime start, DateTime end) async {
+  Future<List<TimerSession>> query(TimerSessionQuery query) async {
     final sessions = _box.values
         .where((adapter) =>
-            adapter.session.startedAt.isAfter(start) &&
-            adapter.session.startedAt.isBefore(end))
+            adapter.session.startedAt.isAfter(query.start) &&
+            adapter.session.startedAt.isBefore(query.end))
         .map((adapter) => adapter.session)
         .toList();
         
