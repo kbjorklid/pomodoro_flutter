@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
+
 import 'pause_record.dart';
 
 part 'timer_session.freezed.dart';
@@ -21,14 +22,16 @@ class TimerSession with _$TimerSession {
     
     /// List of all pauses during this session
     required List<PauseRecord> pauses,
-    
+
     /// Total intended duration of the session
     required Duration totalDuration,
-    
-    /// Actual time spent in the session before ending
-    required Duration actualDuration,
   }) = _TimerSession;
 
   /// Whether the session was completed (derived value)
   bool get isCompleted => actualDuration >= totalDuration;
+
+  // Returns the duration spent in the session, excluding pauses
+  Duration get actualDuration =>
+      endedAt.difference(startedAt) -
+      pauses.fold(Duration.zero, (sum, pause) => sum + pause.duration);
 }
