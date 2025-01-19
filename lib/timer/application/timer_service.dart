@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:pomodoro_app2/settings/infrastructure/settings_repository.dart';
+import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timer_type.dart';
 
@@ -85,6 +86,7 @@ typedef TimerStateListener = void Function(TimerState);
 /// independently of the UI.
 class TimerService  {
   final SettingsRepository _settings;
+  final PlayTimerEndSoundUseCase _playTimerEndSoundUseCase;
   Timer? _timer;
   final _TimerRuntimeState _state = _TimerRuntimeState();
 
@@ -92,7 +94,7 @@ class TimerService  {
 
   TimerState get state => _state.toTimerState(DateTime.now());
 
-  TimerService(this._settings) {
+  TimerService(this._settings, this._playTimerEndSoundUseCase) {
     setTimerType(TimerType.work);
   }
 
@@ -188,6 +190,7 @@ class TimerService  {
       _timer?.cancel();
       _state.stop();
       _notifyListeners();
+      _playTimerEndSoundUseCase.execute();
       return true;
     }
     return false;

@@ -2,13 +2,21 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
+import 'package:pomodoro_app2/sound/presentation/providers/sound_player_provider.dart';
+import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
 import 'package:pomodoro_app2/timer/application/timer_service.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 
 TimerService? _timerService;
 
 final timerProvider = Provider<TimerService>((ref) {
-  _timerService ??= TimerService(ref.watch(settingsRepositoryProvider));
+  _timerService ??= TimerService(
+    ref.watch(settingsRepositoryProvider),
+    PlayTimerEndSoundUseCase(
+      ref.watch(soundPlayerProvider),
+      ref.watch(settingsRepositoryProvider),
+    ),
+  );
   return _timerService!;
 });
 
