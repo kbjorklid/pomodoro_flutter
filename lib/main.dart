@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pomodoro_app2/timer/presentation/timer_screen.dart';
 
-void main() {
+void main() async {
+  await Hive.initFlutter();
   runApp(const ProviderScope(child: MyApp()));
 }
 
