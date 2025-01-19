@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:pomodoro_app2/settings/infrastructure/settings_repository.dart';
 import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
@@ -6,7 +7,7 @@ import 'package:pomodoro_app2/timer/domain/timer_type.dart';
 
 class _TimerRuntimeState {
   TimerType _timerType = TimerType.work;
-  Duration _totalDuration = Duration(minutes:25);
+  Duration _totalDuration = Duration(minutes: 25);
   TimerStatus _status = TimerStatus.notStarted;
   DateTime? _startedAt;
   Duration _spentInPause = Duration.zero;
@@ -39,6 +40,7 @@ class _TimerRuntimeState {
   void resume() {
     _updateTimeSpentInPause();
     _status = TimerStatus.running;
+    _pausedAt = null;
   }
 
   void stop() {
@@ -63,7 +65,7 @@ class _TimerRuntimeState {
     if (_status == TimerStatus.notStarted) return _totalDuration;
     if (_status == TimerStatus.ended) return Duration.zero;
 
-    assert ((status == TimerStatus.paused) == (_pausedAt != null));
+    assert((status == TimerStatus.paused) == (_pausedAt != null));
     DateTime comparisonTarget = _pausedAt ?? now;
     final timePassed = comparisonTarget.difference(_startedAt!) - _spentInPause;
     if (timePassed >= _totalDuration) return Duration.zero;
@@ -72,11 +74,10 @@ class _TimerRuntimeState {
 
   TimerState toTimerState(DateTime now) {
     return TimerState(
-      timerType: _timerType,
-      totalTime: _totalDuration,
-      remainingTime: getRemainingTime(now),
-      status: _status
-    );
+        timerType: _timerType,
+        totalTime: _totalDuration,
+        remainingTime: getRemainingTime(now),
+        status: _status);
   }
 }
 
@@ -84,7 +85,7 @@ typedef TimerStateListener = void Function(TimerState);
 
 /// A service class that manages the timer logic,
 /// independently of the UI.
-class TimerService  {
+class TimerService {
   final SettingsRepository _settings;
   final PlayTimerEndSoundUseCase _playTimerEndSoundUseCase;
   Timer? _timer;
@@ -103,11 +104,11 @@ class TimerService  {
       listeners.add(listener);
     }
   }
-  
+
   void removeListener(TimerStateListener listener) {
     listeners.remove(listener);
   }
-  
+
   void _notifyListeners() {
     if (listeners.isEmpty) return;
     final state = _state.toTimerState(DateTime.now());
@@ -120,52 +121,36 @@ class TimerService  {
     Duration totalDuration = await (timerType == TimerType.work
         ? _settings.getWorkDuration()
         : _settings.getRestDuration());
-    assert (totalDuration.inSeconds > 0);
-    if (_state._timerType != timerType || _state._totalDuration != totalDuration) {
+    assert(totalDuration.inSeconds > 0);
+    if (_state._timerType != timerType ||
+        _state._totalDuration != totalDuration) {
       _state.updateTimerType(timerType, totalDuration);
       _notifyListeners();
     }
   }
 
-  void startTimerOrPause() {
-    if (_state.status == TimerStatus.running) {
-      pause();
-    } else {
-      startOrContinue();
-    }
-  }
-
-  void startOrContinue() {
-    if (_state.status == TimerStatus.running) return;
-    if (_state.status == TimerStatus.paused) {
-      _resume();
-    } else {
-      _startFromBeginning();
-    }
-  }
-
-  void _startFromBeginning() {
+  void startFromBeginning() {
     _state.startFromBeginning(DateTime.now());
     _startTimerTicks();
   }
-  
-  void _resume() {
-    if (_state.status == TimerStatus.paused) {
-      if (_state.getRemainingTime(DateTime.now()) <= Duration.zero) {
-        _handleTimerEnd();
-        return;
-      } else {
-        _state.resume();
-        _startTimerTicks();
-      }
+
+  void resume() {
+    if (_state.status != TimerStatus.paused) return;
+    if (_state.getRemainingTime(DateTime.now()) <= Duration.zero) {
+      _handleTimerEnd();
+      return;
+    } else {
+      _state.resume();
+      _startTimerTicks();
     }
   }
-  
+
   void _startTimerTicks() {
+    if (_timer != null && _timer!.isActive) return;
     _tick();
-    _timer ??= Timer.periodic(Duration(seconds: 1), (_) {
-        _tick();
-      });
+    _timer = Timer.periodic(Duration(milliseconds: 100), (_) {
+      _tick();
+    });
   }
 
   void _tick() {

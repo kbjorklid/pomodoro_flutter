@@ -5,6 +5,7 @@ import 'package:pomodoro_app2/settings/presentation/providers/settings_repositor
 import 'package:pomodoro_app2/sound/presentation/providers/sound_player_provider.dart';
 import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
 import 'package:pomodoro_app2/timer/application/timer_service.dart';
+import 'package:pomodoro_app2/timer/application/toggle_timer_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 
 TimerService? _timerService;
@@ -18,6 +19,10 @@ final timerProvider = Provider<TimerService>((ref) {
     ),
   );
   return _timerService!;
+});
+
+final toggleTimerUseCaseProvider = Provider<ToggleTimerUseCase>((ref) {
+  return ToggleTimerUseCase(ref.watch(timerProvider));
 });
 
 final timerStateProvider = StreamProvider<TimerState>((ref) {
