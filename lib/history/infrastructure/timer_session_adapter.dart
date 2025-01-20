@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'package:pomodoro_app2/history/domain/timer_session.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 
 part 'timer_session_adapter.g.dart';
 

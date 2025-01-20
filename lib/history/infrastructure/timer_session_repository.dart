@@ -1,10 +1,10 @@
 import 'package:hive/hive.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
-import 'package:pomodoro_app2/history/domain/completion_status.dart';
-import 'package:pomodoro_app2/history/domain/timer_session.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
 import 'package:pomodoro_app2/history/infrastructure/timer_session_adapter.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/completion_status.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 
 class TimerSessionRepository implements TimerSessionRepositoryPort {
   static const _boxName = 'timerSessions';

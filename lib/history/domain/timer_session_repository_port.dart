@@ -1,5 +1,5 @@
-import 'package:pomodoro_app2/history/domain/timer_session.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 
 abstract class TimerSessionRepositoryPort {
   /// Saves a timer session

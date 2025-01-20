@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
-import 'package:pomodoro_app2/history/domain/completion_status.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/completion_status.dart';
 
 part 'timer_session_query.freezed.dart';
 
