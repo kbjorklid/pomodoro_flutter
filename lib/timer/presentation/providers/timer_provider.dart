@@ -33,9 +33,9 @@ final timerStateProvider = StreamProvider<TimerState>((ref) {
     controller.add(state);
   }
 
-  timerService.addListener(listener);
+  timerService.addStateListener(listener);
   ref.onDispose(() {
-    timerService.removeListener(listener);
+    timerService.removeStateListener(listener);
     controller.close();
   });
 

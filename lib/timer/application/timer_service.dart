@@ -5,6 +5,7 @@ import 'package:pomodoro_app2/settings/infrastructure/settings_repository.dart';
 import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 
 class _TimerRuntimeState {
   TimerType _timerType = TimerType.work;
@@ -86,6 +87,7 @@ class _TimerRuntimeState {
 }
 
 typedef TimerStateListener = void Function(TimerState);
+typedef TimerSessionListener = void Function(TimerSession);
 
 /// A service class that manages the timer logic,
 /// independently of the UI.
@@ -95,7 +97,8 @@ class TimerService {
   Timer? _timer;
   final _TimerRuntimeState _state = _TimerRuntimeState();
 
-  final List<TimerStateListener> listeners = [];
+  final List<TimerStateListener> _stateListeners = [];
+  final List<TimerSessionListener> _sessionListeners = [];
 
   TimerState get state => _state.toTimerState(DateTime.now());
 
@@ -103,21 +106,46 @@ class TimerService {
     setTimerType(TimerType.work);
   }
 
-  void addListener(TimerStateListener listener) {
-    if (!listeners.contains(listener)) {
-      listeners.add(listener);
+  void addStateListener(TimerStateListener listener) {
+    if (!_stateListeners.contains(listener)) {
+      _stateListeners.add(listener);
     }
   }
 
-  void removeListener(TimerStateListener listener) {
-    listeners.remove(listener);
+  void removeStateListener(TimerStateListener listener) {
+    _stateListeners.remove(listener);
   }
 
-  void _notifyListeners() {
-    if (listeners.isEmpty) return;
+  void addSessionListener(TimerSessionListener listener) {
+    if (!_sessionListeners.contains(listener)) {
+      _sessionListeners.add(listener);
+    }
+  }
+
+  void removeSessionListener(TimerSessionListener listener) {
+    _sessionListeners.remove(listener);
+  }
+
+  void _notifyStateListeners() {
+    if (_stateListeners.isEmpty) return;
     final state = _state.toTimerState(DateTime.now());
-    for (var listener in listeners) {
+    for (var listener in _stateListeners) {
       listener(state);
+    }
+  }
+
+  void _notifySessionListeners() {
+    if (_sessionListeners.isEmpty) return;
+    final now = DateTime.now();
+    final session = TimerSession(
+      sessionType: _state._timerType,
+      startedAt: _state._startedAt!,
+      endedAt: now,
+      pauses: _state._pauses,
+      totalDuration: _state._totalDuration,
+    );
+    for (var listener in _sessionListeners) {
+      listener(session);
     }
   }
 
@@ -128,12 +156,14 @@ class TimerService {
     assert(totalDuration.inSeconds > 0);
     if (_state._timerType != timerType ||
         _state._totalDuration != totalDuration) {
+      _completeSessionIfStarted();
       _state.updateTimerType(timerType, totalDuration);
-      _notifyListeners();
+      _notifyStateListeners();
     }
   }
 
   void startFromBeginning() {
+    _completeSessionIfStarted();
     _state.startFromBeginning(DateTime.now());
     _startTimerTicks();
   }
@@ -141,7 +171,7 @@ class TimerService {
   void resume() {
     if (_state.status != TimerStatus.paused) return;
     if (_state.getRemainingTime(DateTime.now()) <= Duration.zero) {
-      _handleTimerEnd();
+      _stopTimerIfEnded();
       return;
     } else {
       _state.resume();
@@ -159,26 +189,21 @@ class TimerService {
 
   void _tick() {
     if (_stopTimerIfEnded()) return;
-    _notifyListeners();
-  }
-
-  void _handleTimerEnd() {
-    _timer?.cancel();
-    _notifyListeners();
+    _notifyStateListeners();
   }
 
   void pause() {
     _timer?.cancel();
     _state.pause(DateTime.now());
-    _notifyListeners();
+    _notifyStateListeners();
   }
 
   bool _stopTimerIfEnded() {
-    if (_state.status != TimerStatus.running) return false;
     if (_isTimerEndReached()) {
       _timer?.cancel();
+      _completeSessionIfStarted();
       _state.stop();
-      _notifyListeners();
+      _notifyStateListeners();
       _playTimerEndSoundUseCase.execute();
       return true;
     }
@@ -189,9 +214,17 @@ class TimerService {
     return _state.getRemainingTime(DateTime.now()) <= Duration.zero;
   }
 
+  void _completeSessionIfStarted() {
+    if (_state._startedAt != null) {
+      _notifySessionListeners();
+      _state.reset();
+    }
+  }
+
   void dispose() {
     _timer?.cancel();
     _timer = null;
-    listeners.clear();
+    _stateListeners.clear();
+    _sessionListeners.clear();
   }
 }
