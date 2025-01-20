@@ -4,13 +4,14 @@ import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/settings/infrastructure/settings_repository.dart';
 import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 
 class _TimerRuntimeState {
   TimerType _timerType = TimerType.work;
   Duration _totalDuration = Duration(minutes: 25);
   TimerStatus _status = TimerStatus.notStarted;
   DateTime? _startedAt;
-  Duration _spentInPause = Duration.zero;
+  final List<PauseRecord> _pauses = [];
   DateTime? _pausedAt;
 
   TimerStatus get status => _status;
@@ -29,7 +30,7 @@ class _TimerRuntimeState {
     _status = TimerStatus.running;
     _startedAt = now;
     _pausedAt = null;
-    _spentInPause = Duration.zero;
+    _pauses.clear();
   }
 
   void pause(DateTime now) {
@@ -38,13 +39,17 @@ class _TimerRuntimeState {
   }
 
   void resume() {
-    _updateTimeSpentInPause();
+    if (_pausedAt != null) {
+      _pauses.add(PauseRecord(
+        pausedAt: _pausedAt!,
+        resumedAt: DateTime.now(),
+      ));
+      _pausedAt = null;
+    }
     _status = TimerStatus.running;
-    _pausedAt = null;
   }
 
   void stop() {
-    _updateTimeSpentInPause();
     _status = TimerStatus.ended;
     _pausedAt = null;
   }
@@ -52,14 +57,10 @@ class _TimerRuntimeState {
   void reset() {
     _status = TimerStatus.notStarted;
     _startedAt = null;
-    _spentInPause = Duration.zero;
+    _pauses.clear();
     _pausedAt = null;
   }
 
-  void _updateTimeSpentInPause() {
-    if (_pausedAt == null) return;
-    _spentInPause += DateTime.now().difference(_pausedAt!);
-  }
 
   Duration getRemainingTime(DateTime now) {
     if (_status == TimerStatus.notStarted) return _totalDuration;
@@ -67,7 +68,10 @@ class _TimerRuntimeState {
 
     assert((status == TimerStatus.paused) == (_pausedAt != null));
     DateTime comparisonTarget = _pausedAt ?? now;
-    final timePassed = comparisonTarget.difference(_startedAt!) - _spentInPause;
+    final totalPauseDuration =
+        _pauses.fold(Duration.zero, (sum, pause) => sum + pause.duration);
+    final timePassed =
+        comparisonTarget.difference(_startedAt!) - totalPauseDuration;
     if (timePassed >= _totalDuration) return Duration.zero;
     return _totalDuration - timePassed;
   }
