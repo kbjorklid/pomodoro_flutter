@@ -1,4 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/history/domain/completion_status.dart';
 
 part 'timer_session_query.freezed.dart';
 
@@ -11,5 +13,11 @@ class TimerSessionQuery with _$TimerSessionQuery {
     
     /// End of the time range
     required DateTime end,
+    
+    /// Filter by completion status
+    @Default(CompletionStatus.any) CompletionStatus completionStatus,
+    
+    /// Filter by session type
+    @Default(TimerType.any) TimerType sessionType,
   }) = _TimerSessionQuery;
 }

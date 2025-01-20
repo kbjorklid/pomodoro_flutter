@@ -1,4 +1,6 @@
 import 'package:hive/hive.dart';
+import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/history/domain/completion_status.dart';
 import 'package:pomodoro_app2/history/domain/timer_session.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
@@ -32,7 +34,13 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
     final sessions = _box.values
         .where((adapter) =>
             adapter.session.startedAt.isAfter(query.start) &&
-            adapter.session.startedAt.isBefore(query.end))
+            adapter.session.startedAt.isBefore(query.end) &&
+            (query.sessionType == TimerType.any ||
+                adapter.session.sessionType == query.sessionType) &&
+            (query.completionStatus == CompletionStatus.any ||
+                (query.completionStatus == CompletionStatus.completed
+                    ? adapter.session.isCompleted
+                    : !adapter.session.isCompleted)))
         .map((adapter) => adapter.session)
         .toList();
         
