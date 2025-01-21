@@ -8,7 +8,7 @@ part 'timer_session_dto.g.dart';
 @HiveType(typeId: 1)
 class TimerSessionDTO {
   @HiveField(0)
-  final TimerType sessionType;
+  final int sessionTypeCode; // Store enum index
   @HiveField(1)
   final DateTime startedAt;
   @HiveField(2)
@@ -19,7 +19,7 @@ class TimerSessionDTO {
   final Duration totalDuration;
 
   TimerSessionDTO({
-    required this.sessionType,
+    required this.sessionTypeCode,
     required this.startedAt,
     required this.endedAt,
     required this.pauses,
@@ -27,7 +27,7 @@ class TimerSessionDTO {
   });
 
   factory TimerSessionDTO.fromDomain(TimerSession session) => TimerSessionDTO(
-        sessionType: session.sessionType,
+        sessionTypeCode: session.sessionType.index,
         startedAt: session.startedAt,
         endedAt: session.endedAt,
         pauses: session.pauses.map(PauseRecordDTO.fromDomain).toList(),
@@ -35,7 +35,7 @@ class TimerSessionDTO {
       );
 
   TimerSession toDomain() => TimerSession(
-        sessionType: sessionType,
+        sessionType: TimerType.values[sessionTypeCode],
         startedAt: startedAt,
         endedAt: endedAt,
         pauses: pauses.map((dto) => dto.toDomain()).toList(),

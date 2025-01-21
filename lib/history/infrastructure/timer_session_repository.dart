@@ -1,7 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
-import 'package:pomodoro_app2/core/infrastructure/duration_adapter.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/core/infrastructure/duration_adapter.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
 import 'package:pomodoro_app2/history/infrastructure/dtos/timer_session_dto.dart';
@@ -21,7 +21,6 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
   Future<void> _init() async {
     Hive.registerAdapter(DurationAdapter());
-    Hive.registerAdapter(TimerTypeAdapter());
     Hive.registerAdapter(TimerSessionDTOAdapter());
     Hive.registerAdapter(PauseRecordDTOAdapter());
     _box = await Hive.openBox<TimerSessionDTO>(_boxName);
@@ -48,7 +47,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
             dto.startedAt.isAfter(query.start) &&
             dto.startedAt.isBefore(query.end) &&
             (query.sessionType == TimerType.any ||
-                dto.sessionType == query.sessionType) &&
+                dto.sessionTypeCode == query.sessionType.index) &&
             (query.completionStatus == CompletionStatus.any ||
                 (query.completionStatus == CompletionStatus.completed
                     ? dto.toDomain().isCompleted
