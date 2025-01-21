@@ -5,8 +5,6 @@ enum TimerType {
   
   /// Rest session
   rest,
-  
-  /// Any type of session
-  any,
+
 }
 

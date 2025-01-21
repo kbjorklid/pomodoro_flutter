@@ -18,6 +18,6 @@ class TimerSessionQuery with _$TimerSessionQuery {
     @Default(CompletionStatus.any) CompletionStatus completionStatus,
     
     /// Filter by session type
-    @Default(TimerType.any) TimerType sessionType,
+    @Default(null) TimerType? sessionType,
   }) = _TimerSessionQuery;
 }

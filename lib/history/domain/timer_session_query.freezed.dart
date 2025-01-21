@@ -26,7 +26,7 @@ mixin _$TimerSessionQuery {
   CompletionStatus get completionStatus => throw _privateConstructorUsedError;
 
   /// Filter by session type
-  TimerType get sessionType => throw _privateConstructorUsedError;
+  TimerType? get sessionType => throw _privateConstructorUsedError;
 
   /// Create a copy of TimerSessionQuery
   /// with the given fields replaced by the non-null parameter values.
@@ -45,7 +45,7 @@ abstract class $TimerSessionQueryCopyWith<$Res> {
       {DateTime start,
       DateTime end,
       CompletionStatus completionStatus,
-      TimerType sessionType});
+      TimerType? sessionType});
 }
 
 /// @nodoc
@@ -66,7 +66,7 @@ class _$TimerSessionQueryCopyWithImpl<$Res, $Val extends TimerSessionQuery>
     Object? start = null,
     Object? end = null,
     Object? completionStatus = null,
-    Object? sessionType = null,
+    Object? sessionType = freezed,
   }) {
     return _then(_value.copyWith(
       start: null == start
@@ -81,10 +81,10 @@ class _$TimerSessionQueryCopyWithImpl<$Res, $Val extends TimerSessionQuery>
           ? _value.completionStatus
           : completionStatus // ignore: cast_nullable_to_non_nullable
               as CompletionStatus,
-      sessionType: null == sessionType
+      sessionType: freezed == sessionType
           ? _value.sessionType
           : sessionType // ignore: cast_nullable_to_non_nullable
-              as TimerType,
+              as TimerType?,
     ) as $Val);
   }
 }
@@ -101,7 +101,7 @@ abstract class _$$TimerSessionQueryImplCopyWith<$Res>
       {DateTime start,
       DateTime end,
       CompletionStatus completionStatus,
-      TimerType sessionType});
+      TimerType? sessionType});
 }
 
 /// @nodoc
@@ -120,7 +120,7 @@ class __$$TimerSessionQueryImplCopyWithImpl<$Res>
     Object? start = null,
     Object? end = null,
     Object? completionStatus = null,
-    Object? sessionType = null,
+    Object? sessionType = freezed,
   }) {
     return _then(_$TimerSessionQueryImpl(
       start: null == start
@@ -135,10 +135,10 @@ class __$$TimerSessionQueryImplCopyWithImpl<$Res>
           ? _value.completionStatus
           : completionStatus // ignore: cast_nullable_to_non_nullable
               as CompletionStatus,
-      sessionType: null == sessionType
+      sessionType: freezed == sessionType
           ? _value.sessionType
           : sessionType // ignore: cast_nullable_to_non_nullable
-              as TimerType,
+              as TimerType?,
     ));
   }
 }
@@ -150,7 +150,7 @@ class _$TimerSessionQueryImpl implements _TimerSessionQuery {
       {required this.start,
       required this.end,
       this.completionStatus = CompletionStatus.any,
-      this.sessionType = TimerType.any});
+      this.sessionType = null});
 
   /// Start of the time range
   @override
@@ -168,7 +168,7 @@ class _$TimerSessionQueryImpl implements _TimerSessionQuery {
   /// Filter by session type
   @override
   @JsonKey()
-  final TimerType sessionType;
+  final TimerType? sessionType;
 
   @override
   String toString() {
@@ -207,7 +207,7 @@ abstract class _TimerSessionQuery implements TimerSessionQuery {
       {required final DateTime start,
       required final DateTime end,
       final CompletionStatus completionStatus,
-      final TimerType sessionType}) = _$TimerSessionQueryImpl;
+      final TimerType? sessionType}) = _$TimerSessionQueryImpl;
 
   /// Start of the time range
   @override
@@ -223,7 +223,7 @@ abstract class _TimerSessionQuery implements TimerSessionQuery {
 
   /// Filter by session type
   @override
-  TimerType get sessionType;
+  TimerType? get sessionType;
 
   /// Create a copy of TimerSessionQuery
   /// with the given fields replaced by the non-null parameter values.
