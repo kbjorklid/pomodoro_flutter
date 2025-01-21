@@ -20,7 +20,6 @@ final _sessionSaverProvider = Provider<void>((ref) {
   final timerService = ref.read(timerProvider);
   final repository = ref.read(timerSessionRepositoryProvider);
 
-  // Save completed sessions to repository
   timerService.addSessionListener((session) async {
     await repository.save(session);
   });

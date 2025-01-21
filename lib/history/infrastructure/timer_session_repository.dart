@@ -1,26 +1,30 @@
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
+import 'package:pomodoro_app2/core/infrastructure/duration_adapter.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
-import 'package:pomodoro_app2/history/infrastructure/timer_session_adapter.dart';
+import 'package:pomodoro_app2/history/infrastructure/dtos/timer_session_dto.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/completion_status.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
+
+import 'dtos/pause_record_dto.dart';
 
 final _logger = Logger();
 class TimerSessionRepository implements TimerSessionRepositoryPort {
   static const _boxName = 'timerSessions';
-  late final Box<TimerSessionAdapter> _box;
+  late final Box<TimerSessionDTO> _box;
 
   TimerSessionRepository() {
     _init();
   }
 
   Future<void> _init() async {
-    if (!Hive.isAdapterRegistered(1)) {
-      Hive.registerAdapter(TimerSessionAdapterAdapter());
-    }
-    _box = await Hive.openBox<TimerSessionAdapter>(_boxName);
+    Hive.registerAdapter(DurationAdapter());
+    Hive.registerAdapter(TimerTypeAdapter());
+    Hive.registerAdapter(TimerSessionDTOAdapter());
+    Hive.registerAdapter(PauseRecordDTOAdapter());
+    _box = await Hive.openBox<TimerSessionDTO>(_boxName);
   }
 
   @override
@@ -29,7 +33,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
         'started at ${session.startedAt}');
     await _box.put(
       session.startedAt.toIso8601String(),
-      TimerSessionAdapter(session),
+      TimerSessionDTO.fromDomain(session),
     );
     _logger.d('Session saved successfully');
   }
@@ -40,16 +44,16 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
         'start=${query.start}, end=${query.end}, '
         'type=${query.sessionType}, status=${query.completionStatus}');
     final sessions = _box.values
-        .where((adapter) =>
-            adapter.session.startedAt.isAfter(query.start) &&
-            adapter.session.startedAt.isBefore(query.end) &&
+        .where((dto) =>
+            dto.startedAt.isAfter(query.start) &&
+            dto.startedAt.isBefore(query.end) &&
             (query.sessionType == TimerType.any ||
-                adapter.session.sessionType == query.sessionType) &&
+                dto.sessionType == query.sessionType) &&
             (query.completionStatus == CompletionStatus.any ||
                 (query.completionStatus == CompletionStatus.completed
-                    ? adapter.session.isCompleted
-                    : !adapter.session.isCompleted)))
-        .map((adapter) => adapter.session)
+                    ? dto.toDomain().isCompleted
+                    : !dto.toDomain().isCompleted)))
+        .map((dto) => dto.toDomain())
         .toList();
         
     // Sort by start time descending

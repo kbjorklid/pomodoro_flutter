@@ -64,6 +64,8 @@ lib/settings/infrastructure/
 - Value objects defined for value types, and should be immutable
 - Value objects must validate values upon creation
 - Define value objects even for simple types in order to leverage the type system. For example, use 'UserId' as primary key for a user instead of 'int'.
+- Classes, enums etc should not be annotated with Hive annotations. Domain classes should be agnostic of the persistence
+  mechanism.
 
 ### Application layer
 - Use Case classes should be named "*UseCase". For example, "StartTimerUseCase"
