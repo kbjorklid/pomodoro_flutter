@@ -10,4 +10,9 @@ abstract class TimerSessionRepositoryPort {
 
   /// Deletes a session by its start time
   Future<void> delete(DateTime startedAt);
+
+  /// Gets daily session counts matching the query parameters
+  Future<List<({DateTime date, int count})>> queryDailyCounts(
+    TimerSessionQuery query,
+  );
 }
