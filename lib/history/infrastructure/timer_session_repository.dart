@@ -13,9 +13,10 @@ final _logger = Logger();
 class TimerSessionRepository implements TimerSessionRepositoryPort {
   static const _boxName = 'timerSessions';
   late final Box<TimerSessionDTO> _box;
+  late final Future<void> _initialized;
 
   TimerSessionRepository() {
-    _init();
+    _initialized = _init();
   }
 
   Future<void> _init() async {
@@ -27,6 +28,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
   @override
   Future<void> save(TimerSession session) async {
+    await _initialized;
     _logger.d('Saving timer session: ${session.sessionType} '
         'started at ${session.startedAt}');
     await _box.put(
@@ -38,9 +40,11 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
   @override
   Future<List<TimerSession>> query(TimerSessionQuery query) async {
+    await _initialized;
     _logger.d('Querying sessions: '
         'start=${query.start}, end=${query.end}, '
         'type=${query.sessionType}, status=${query.completionStatus}');
+    // Something in this exception throws an error: LateInitializationError: Field '_box@40389586' has not been initialized. What's wrong AI?
     final sessions = _box.values
         .where((dto) =>
             dto.startedAt.isAfter(query.start) &&

@@ -36,7 +36,11 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       title: 'Pomodoro Timer',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          secondary: Colors.teal,
+          tertiary: Colors.green,
+        ),
         useMaterial3: true,
       ),
       home: const TimerScreen(),

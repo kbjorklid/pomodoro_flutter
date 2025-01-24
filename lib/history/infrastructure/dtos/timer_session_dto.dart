@@ -35,10 +35,19 @@ class TimerSessionDTO {
       );
 
   TimerSession toDomain() => TimerSession(
-        sessionType: TimerType.values[sessionTypeCode],
+        sessionType: _timerTypeFromCode(sessionTypeCode),
         startedAt: startedAt,
         endedAt: endedAt,
         pauses: pauses.map((dto) => dto.toDomain()).toList(),
         totalDuration: totalDuration,
       );
+
+  TimerType _timerTypeFromCode(int code) {
+    switch (code) {
+      case 0:
+        return TimerType.work;
+      default:
+        return TimerType.rest;
+    }
+  }
 }
