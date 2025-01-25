@@ -1,5 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
+import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
+import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
 import 'package:pomodoro_app2/core/infrastructure/duration_adapter.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
@@ -35,6 +37,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
       session.startedAt.toIso8601String(),
       TimerSessionDTO.fromDomain(session),
     );
+    _sendEventForHistoryUpdate();
     _logger.d('Session saved successfully');
   }
 
@@ -68,6 +71,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   Future<void> delete(DateTime startedAt) async {
     _logger.d('Deleting session started at $startedAt');
     await _box.delete(startedAt.toIso8601String());
+    _sendEventForHistoryUpdate();
     _logger.d('Session deleted successfully');
   }
 
@@ -101,5 +105,9 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
     _logger.d('Found ${results.length} days with sessions');
     return results;
+  }
+
+  void _sendEventForHistoryUpdate() {
+    DomainEventBus.publish(TimerHistoryUpdatedEvent());
   }
 }
