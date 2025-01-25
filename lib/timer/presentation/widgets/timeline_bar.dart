@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
@@ -9,14 +11,14 @@ import '../../domain/timersession/pause_record.dart';
 final _borderRadius = BorderRadius.circular(1);
 
 class TimelineBar extends ConsumerWidget {
-  static const int _startHour = 18;
-  static const int _endHour = 22;
 
   TimelineBar({super.key}) {}
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final DateTime now = DateTime.now();
+    final int _startHour = now.hour;
+    final int _endHour = min(now.hour + 8, 23);
     final startDateTime = DateTime(now.year, now.month, now.day, _startHour);
     final endDateTime = DateTime(now.year, now.month, now.day, _endHour);
     final timeRange = DateTimeRange(start: startDateTime, end: endDateTime);
