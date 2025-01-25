@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
+import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
+import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
@@ -19,6 +21,14 @@ class TimelineBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Listen for history update events and refresh data
+    DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
+      ref.invalidate(todaySessionsProvider);
+    });
+    //ref.listen(DomainEventBus.of<TimerHistoryUpdatedEvent>(), (_, __) {
+    //ref.invalidate(todaySessionsProvider);
+    //});
+
     final sessionsAsync = ref.watch(todaySessionsProvider);
 
     final screenWidth = MediaQuery.of(context).size.width;
