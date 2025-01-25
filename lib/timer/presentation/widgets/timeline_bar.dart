@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logger/logger.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
@@ -10,19 +11,14 @@ import '../../domain/timersession/pause_record.dart';
 
 final _borderRadius = BorderRadius.circular(1);
 
+Logger logger = Logger();
+
 class TimelineBar extends ConsumerWidget {
 
   TimelineBar({super.key}) {}
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final DateTime now = DateTime.now();
-    final int startHour = 10;
-    final int endHour = 13;
-    final startDateTime = DateTime(now.year, now.month, now.day, startHour);
-    final endDateTime = DateTime(now.year, now.month, now.day, endHour);
-    final timeRange = DateTimeRange(start: startDateTime, end: endDateTime);
-
     final sessionsAsync = ref.watch(todaySessionsProvider);
 
     final screenWidth = MediaQuery.of(context).size.width;
@@ -39,15 +35,30 @@ class TimelineBar extends ConsumerWidget {
       child: LayoutBuilder(builder: (context, constraints) {
         final width = constraints.maxWidth;
         return sessionsAsync.when(
-            data: (sessions) => _buildTimeline(sessions, timeRange, width),
+            data: (sessions) => _buildTimeline(sessions, width),
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (error, _) => throw error);
       }),
     );
   }
 
-  Widget _buildTimeline(List<TimerSession> sessions, DateTimeRange timeRange,
-      double timelineWidth) {
+  Widget _buildTimeline(List<TimerSession> sessions, double timelineWidth) {
+    DateTime now = DateTime.now();
+    DateTime startDateTime;
+    DateTime endDateTime;
+    if (sessions.isEmpty) {
+      startDateTime = DateTime(now.year, now.month, now.day, now.hour);
+      endDateTime = startDateTime.add(Duration(hours: 8));
+    } else {
+      sessions.sort((a, b) => a.startedAt.compareTo(b.startedAt));
+      var startHour = sessions.first.startedAt.hour;
+      startDateTime = DateTime(now.year, now.month, now.day, startHour);
+      endDateTime = DateTime(now.year, now.month, now.day, now.hour)
+          .add(Duration(hours: 1));
+    }
+    logger.d("Start: $startDateTime, End: $endDateTime");
+
+    final timeRange = DateTimeRange(start: startDateTime, end: endDateTime);
     return Stack(
       children: _children(sessions, timeRange, timelineWidth),
     );
@@ -62,6 +73,8 @@ class TimelineBar extends ConsumerWidget {
           timeBarRange: timeBarRange,
           timelinePixelWidth: timelineWidth);
       if (segmentPosition.isEmpty) continue;
+
+      logger.d("Session: $session\n    SegmentPosition: $segmentPosition");
       children.add(
           _SessionSegment(segmentPosition: segmentPosition, session: session));
     }
@@ -183,5 +196,14 @@ class _SegmentPosition {
         sessionRange.end.difference(fullTimeRange.start).inMinutes;
     if (totalMinutes == 0) return 0;
     return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
+  }
+
+  @override
+  String toString() {
+    if (isEmpty) return 'SegmentPosition{isEmpty: true}';
+    return 'SegmentPosition{relativeStart: ${relativeStart.toStringAsFixed(4)}, '
+        'relativeEnd: ${relativeEnd.toStringAsFixed(4)}, timelinePixelWidth: $timelinePixelWidth, '
+        'left: ${left.toStringAsFixed(2)}, right: ${right.toStringAsFixed(2)}, '
+        'width: ${width.toStringAsFixed(2)}, isEmpty: $isEmpty}';
   }
 }

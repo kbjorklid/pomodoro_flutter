@@ -37,4 +37,13 @@ class TimerSession with _$TimerSession {
       pauses.fold(Duration.zero, (sum, pause) => sum + pause.duration);
 
   DateTimeRange get range => DateTimeRange(start: startedAt, end: endedAt);
+
+  @override
+  String toString() {
+    return 'TimerSession(sessionType: $sessionType, '
+        'startedAt: ${startedAt.toString().split('.').first}, '
+        'endedAt: ${endedAt.toString().split('.').first}, '
+        'totalDuration: $totalDuration, '
+        'isCompleted: $isCompleted)';
+  }
 }
