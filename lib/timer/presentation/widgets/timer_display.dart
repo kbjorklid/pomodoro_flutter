@@ -11,6 +11,7 @@ class TimerDisplay extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.max,
       children: [
         TimerLabel(),
         SizedBox(height: 20),

@@ -44,6 +44,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
           ),
           const VerticalDivider(thickness: 1, width: 1),
           Expanded(
+            flex: 10,
             child: _selectedIndex == 0
                 ? const TimerDisplay()
                 : const SettingsScreen(),

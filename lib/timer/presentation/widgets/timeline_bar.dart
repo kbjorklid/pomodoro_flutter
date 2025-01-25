@@ -25,9 +25,13 @@ class TimelineBar extends ConsumerWidget {
 
     final sessionsAsync = ref.watch(todaySessionsProvider);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final horizontalMargin = screenWidth * 0.05;
+
     return Container(
+      width: double.infinity,
       height: 30,
-      margin: const EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+      margin: EdgeInsets.symmetric(vertical: 20, horizontal: horizontalMargin),
       decoration: BoxDecoration(
         borderRadius: _borderRadius,
         color: Colors.grey[200],
