@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
+import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/settings/infrastructure/settings_repository.dart';
 import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
@@ -134,16 +136,9 @@ class TimerService {
     }
   }
 
-  void _notifySessionListeners() {
+  void _notifySessionListeners(TimerSession session) {
     if (_sessionListeners.isEmpty) return;
     final now = DateTime.now();
-    final session = TimerSession(
-      sessionType: _state._timerType,
-      startedAt: _state._startedAt!,
-      endedAt: now,
-      pauses: _state._pauses,
-      totalDuration: _state._totalDuration,
-    );
     for (var listener in _sessionListeners) {
       listener(session);
     }
@@ -165,6 +160,7 @@ class TimerService {
   void startFromBeginning() {
     _completeSessionIfStarted();
     _state.startFromBeginning(DateTime.now());
+    DomainEventBus.publish(TimerStartedEvent(timerType: _state._timerType));
     _startTimerTicks();
   }
 
@@ -175,6 +171,7 @@ class TimerService {
       return;
     } else {
       _state.resume();
+      DomainEventBus.publish(TimerResumedEvent(timerType: _state._timerType));
       _startTimerTicks();
     }
   }
@@ -195,6 +192,7 @@ class TimerService {
   void pause() {
     _timer?.cancel();
     _state.pause(DateTime.now());
+    DomainEventBus.publish(TimerPausedEvent(timerType: _state._timerType));
     _notifyStateListeners();
   }
 
@@ -216,7 +214,15 @@ class TimerService {
 
   void _completeSessionIfStarted() {
     if (_state._startedAt != null) {
-      _notifySessionListeners();
+      final session = TimerSession(
+        sessionType: _state._timerType,
+        startedAt: _state._startedAt!,
+        endedAt: DateTime.now(),
+        pauses: _state._pauses,
+        totalDuration: _state._totalDuration,
+      );
+      _notifySessionListeners(session);
+      DomainEventBus.publish(TimerStoppedEvent(timerSession: session));
       _state.reset();
     }
   }

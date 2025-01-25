@@ -25,9 +25,6 @@ class TimelineBar extends ConsumerWidget {
     DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
       ref.invalidate(todaySessionsProvider);
     });
-    //ref.listen(DomainEventBus.of<TimerHistoryUpdatedEvent>(), (_, __) {
-    //ref.invalidate(todaySessionsProvider);
-    //});
 
     final sessionsAsync = ref.watch(todaySessionsProvider);
 
