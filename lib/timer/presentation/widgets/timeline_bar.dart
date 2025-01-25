@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
@@ -30,61 +32,51 @@ class TimelineBar extends ConsumerWidget {
         borderRadius: _borderRadius,
         color: Colors.grey[200],
       ),
-      child: sessionsAsync.when(
-        data: (sessions) => _buildTimeline(sessions, timeRange),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => throw error,
-        //Center(child: Text('Error loading timeline: $error')),
-      ),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return sessionsAsync.when(
+            data: (sessions) => _buildTimeline(sessions, timeRange, width),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, _) => throw error);
+      }),
     );
   }
 
-  Widget _buildTimeline(List<TimerSession> sessions, DateTimeRange timeRange) {
+  Widget _buildTimeline(List<TimerSession> sessions, DateTimeRange timeRange,
+      double timelineWidth) {
     return Stack(
-      children: _children(sessions, timeRange),
+      children: _children(sessions, timeRange, timelineWidth),
     );
   }
 
-  List<Widget> _children(
-      List<TimerSession> sessions, DateTimeRange timeBarRange) {
+  List<Widget> _children(List<TimerSession> sessions,
+      DateTimeRange timeBarRange, double timelineWidth) {
     final children = <Widget>[];
     for (final session in sessions) {
-      var sessionRange = session.range;
-      double startPos = _startPos(sessionRange, timeBarRange);
-      double endPos = _endPos(sessionRange, timeBarRange);
-      if (endPos <= 0 || startPos >= 1 || endPos - startPos < 0.00001) continue;
-      children.add(_SessionSegment(session, timeBarRange));
+      _SegmentPosition segmentPosition = _SegmentPosition(
+          segmentRange: session.range,
+          timeBarRange: timeBarRange,
+          timelinePixelWidth: timelineWidth);
+      if (segmentPosition.isEmpty) continue;
+      children.add(
+          _SessionSegment(segmentPosition: segmentPosition, session: session));
     }
     // Add pauses at the end, on top of everything else.
     for (final session in sessions) {
       for (final pause in session.pauses) {
-        var sessionRange = session.range;
-        double startPos = _startPos(sessionRange, timeBarRange);
-        double endPos = _endPos(sessionRange, timeBarRange);
-        if (endPos <= 0 || startPos >= 1 || endPos - startPos < 0.00001)
-          continue;
-        children.add(_PauseSegment(pause, timeBarRange));
+        _SegmentPosition segmentPosition = _SegmentPosition(
+            segmentRange: pause.range,
+            timeBarRange: timeBarRange,
+            timelinePixelWidth: timelineWidth);
+        children
+            .add(_PauseSegment(segmentPosition: segmentPosition, pause: pause));
       }
     }
     return children;
   }
 }
 
-double _startPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
-  final totalMinutes = fullTimeRange.duration.inMinutes;
-  final minutesFromStart =
-      sessionRange.start.difference(fullTimeRange.start).inMinutes;
-  if (totalMinutes == 0) return 0;
-  return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
-}
 
-double _endPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
-  final totalMinutes = fullTimeRange.duration.inMinutes;
-  final minutesFromStart =
-      sessionRange.end.difference(fullTimeRange.start).inMinutes;
-  if (totalMinutes == 0) return 0;
-  return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
-}
 
 class _TimeMarker extends StatelessWidget {
   final int hour;
@@ -106,40 +98,22 @@ class _TimeMarker extends StatelessWidget {
 }
 
 abstract class _TimelineSegment extends StatelessWidget {
-  final DateTimeRange segmentRange;
-  final DateTimeRange fullRange;
+  final _SegmentPosition segmentPosition;
   abstract final Color color;
 
-  const _TimelineSegment({
-    required this.segmentRange,
-    required this.fullRange,
-  });
-
-  double _timeToRelativePosition(DateTime time) {
-    final totalMinutes = fullRange.duration.inMinutes;
-    final minutesFromStart = time.difference(fullRange.start).inMinutes;
-    if (totalMinutes == 0) return 0;
-    return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
-  }
+  const _TimelineSegment({required this.segmentPosition});
 
   @override
   Widget build(BuildContext context) {
-    final left = _timeToRelativePosition(segmentRange.start);
-    final right = _timeToRelativePosition(segmentRange.end);
-    final relativeWidth = right - left;
-    if (relativeWidth <= 0) return const SizedBox.shrink();
+    if (segmentPosition.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: EdgeInsets.symmetric(
-          horizontal: left * MediaQuery.of(context).size.width),
-      child: FractionallySizedBox(
-        widthFactor: relativeWidth,
-        child: Container(
-          height: 30,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: _borderRadius,
-          ),
+      padding: EdgeInsets.only(left: segmentPosition.left),
+      child: Container(
+        width: segmentPosition.width,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: _borderRadius,
         ),
       ),
     );
@@ -147,34 +121,63 @@ abstract class _TimelineSegment extends StatelessWidget {
 }
 
 class _SessionSegment extends _TimelineSegment {
-  late final TimerType _timerType;
-  late final bool _completed;
+  final TimerSession session;
 
-  _SessionSegment(TimerSession session, DateTimeRange fullRange)
-      : super(
-            segmentRange:
-                DateTimeRange(start: session.startedAt, end: session.endedAt),
-            fullRange: fullRange) {
-    _timerType = session.sessionType;
-    _completed = session.isCompleted;
-  }
+  const _SessionSegment(
+      {required super.segmentPosition, required this.session});
 
   @override
   Color get color {
-    if (_timerType == TimerType.work) {
-      return _completed ? Colors.teal : Colors.grey[800]!;
+    if (session.sessionType == TimerType.work) {
+      return session.isCompleted ? Colors.teal : Colors.grey[800]!;
     }
     return Colors.green;
   }
 }
 
 class _PauseSegment extends _TimelineSegment {
-  _PauseSegment(PauseRecord pause, DateTimeRange fullRange)
-      : super(
-            segmentRange:
-                DateTimeRange(start: pause.pausedAt, end: pause.resumedAt),
-            fullRange: fullRange);
+  final PauseRecord pause;
+
+  const _PauseSegment({required super.segmentPosition, required this.pause});
 
   @override
   Color get color => Colors.lightBlue[300]!;
+}
+
+class _SegmentPosition {
+  late final double relativeStart;
+  late final double relativeEnd;
+  final double timelinePixelWidth;
+
+  double get left => relativeStart * timelinePixelWidth;
+
+  double get right => relativeEnd * timelinePixelWidth;
+
+  double get width => max(right - left, 0);
+
+  bool get isEmpty => width < 0.00001;
+
+  _SegmentPosition(
+      {required DateTimeRange segmentRange,
+      required DateTimeRange timeBarRange,
+      required this.timelinePixelWidth}) {
+    relativeStart = _startPos(segmentRange, timeBarRange);
+    relativeEnd = _endPos(segmentRange, timeBarRange);
+  }
+
+  double _startPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
+    final totalMinutes = fullTimeRange.duration.inMinutes;
+    final minutesFromStart =
+        sessionRange.start.difference(fullTimeRange.start).inMinutes;
+    if (totalMinutes == 0) return 0;
+    return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
+  }
+
+  double _endPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
+    final totalMinutes = fullTimeRange.duration.inMinutes;
+    final minutesFromStart =
+        sessionRange.end.difference(fullTimeRange.start).inMinutes;
+    if (totalMinutes == 0) return 0;
+    return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
+  }
 }

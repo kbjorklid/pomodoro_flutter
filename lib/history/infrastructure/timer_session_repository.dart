@@ -69,6 +69,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
   @override
   Future<void> delete(DateTime startedAt) async {
+    await _initialized;
     _logger.d('Deleting session started at $startedAt');
     await _box.delete(startedAt.toIso8601String());
     _sendEventForHistoryUpdate();
