@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 
@@ -34,4 +35,6 @@ class TimerSession with _$TimerSession {
   Duration get actualDuration =>
       endedAt.difference(startedAt) -
       pauses.fold(Duration.zero, (sum, pause) => sum + pause.duration);
+
+  DateTimeRange get range => DateTimeRange(start: startedAt, end: endedAt);
 }

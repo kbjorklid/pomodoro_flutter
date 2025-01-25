@@ -31,8 +31,8 @@ final toggleTimerUseCaseProvider = Provider<ToggleTimerUseCase>((ref) {
 
 final todaySessionsProvider = FutureProvider<List<TimerSession>>((ref) {
   final now = DateTime.now();
-  final startTime = DateTime(now.year, now.month, now.day, 16);
-  final endTime = DateTime(now.year, now.month, now.day, 22);
+  final startTime = DateTime(now.year, now.month, now.day, 8);
+  final endTime = DateTime(now.year, now.month, now.day, 23);
 
   return ref.read(timerSessionRepositoryProvider).query(TimerSessionQuery(
         start: startTime,

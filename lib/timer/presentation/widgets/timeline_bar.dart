@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
@@ -17,10 +15,10 @@ class TimelineBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final DateTime now = DateTime.now();
-    final int _startHour = now.hour;
-    final int _endHour = min(now.hour + 8, 23);
-    final startDateTime = DateTime(now.year, now.month, now.day, _startHour);
-    final endDateTime = DateTime(now.year, now.month, now.day, _endHour);
+    final int startHour = 10;
+    final int endHour = 13;
+    final startDateTime = DateTime(now.year, now.month, now.day, startHour);
+    final endDateTime = DateTime(now.year, now.month, now.day, endHour);
     final timeRange = DateTimeRange(start: startDateTime, end: endDateTime);
 
     final sessionsAsync = ref.watch(todaySessionsProvider);
@@ -35,24 +33,57 @@ class TimelineBar extends ConsumerWidget {
       child: sessionsAsync.when(
         data: (sessions) => _buildTimeline(sessions, timeRange),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) =>
-            Center(child: Text('Error loading timeline: $error')),
+        error: (error, _) => throw error,
+        //Center(child: Text('Error loading timeline: $error')),
       ),
     );
   }
 
   Widget _buildTimeline(List<TimerSession> sessions, DateTimeRange timeRange) {
     return Stack(
-      children: [
-        // Session segments
-        for (final session in sessions) _SessionSegment(session, timeRange),
-
-        // Pause segments
-        for (final session in sessions)
-          for (final pause in session.pauses) _PauseSegment(pause, timeRange)
-      ],
+      children: _children(sessions, timeRange),
     );
   }
+
+  List<Widget> _children(
+      List<TimerSession> sessions, DateTimeRange timeBarRange) {
+    final children = <Widget>[];
+    for (final session in sessions) {
+      var sessionRange = session.range;
+      double startPos = _startPos(sessionRange, timeBarRange);
+      double endPos = _endPos(sessionRange, timeBarRange);
+      if (endPos <= 0 || startPos >= 1 || endPos - startPos < 0.00001) continue;
+      children.add(_SessionSegment(session, timeBarRange));
+    }
+    // Add pauses at the end, on top of everything else.
+    for (final session in sessions) {
+      for (final pause in session.pauses) {
+        var sessionRange = session.range;
+        double startPos = _startPos(sessionRange, timeBarRange);
+        double endPos = _endPos(sessionRange, timeBarRange);
+        if (endPos <= 0 || startPos >= 1 || endPos - startPos < 0.00001)
+          continue;
+        children.add(_PauseSegment(pause, timeBarRange));
+      }
+    }
+    return children;
+  }
+}
+
+double _startPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
+  final totalMinutes = fullTimeRange.duration.inMinutes;
+  final minutesFromStart =
+      sessionRange.start.difference(fullTimeRange.start).inMinutes;
+  if (totalMinutes == 0) return 0;
+  return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
+}
+
+double _endPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
+  final totalMinutes = fullTimeRange.duration.inMinutes;
+  final minutesFromStart =
+      sessionRange.end.difference(fullTimeRange.start).inMinutes;
+  if (totalMinutes == 0) return 0;
+  return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
 }
 
 class _TimeMarker extends StatelessWidget {

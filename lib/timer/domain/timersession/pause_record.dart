@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'pause_record.freezed.dart';
@@ -17,4 +18,6 @@ class PauseRecord with _$PauseRecord {
 
   /// Duration of the pause (derived value)
   Duration get duration => resumedAt.difference(pausedAt);
+
+  DateTimeRange get range => DateTimeRange(start: pausedAt, end: resumedAt);
 }
