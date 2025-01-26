@@ -14,7 +14,7 @@ class _TimerRuntimeState {
   Duration _totalDuration = Duration(minutes: 25);
   TimerStatus _status = TimerStatus.notStarted;
   DateTime? _startedAt;
-  final List<PauseRecord> _pauses = [];
+  List<PauseRecord> _pauses = [];
   DateTime? _pausedAt;
 
   TimerStatus get status => _status;
@@ -33,7 +33,7 @@ class _TimerRuntimeState {
     _status = TimerStatus.running;
     _startedAt = now;
     _pausedAt = null;
-    _pauses.clear();
+    _pauses = [];
   }
 
   void pause(DateTime now) {

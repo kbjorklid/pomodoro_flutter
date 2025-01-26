@@ -24,4 +24,9 @@ class PauseRecordDTO {
         pausedAt: pausedAt,
         resumedAt: resumedAt,
       );
+
+  @override
+  String toString() {
+    return 'PauseRecordDTO{pausedAt: $pausedAt, resumedAt: $resumedAt}';
+  }
 }

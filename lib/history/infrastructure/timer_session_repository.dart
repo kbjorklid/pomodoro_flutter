@@ -30,12 +30,13 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
   @override
   Future<void> save(TimerSession session) async {
-    await _initialized;
     _logger.d('Saving timer session: ${session.sessionType} '
-        'started at ${session.startedAt}');
+        'started at ${session.startedAt}, pauses: ${session.pauses}');
+    var dto = TimerSessionDTO.fromDomain(session);
+    await _initialized;
     await _box.put(
       session.startedAt.toIso8601String(),
-      TimerSessionDTO.fromDomain(session),
+      dto,
     );
     _sendEventForHistoryUpdate();
     _logger.d('Session saved successfully');
@@ -47,7 +48,6 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
     _logger.d('Querying sessions: '
         'start=${query.start}, end=${query.end}, '
         'type=${query.sessionType}, status=${query.completionStatus}');
-    // Something in this exception throws an error: LateInitializationError: Field '_box@40389586' has not been initialized. What's wrong AI?
     final sessions = _box.values
         .where((dto) =>
             dto.startedAt.isAfter(query.start) &&
@@ -63,7 +63,9 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
         
     // Sort by start time descending
     sessions.sort((a, b) => b.startedAt.compareTo(a.startedAt));
-    _logger.d('Found ${sessions.length} matching sessions');
+    var debugStr = sessions.fold(
+        "", (previousValue, element) => '$previousValue\n  $element');
+    _logger.d('Found ${sessions.length} matching sessions: $debugStr');
     return sessions;
   }
 

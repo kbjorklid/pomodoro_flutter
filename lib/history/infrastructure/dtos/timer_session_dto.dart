@@ -50,4 +50,9 @@ class TimerSessionDTO {
         return TimerType.rest;
     }
   }
+
+  @override
+  String toString() {
+    return 'TimerSessionDTO{sessionTypeCode: $sessionTypeCode, startedAt: $startedAt, endedAt: $endedAt, pauses: $pauses, totalDuration: $totalDuration}';
+  }
 }
