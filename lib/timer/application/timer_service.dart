@@ -246,6 +246,7 @@ class TimerService {
   void _completeSessionIfStarted([DateTime? now]) {
     now ??= DateTime.now();
     if (_state._startedAt != null) {
+      _timer?.cancel();
       final session = TimerSession(
         sessionType: _state._timerType,
         startedAt: _state._startedAt!,

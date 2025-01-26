@@ -6,13 +6,107 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
+import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
 
 final _borderRadius = BorderRadius.circular(1);
 final _logger = Logger();
+
+class _CurrentlyRunningSession {
+  StreamSubscription? _runtimeEventSubscription;
+  StreamSubscription? _timerStoppedSubscription;
+  TimerState? state;
+  _SessionSegment? _currentSegment;
+  List<_PauseSegment> _pauseSegments = [];
+
+  _SessionSegment? getCurrentSegment(
+      DateTimeRange timebarRange, double timelinePixelWidth) {
+    _updateCurrentSegment(timebarRange, timelinePixelWidth);
+    return _currentSegment;
+  }
+
+  List<_PauseSegment> getPauseSegments(
+      DateTimeRange timebarRange, double timelinePixelWidth) {
+    _updatePauseSegments(timebarRange, timelinePixelWidth);
+    return _pauseSegments;
+  }
+
+  _CurrentlyRunningSession() {
+    _runtimeEventSubscription =
+        DomainEventBus.of<TimerRuntimeEvent>().listen((event) {
+      if (event.runtimeType == TimerSecondsChangedEvent) return;
+      state = event.timerState;
+      _invalidateSegments();
+    });
+    _timerStoppedSubscription =
+        DomainEventBus.of<TimerStoppedEvent>().listen((event) {
+      state = null;
+      _invalidateSegments();
+    });
+  }
+
+  void dispose() {
+    _runtimeEventSubscription?.cancel();
+    _timerStoppedSubscription?.cancel();
+  }
+
+  void _updateCurrentSegment(
+      DateTimeRange timebarRange, double timelinePixelWidth,
+      [DateTime? now]) {
+    TimerState? state = this.state;
+    if (state == null || state.startedAt == null) {
+      _invalidateSegments();
+    } else {
+      now ??= DateTime.now();
+      DateTime startTime = state.startedAt!;
+      DateTime endTime = state.pausedAt ?? now;
+      DateTimeRange segmentRange =
+          DateTimeRange(start: startTime, end: endTime);
+      final segmentPosition = _SegmentPosition(
+          segmentRange: segmentRange,
+          timeBarRange: timebarRange,
+          timelinePixelWidth: timelinePixelWidth);
+      _currentSegment =
+          _SessionSegment.fromValues(segmentPosition, state.timerType, true);
+    }
+  }
+
+  void _updatePauseSegments(
+      DateTimeRange timebarRange, double timelinePixelWidth,
+      [DateTime? now]) {
+    TimerState? state = this.state;
+    if (state == null || state.startedAt == null) {
+      _invalidateSegments();
+    } else {
+      now ??= DateTime.now();
+      _pauseSegments = state.pauses.map((pause) {
+        final segmentPosition = _SegmentPosition(
+            segmentRange: pause.range,
+            timeBarRange: timebarRange,
+            timelinePixelWidth: timelinePixelWidth);
+        return _PauseSegment(segmentPosition: segmentPosition, pause: pause);
+      }).toList();
+      if (state.pausedAt != null) {
+        final pauseSegment = _PauseSegment(
+            segmentPosition: _SegmentPosition(
+                segmentRange: DateTimeRange(start: state.pausedAt!, end: now),
+                timeBarRange: timebarRange,
+                timelinePixelWidth: timelinePixelWidth),
+            pause: PauseRecord(pausedAt: state.pausedAt!, resumedAt: now));
+        _pauseSegments.add(pauseSegment);
+      }
+    }
+  }
+
+  void _invalidateSegments() {
+    _currentSegment = null;
+    _pauseSegments = [];
+  }
+}
 
 class TimelineBar extends ConsumerStatefulWidget {
   const TimelineBar({super.key});
@@ -22,20 +116,28 @@ class TimelineBar extends ConsumerStatefulWidget {
 }
 
 class _TimelineBarState extends ConsumerState<TimelineBar> {
-  StreamSubscription? _subscription;
+  final _CurrentlyRunningSession _currentSession = _CurrentlyRunningSession();
+  StreamSubscription? _timerHistorySubscription;
+  StreamSubscription? _timerRuntimeSubscription;
 
   @override
   void initState() {
     super.initState();
-    _subscription =
+    _timerHistorySubscription =
         DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
       ref.invalidate(todaySessionsProvider);
+    });
+    _timerRuntimeSubscription =
+        DomainEventBus.of<TimerRuntimeEvent>().listen((event) {
+      setState(() {});
     });
   }
 
   @override
   void dispose() {
-    _subscription?.cancel();
+    _timerHistorySubscription?.cancel();
+    _timerRuntimeSubscription?.cancel();
+    _currentSession.dispose();
     super.dispose();
   }
 
@@ -100,6 +202,11 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       children.add(
           _SessionSegment(segmentPosition: segmentPosition, session: session));
     }
+    _SessionSegment? current =
+        _currentSession.getCurrentSegment(timeBarRange, timelineWidth);
+    if (current != null) {
+      children.add(current);
+    }
     // Add pauses at the end, on top of everything else.
     for (final session in sessions) {
       for (final pause in session.pauses) {
@@ -113,6 +220,9 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
             .add(_PauseSegment(segmentPosition: segmentPosition, pause: pause));
       }
     }
+    List<_PauseSegment> currentPauseSegments =
+        _currentSession.getPauseSegments(timeBarRange, timelineWidth);
+    children.addAll(currentPauseSegments);
     return children;
   }
 }
@@ -149,7 +259,7 @@ abstract class _TimelineSegment extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(left: segmentPosition.left),
       child: Container(
-        width: segmentPosition.width,
+        width: max(1, segmentPosition.width),
         decoration: BoxDecoration(
           color: color,
           borderRadius: _borderRadius,
@@ -160,15 +270,26 @@ abstract class _TimelineSegment extends StatelessWidget {
 }
 
 class _SessionSegment extends _TimelineSegment {
-  final TimerSession session;
+  late final TimerType _timerType;
+  late final bool _isCompleted;
 
-  const _SessionSegment(
-      {required super.segmentPosition, required this.session});
+  _SessionSegment(
+      {required super.segmentPosition, required TimerSession session}) {
+    _timerType = session.sessionType;
+    _isCompleted = session.isCompleted;
+  }
+
+  _SessionSegment.fromValues(
+      _SegmentPosition position, TimerType timerType, bool isCompleted)
+      : super(segmentPosition: position) {
+    _timerType = timerType;
+    _isCompleted = isCompleted;
+  }
 
   @override
   Color get color {
-    if (session.sessionType == TimerType.work) {
-      return session.isCompleted ? Colors.teal : Colors.grey[800]!;
+    if (_timerType == TimerType.work) {
+      return _isCompleted ? Colors.teal : Colors.grey[800]!;
     }
     return Colors.green;
   }
@@ -194,7 +315,7 @@ class _SegmentPosition {
 
   double get width => max(right - left, 0);
 
-  bool get isEmpty => width < 0.00001;
+  bool get isEmpty => width == 0;
 
   _SegmentPosition(
       {required DateTimeRange segmentRange,
@@ -206,8 +327,9 @@ class _SegmentPosition {
 
   double _startPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
     final totalMinutes = fullTimeRange.duration.inMinutes;
-    final minutesFromStart =
-        sessionRange.start.difference(fullTimeRange.start).inMinutes;
+    final secondsFromStart =
+        sessionRange.start.difference(fullTimeRange.start).inSeconds;
+    double minutesFromStart = secondsFromStart / 60.0;
     if (totalMinutes == 0) return 0;
     return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
   }
