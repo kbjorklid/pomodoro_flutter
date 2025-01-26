@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -6,26 +7,40 @@ import 'package:logger/logger.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
 
-import '../../domain/timersession/pause_record.dart';
-
 final _borderRadius = BorderRadius.circular(1);
+final _logger = Logger();
 
-Logger logger = Logger();
-
-class TimelineBar extends ConsumerWidget {
-
-  TimelineBar({super.key}) {}
+class TimelineBar extends ConsumerStatefulWidget {
+  const TimelineBar({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Listen for history update events and refresh data
-    DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
+  ConsumerState<TimelineBar> createState() => _TimelineBarState();
+}
+
+class _TimelineBarState extends ConsumerState<TimelineBar> {
+  StreamSubscription? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription =
+        DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
       ref.invalidate(todaySessionsProvider);
     });
+  }
 
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final sessionsAsync = ref.watch(todaySessionsProvider);
 
     final screenWidth = MediaQuery.of(context).size.width;
@@ -55,15 +70,15 @@ class TimelineBar extends ConsumerWidget {
     DateTime endDateTime;
     if (sessions.isEmpty) {
       startDateTime = DateTime(now.year, now.month, now.day, now.hour);
-      endDateTime = startDateTime.add(Duration(hours: 8));
+      endDateTime = startDateTime.add(const Duration(hours: 8));
     } else {
       sessions.sort((a, b) => a.startedAt.compareTo(b.startedAt));
       var startHour = sessions.first.startedAt.hour;
       startDateTime = DateTime(now.year, now.month, now.day, startHour);
       endDateTime = DateTime(now.year, now.month, now.day, now.hour)
-          .add(Duration(hours: 1));
+          .add(const Duration(hours: 1));
     }
-    logger.d("Start: $startDateTime, End: $endDateTime");
+    _logger.d("Start: $startDateTime, End: $endDateTime");
 
     final timeRange = DateTimeRange(start: startDateTime, end: endDateTime);
     return Stack(
@@ -81,7 +96,7 @@ class TimelineBar extends ConsumerWidget {
           timelinePixelWidth: timelineWidth);
       if (segmentPosition.isEmpty) continue;
 
-      logger.d("Session: $session\n    SegmentPosition: $segmentPosition");
+      _logger.d("Session: $session\n    SegmentPosition: $segmentPosition");
       children.add(
           _SessionSegment(segmentPosition: segmentPosition, session: session));
     }
@@ -93,7 +108,7 @@ class TimelineBar extends ConsumerWidget {
             timeBarRange: timeBarRange,
             timelinePixelWidth: timelineWidth);
 
-        logger.d("Pause: $pause\n    SegmentPosition: $segmentPosition");
+        _logger.d("Pause: $pause\n    SegmentPosition: $segmentPosition");
         children
             .add(_PauseSegment(segmentPosition: segmentPosition, pause: pause));
       }
@@ -101,8 +116,6 @@ class TimelineBar extends ConsumerWidget {
     return children;
   }
 }
-
-
 
 class _TimeMarker extends StatelessWidget {
   final int hour;
