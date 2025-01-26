@@ -41,11 +41,12 @@ class _TimerRuntimeState {
     _pausedAt ??= now;
   }
 
-  void resume() {
+  void resume([DateTime? now]) {
+    now ??= DateTime.now();
     if (_pausedAt != null) {
       _pauses.add(PauseRecord(
         pausedAt: _pausedAt!,
-        resumedAt: DateTime.now(),
+        resumedAt: now,
       ));
       _pausedAt = null;
     }
@@ -133,9 +134,10 @@ class TimerService {
     _sessionListeners.remove(listener);
   }
 
-  void _notifyStateListeners() {
+  void _notifyStateListeners([DateTime? now]) {
+    now ??= DateTime.now();
     if (_stateListeners.isEmpty) return;
-    final state = _state.toTimerState(DateTime.now());
+    final state = _state.toTimerState(now);
     for (var listener in _stateListeners) {
       listener(state);
     }
@@ -143,7 +145,6 @@ class TimerService {
 
   void _notifySessionListeners(TimerSession session) {
     if (_sessionListeners.isEmpty) return;
-    final now = DateTime.now();
     for (var listener in _sessionListeners) {
       listener(session);
     }
@@ -156,27 +157,32 @@ class TimerService {
     assert(totalDuration.inSeconds > 0);
     if (_state._timerType != timerType ||
         _state._totalDuration != totalDuration) {
-      _completeSessionIfStarted();
+      DateTime now = DateTime.now();
+      _completeSessionIfStarted(now);
       _state.updateTimerType(timerType, totalDuration);
-      _notifyStateListeners();
+      _notifyStateListeners(now);
     }
   }
 
-  void startFromBeginning() {
-    _completeSessionIfStarted();
-    _state.startFromBeginning(DateTime.now());
-    DomainEventBus.publish(TimerStartedEvent(timerType: _state._timerType));
+  void startFromBeginning([DateTime? now]) {
+    now ??= DateTime.now();
+    _completeSessionIfStarted(now);
+    _state.startFromBeginning(now);
+    DomainEventBus.publish(
+        TimerStartedEvent(timerState: _state.toTimerState(now)));
     _startTimerTicks();
   }
 
-  void resume() {
+  void resume([DateTime? now]) {
+    now ??= DateTime.now();
     if (_state.status != TimerStatus.paused) return;
-    if (_state.getRemainingTime(DateTime.now()) <= Duration.zero) {
-      _stopTimerIfEnded();
+    if (_state.getRemainingTime(now) <= Duration.zero) {
+      _stopTimerIfEnded(now);
       return;
     } else {
-      _state.resume();
-      DomainEventBus.publish(TimerResumedEvent(timerType: _state._timerType));
+      _state.resume(now);
+      DomainEventBus.publish(
+          TimerResumedEvent(timerState: _state.toTimerState(now)));
       _startTimerTicks();
     }
   }
@@ -207,38 +213,43 @@ class TimerService {
           TimerMinutesChangedEvent(timerState: stateToNotify));
       _lastTimeMinutesChanged = now;
     }
-    _notifyStateListeners();
+    _notifyStateListeners(now);
   }
 
   void pause() {
+    var now = DateTime.now();
     _timer?.cancel();
-    _state.pause(DateTime.now());
-    DomainEventBus.publish(TimerPausedEvent(timerType: _state._timerType));
-    _notifyStateListeners();
+    _state.pause(now);
+    DomainEventBus.publish(
+        TimerPausedEvent(timerState: _state.toTimerState(now)));
+    _notifyStateListeners(now);
   }
 
-  bool _stopTimerIfEnded() {
-    if (_isTimerEndReached()) {
+  bool _stopTimerIfEnded([DateTime? now]) {
+    now ??= DateTime.now();
+    if (_isTimerEndReached(now)) {
       _timer?.cancel();
-      _completeSessionIfStarted();
+      _completeSessionIfStarted(now);
       _state.stop();
-      _notifyStateListeners();
+      _notifyStateListeners(now);
       _playTimerEndSoundUseCase.execute();
       return true;
     }
     return false;
   }
 
-  bool _isTimerEndReached() {
-    return _state.getRemainingTime(DateTime.now()) <= Duration.zero;
+  bool _isTimerEndReached([DateTime? now]) {
+    now ??= DateTime.now();
+    return _state.getRemainingTime(now) <= Duration.zero;
   }
 
-  void _completeSessionIfStarted() {
+  void _completeSessionIfStarted([DateTime? now]) {
+    now ??= DateTime.now();
     if (_state._startedAt != null) {
       final session = TimerSession(
         sessionType: _state._timerType,
         startedAt: _state._startedAt!,
-        endedAt: DateTime.now(),
+        endedAt: now,
         pauses: _state._pauses,
         totalDuration: _state._totalDuration,
       );

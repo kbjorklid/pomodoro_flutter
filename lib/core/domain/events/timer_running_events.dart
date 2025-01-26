@@ -20,16 +20,16 @@ abstract class TimerRuntimeEvent extends TimerEvent {
       : super(timerType: timerState.timerType);
 }
 
-class TimerStartedEvent extends TimerEvent {
-  TimerStartedEvent({required super.timerType});
+class TimerStartedEvent extends TimerRuntimeEvent {
+  TimerStartedEvent({required super.timerState});
 }
 
-class TimerPausedEvent extends TimerEvent {
-  TimerPausedEvent({required super.timerType});
+class TimerPausedEvent extends TimerRuntimeEvent {
+  TimerPausedEvent({required super.timerState});
 }
 
-class TimerResumedEvent extends TimerEvent {
-  TimerResumedEvent({required super.timerType});
+class TimerResumedEvent extends TimerRuntimeEvent {
+  TimerResumedEvent({required super.timerState});
 }
 
 class TimerStoppedEvent extends TimerEvent {
