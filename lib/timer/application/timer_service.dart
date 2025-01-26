@@ -104,6 +104,8 @@ class TimerService {
 
   final List<TimerStateListener> _stateListeners = [];
   final List<TimerSessionListener> _sessionListeners = [];
+  DateTime? _lastTimeSecondsChanged;
+  DateTime? _lastTimeMinutesChanged;
 
   TimerState get state => _state.toTimerState(DateTime.now());
 
@@ -189,6 +191,22 @@ class TimerService {
 
   void _tick() {
     if (_stopTimerIfEnded()) return;
+    final DateTime now = DateTime.now();
+    TimerState? stateToNotify;
+    if (_lastTimeSecondsChanged == null ||
+        _lastTimeSecondsChanged!.second != now.second) {
+      stateToNotify = _state.toTimerState(now);
+      DomainEventBus.publish(
+          TimerSecondsChangedEvent(timerState: stateToNotify));
+      _lastTimeSecondsChanged = now;
+    }
+    if (_lastTimeMinutesChanged == null ||
+        _lastTimeMinutesChanged!.minute != now.minute) {
+      stateToNotify ??= _state.toTimerState(now);
+      DomainEventBus.publish(
+          TimerMinutesChangedEvent(timerState: stateToNotify));
+      _lastTimeMinutesChanged = now;
+    }
     _notifyStateListeners();
   }
 
