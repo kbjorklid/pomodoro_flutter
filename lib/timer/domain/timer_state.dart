@@ -1,7 +1,5 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
-
-part 'timer_state.freezed.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 
 enum TimerStatus {
   running,
@@ -10,12 +8,22 @@ enum TimerStatus {
   notStarted,
 }
 
-@freezed
-class TimerState with _$TimerState {
-  const factory TimerState({
-    required TimerType timerType,
-    required Duration totalTime,
-    required Duration remainingTime,
-    required TimerStatus status,
-  }) = _TimerState;
+class TimerState {
+  final TimerType timerType;
+  final TimerStatus status;
+  final Duration timerDuration;
+  final Duration remainingTime;
+  final DateTime? startedAt;
+  final List<PauseRecord> pauses;
+  final DateTime? pausedAt;
+
+  const TimerState({
+    required this.timerType,
+    required this.status,
+    required this.timerDuration,
+    required this.remainingTime,
+    required this.startedAt,
+    required this.pauses,
+    required this.pausedAt,
+  });
 }

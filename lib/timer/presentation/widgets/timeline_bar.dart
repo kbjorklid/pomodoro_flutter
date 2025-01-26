@@ -92,6 +92,8 @@ class TimelineBar extends ConsumerWidget {
             segmentRange: pause.range,
             timeBarRange: timeBarRange,
             timelinePixelWidth: timelineWidth);
+
+        logger.d("Pause: $pause\n    SegmentPosition: $segmentPosition");
         children
             .add(_PauseSegment(segmentPosition: segmentPosition, pause: pause));
       }

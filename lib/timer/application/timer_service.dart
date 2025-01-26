@@ -82,9 +82,12 @@ class _TimerRuntimeState {
   TimerState toTimerState(DateTime now) {
     return TimerState(
         timerType: _timerType,
-        totalTime: _totalDuration,
+        status: _status,
+        timerDuration: _totalDuration,
         remainingTime: getRemainingTime(now),
-        status: _status);
+        startedAt: _startedAt,
+        pauses: _pauses,
+        pausedAt: _pausedAt);
   }
 }
 

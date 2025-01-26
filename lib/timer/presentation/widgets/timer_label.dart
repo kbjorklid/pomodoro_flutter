@@ -12,7 +12,7 @@ class TimerLabel extends ConsumerWidget {
     return timerStateAsync.when(
       data: (timerState) {
         final remaining = timerState.remainingTime;
-        final total = timerState.totalTime;
+        final total = timerState.timerDuration;
         final progress = total.inSeconds > 0 ? remaining.inSeconds / total.inSeconds : 0.0;
         final minutes = (remaining.inMinutes).toString();
         final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
