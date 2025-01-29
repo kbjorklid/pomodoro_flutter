@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/core/presentation/colors.dart';
+import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
 
 class TimerLabel extends ConsumerWidget {
@@ -17,6 +20,18 @@ class TimerLabel extends ConsumerWidget {
         final minutes = (remaining.inMinutes).toString();
         final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
 
+        final bool paused = timerState.status == TimerStatus.paused;
+
+        final Color color;
+        switch (timerState.timerType) {
+          case TimerType.work:
+            color = paused ? AppColors.workPaused : AppColors.work;
+            break;
+          case TimerType.rest:
+            color = paused ? AppColors.restPaused : AppColors.rest;
+            break;
+        }
+
         return SizedBox(
           width: 200,
           height: 200,
@@ -26,7 +41,8 @@ class TimerLabel extends ConsumerWidget {
               SizedBox(
                 width: 200,
                 height: 200,
-                child: CircularProgressIndicator(value: progress, strokeWidth: 8),
+                child: CircularProgressIndicator(
+                    value: progress, strokeWidth: 8, color: color),
               ),
               Text('$minutes:$seconds', style: const TextStyle(fontSize: 48)),
             ],

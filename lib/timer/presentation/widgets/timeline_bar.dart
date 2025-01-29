@@ -8,6 +8,7 @@ import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/core/presentation/colors.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
@@ -289,9 +290,9 @@ class _SessionSegment extends _TimelineSegment {
   @override
   Color get color {
     if (_timerType == TimerType.work) {
-      return _isCompleted ? Colors.teal : Colors.grey[800]!;
+      return _isCompleted ? AppColors.work : AppColors.workIncomplete;
     }
-    return Colors.green;
+    return AppColors.rest;
   }
 }
 
@@ -301,7 +302,7 @@ class _PauseSegment extends _TimelineSegment {
   const _PauseSegment({required super.segmentPosition, required this.pause});
 
   @override
-  Color get color => Colors.lightBlue[300]!;
+  Color get color => Color(0x88ffffff);
 }
 
 class _SegmentPosition {
