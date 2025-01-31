@@ -127,15 +127,20 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     super.initState();
     _timerHistorySubscription =
         DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
-      ref.invalidate(todaySessionsProvider);
+      _refresh();
     });
     _timerRuntimeSubscription =
         DomainEventBus.of<TimerRuntimeEvent>().listen((event) {
-      setState(() {});
+      _refresh();
     });
     // Add periodic refresh timer
     _refreshTimer =
-        Timer.periodic(const Duration(seconds: 10), (_) => setState(() {}));
+        Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
+  }
+
+  void _refresh() {
+    ref.invalidate(todaySessionsProvider);
+    setState(() {});
   }
 
   @override
@@ -340,20 +345,19 @@ class _SegmentPosition {
   }
 
   double _startPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
-    final totalMinutes = fullTimeRange.duration.inMinutes;
+    final totalSeconds = fullTimeRange.duration.inSeconds;
     final secondsFromStart =
         sessionRange.start.difference(fullTimeRange.start).inSeconds;
-    double minutesFromStart = secondsFromStart / 60.0;
-    if (totalMinutes == 0) return 0;
-    return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
+    if (totalSeconds == 0) return 0;
+    return (secondsFromStart / totalSeconds).clamp(0.0, 1.0);
   }
 
   double _endPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
-    final totalMinutes = fullTimeRange.duration.inMinutes;
-    final minutesFromStart =
-        sessionRange.end.difference(fullTimeRange.start).inMinutes;
-    if (totalMinutes == 0) return 0;
-    return (minutesFromStart / totalMinutes).clamp(0.0, 1.0);
+    final totalSeconds = fullTimeRange.duration.inSeconds;
+    final secondsFromStart =
+        sessionRange.end.difference(fullTimeRange.start).inSeconds;
+    if (totalSeconds == 0) return 0;
+    return (secondsFromStart / totalSeconds).clamp(0.0, 1.0);
   }
 
   @override
