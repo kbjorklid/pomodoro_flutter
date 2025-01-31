@@ -127,6 +127,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     super.initState();
     _timerHistorySubscription =
         DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
+      ref.invalidate(todaySessionsProvider);
       _refresh();
     });
     _timerRuntimeSubscription =
@@ -139,7 +140,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
   }
 
   void _refresh() {
-    ref.invalidate(todaySessionsProvider);
     setState(() {});
   }
 
