@@ -55,8 +55,8 @@ class _CurrentlyRunningSession {
     _timerStoppedSubscription?.cancel();
   }
 
-  void _updateCurrentSegment(
-      DateTimeRange timebarRange, double timelinePixelWidth,
+  void _updateCurrentSegment(DateTimeRange timeBarRange,
+      double timelinePixelWidth,
       [DateTime? now]) {
     TimerState? state = this.state;
     if (state == null || state.startedAt == null) {
@@ -64,20 +64,20 @@ class _CurrentlyRunningSession {
     } else {
       now ??= DateTime.now();
       DateTime startTime = state.startedAt!;
-      DateTime endTime = state.pausedAt ?? now;
+      DateTime endTime = now;
       DateTimeRange segmentRange =
           DateTimeRange(start: startTime, end: endTime);
       final segmentPosition = _SegmentPosition(
           segmentRange: segmentRange,
-          timeBarRange: timebarRange,
+          timeBarRange: timeBarRange,
           timelinePixelWidth: timelinePixelWidth);
       _currentSegment =
           _SessionSegment.fromValues(segmentPosition, state.timerType, true);
     }
   }
 
-  void _updatePauseSegments(
-      DateTimeRange timebarRange, double timelinePixelWidth,
+  void _updatePauseSegments(DateTimeRange timeBarRange,
+      double timelinePixelWidth,
       [DateTime? now]) {
     TimerState? state = this.state;
     if (state == null || state.startedAt == null) {
@@ -87,7 +87,7 @@ class _CurrentlyRunningSession {
       _pauseSegments = state.pauses.map((pause) {
         final segmentPosition = _SegmentPosition(
             segmentRange: pause.range,
-            timeBarRange: timebarRange,
+            timeBarRange: timeBarRange,
             timelinePixelWidth: timelinePixelWidth);
         return _PauseSegment(segmentPosition: segmentPosition, pause: pause);
       }).toList();
@@ -95,7 +95,7 @@ class _CurrentlyRunningSession {
         final pauseSegment = _PauseSegment(
             segmentPosition: _SegmentPosition(
                 segmentRange: DateTimeRange(start: state.pausedAt!, end: now),
-                timeBarRange: timebarRange,
+                timeBarRange: timeBarRange,
                 timelinePixelWidth: timelinePixelWidth),
             pause: PauseRecord(pausedAt: state.pausedAt!, resumedAt: now));
         _pauseSegments.add(pauseSegment);
@@ -120,6 +120,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
   final _CurrentlyRunningSession _currentSession = _CurrentlyRunningSession();
   StreamSubscription? _timerHistorySubscription;
   StreamSubscription? _timerRuntimeSubscription;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
@@ -132,10 +133,15 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         DomainEventBus.of<TimerRuntimeEvent>().listen((event) {
       setState(() {});
     });
+    // Add periodic refresh timer
+    _refreshTimer =
+        Timer.periodic(const Duration(seconds: 10), (_) => setState(() {}));
   }
 
   @override
   void dispose() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
     _timerHistorySubscription?.cancel();
     _timerRuntimeSubscription?.cancel();
     _currentSession.dispose();
@@ -169,24 +175,31 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   Widget _buildTimeline(List<TimerSession> sessions, double timelineWidth) {
     DateTime now = DateTime.now();
-    DateTime startDateTime;
-    DateTime endDateTime;
+    final timeBarRange = _getTimeBarRange(sessions, now);
+    _logger.d("Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
+    return Stack(
+      children: _children(sessions, timeBarRange, timelineWidth),
+    );
+  }
+
+  DateTimeRange _getTimeBarRange(List<TimerSession> sessions, [DateTime? now]) {
+    now ??= DateTime.now();
+    var end = now;
+    DateTime start;
     if (sessions.isEmpty) {
-      startDateTime = DateTime(now.year, now.month, now.day, now.hour);
-      endDateTime = startDateTime.add(const Duration(hours: 8));
+      start = end.subtract(const Duration(hours: 1));
     } else {
       sessions.sort((a, b) => a.startedAt.compareTo(b.startedAt));
-      var startHour = sessions.first.startedAt.hour;
-      startDateTime = DateTime(now.year, now.month, now.day, startHour);
-      endDateTime = DateTime(now.year, now.month, now.day, now.hour)
-          .add(const Duration(hours: 1));
+      start = sessions.first.startedAt;
+      if (end.difference(start).inMinutes < 60) {
+        start = end.subtract(const Duration(hours: 1));
+      }
     }
-    _logger.d("Start: $startDateTime, End: $endDateTime");
-
-    final timeRange = DateTimeRange(start: startDateTime, end: endDateTime);
-    return Stack(
-      children: _children(sessions, timeRange, timelineWidth),
-    );
+    DateTime? currentSessionStart = _currentSession.state?.startedAt;
+    if (currentSessionStart != null && currentSessionStart.isBefore(start)) {
+      start = currentSessionStart;
+    }
+    return new DateTimeRange(start: start, end: end);
   }
 
   List<Widget> _children(List<TimerSession> sessions,
