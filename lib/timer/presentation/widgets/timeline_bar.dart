@@ -55,8 +55,8 @@ class _CurrentlyRunningSession {
     _timerStoppedSubscription?.cancel();
   }
 
-  void _updateCurrentSegment(DateTimeRange timeBarRange,
-      double timelinePixelWidth,
+  void _updateCurrentSegment(
+      DateTimeRange timeBarRange, double timelinePixelWidth,
       [DateTime? now]) {
     TimerState? state = this.state;
     if (state == null || state.startedAt == null) {
@@ -76,8 +76,8 @@ class _CurrentlyRunningSession {
     }
   }
 
-  void _updatePauseSegments(DateTimeRange timeBarRange,
-      double timelinePixelWidth,
+  void _updatePauseSegments(
+      DateTimeRange timeBarRange, double timelinePixelWidth,
       [DateTime? now]) {
     TimerState? state = this.state;
     if (state == null || state.startedAt == null) {
@@ -204,7 +204,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     if (currentSessionStart != null && currentSessionStart.isBefore(start)) {
       start = currentSessionStart;
     }
-    return new DateTimeRange(start: start, end: end);
+    return DateTimeRange(start: start, end: end);
   }
 
   List<Widget> _children(List<TimerSession> sessions,
@@ -243,25 +243,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         _currentSession.getPauseSegments(timeBarRange, timelineWidth);
     children.addAll(currentPauseSegments);
     return children;
-  }
-}
-
-class _TimeMarker extends StatelessWidget {
-  final int hour;
-  final double position;
-
-  const _TimeMarker({required this.hour, required this.position});
-
-  @override
-  Widget build(BuildContext context) {
-    return Positioned(
-      left: position,
-      child: Text('$hour:00',
-          style: TextStyle(
-            color: Colors.grey[600],
-            fontSize: 12,
-          )),
-    );
   }
 }
 
