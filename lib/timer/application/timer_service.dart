@@ -143,6 +143,11 @@ class TimerService {
     }
   }
 
+  TimerState getState() {
+    final state = _state.toTimerState(DateTime.now());
+    return state;
+  }
+
   void _notifySessionListeners(TimerSession session) {
     if (_sessionListeners.isEmpty) return;
     for (var listener in _sessionListeners) {
@@ -244,6 +249,15 @@ class TimerService {
   }
 
   void _completeSessionIfStarted([DateTime? now]) {
+    TimerSession? session = finalizeSessionIfStarted(now);
+    if (session != null) {
+      _notifySessionListeners(session);
+      DomainEventBus.publish(TimerStoppedEvent(timerSession: session));
+      _state.reset();
+    }
+  }
+
+  TimerSession? finalizeSessionIfStarted([DateTime? now]) {
     now ??= DateTime.now();
     if (_state._startedAt != null) {
       _timer?.cancel();
@@ -254,10 +268,10 @@ class TimerService {
         pauses: _state._pauses,
         totalDuration: _state._totalDuration,
       );
-      _notifySessionListeners(session);
-      DomainEventBus.publish(TimerStoppedEvent(timerSession: session));
       _state.reset();
+      return session;
     }
+    return null;
   }
 
   void dispose() {

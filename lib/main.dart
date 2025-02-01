@@ -23,9 +23,14 @@ final _sessionSaverProvider = Provider<void>((ref) {
   timerService.addSessionListener((session) async {
     await repository.save(session);
   });
+
+  ref.onDispose(() async {
+    timerService.removeSessionListener((session) async {});
+  });
 });
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerWidget implements WidgetsBindingObserver {
+  final _navigatorKey = GlobalKey<NavigatorState>();
   const MyApp({super.key});
 
   @override
