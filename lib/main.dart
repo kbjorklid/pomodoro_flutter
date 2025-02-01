@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -29,15 +31,46 @@ final _sessionSaverProvider = Provider<void>((ref) {
   });
 });
 
-class MyApp extends ConsumerWidget implements WidgetsBindingObserver {
-  final _navigatorKey = GlobalKey<NavigatorState>();
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Initialize session saver by reading the provider
-    ref.read(_sessionSaverProvider);
+  _MyAppState createState() => _MyAppState();
+}
 
+class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Initialize session saver
+    ref.read(_sessionSaverProvider);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  Future<AppExitResponse> didRequestAppExit() {
+    _finalizeAndSaveSessionIfRunning();
+    return super.didRequestAppExit();
+  }
+
+  void _finalizeAndSaveSessionIfRunning() {
+    final timerService = ref.read(timerProvider);
+    final repository = ref.read(timerSessionRepositoryProvider);
+
+    final session = timerService.finalizeSessionIfStarted();
+    if (session != null) {
+      repository.save(session);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Pomodoro Timer',
       theme: ThemeData(
