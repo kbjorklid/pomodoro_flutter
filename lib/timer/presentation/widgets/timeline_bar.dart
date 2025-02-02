@@ -212,7 +212,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     final children = <Widget>[];
     for (final session in sessions) {
       _SegmentPosition segmentPosition = _SegmentPosition(
-          segmentRange: session.range,
+          segmentRange: session.range!,
           timeBarRange: timeBarRange,
           timelinePixelWidth: timelineWidth);
       if (segmentPosition.isEmpty) continue;

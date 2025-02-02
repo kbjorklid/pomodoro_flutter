@@ -23,7 +23,7 @@ mixin _$TimerSession {
   DateTime get startedAt => throw _privateConstructorUsedError;
 
   /// When the session ended (completed or stopped)
-  DateTime get endedAt => throw _privateConstructorUsedError;
+  DateTime? get endedAt => throw _privateConstructorUsedError;
 
   /// List of all pauses during this session
   List<PauseRecord> get pauses => throw _privateConstructorUsedError;
@@ -47,7 +47,7 @@ abstract class $TimerSessionCopyWith<$Res> {
   $Res call(
       {TimerType sessionType,
       DateTime startedAt,
-      DateTime endedAt,
+      DateTime? endedAt,
       List<PauseRecord> pauses,
       Duration totalDuration});
 }
@@ -69,7 +69,7 @@ class _$TimerSessionCopyWithImpl<$Res, $Val extends TimerSession>
   $Res call({
     Object? sessionType = null,
     Object? startedAt = null,
-    Object? endedAt = null,
+    Object? endedAt = freezed,
     Object? pauses = null,
     Object? totalDuration = null,
   }) {
@@ -82,10 +82,10 @@ class _$TimerSessionCopyWithImpl<$Res, $Val extends TimerSession>
           ? _value.startedAt
           : startedAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
-      endedAt: null == endedAt
+      endedAt: freezed == endedAt
           ? _value.endedAt
           : endedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
       pauses: null == pauses
           ? _value.pauses
           : pauses // ignore: cast_nullable_to_non_nullable
@@ -109,7 +109,7 @@ abstract class _$$TimerSessionImplCopyWith<$Res>
   $Res call(
       {TimerType sessionType,
       DateTime startedAt,
-      DateTime endedAt,
+      DateTime? endedAt,
       List<PauseRecord> pauses,
       Duration totalDuration});
 }
@@ -129,7 +129,7 @@ class __$$TimerSessionImplCopyWithImpl<$Res>
   $Res call({
     Object? sessionType = null,
     Object? startedAt = null,
-    Object? endedAt = null,
+    Object? endedAt = freezed,
     Object? pauses = null,
     Object? totalDuration = null,
   }) {
@@ -142,10 +142,10 @@ class __$$TimerSessionImplCopyWithImpl<$Res>
           ? _value.startedAt
           : startedAt // ignore: cast_nullable_to_non_nullable
               as DateTime,
-      endedAt: null == endedAt
+      endedAt: freezed == endedAt
           ? _value.endedAt
           : endedAt // ignore: cast_nullable_to_non_nullable
-              as DateTime,
+              as DateTime?,
       pauses: null == pauses
           ? _value._pauses
           : pauses // ignore: cast_nullable_to_non_nullable
@@ -180,7 +180,7 @@ class _$TimerSessionImpl extends _TimerSession {
 
   /// When the session ended (completed or stopped)
   @override
-  final DateTime endedAt;
+  final DateTime? endedAt;
 
   /// List of all pauses during this session
   final List<PauseRecord> _pauses;
@@ -196,11 +196,6 @@ class _$TimerSessionImpl extends _TimerSession {
   /// Total intended duration of the session
   @override
   final Duration totalDuration;
-
-  @override
-  String toString() {
-    return 'TimerSession(sessionType: $sessionType, startedAt: $startedAt, endedAt: $endedAt, pauses: $pauses, totalDuration: $totalDuration)';
-  }
 
   @override
   bool operator ==(Object other) {
@@ -234,7 +229,7 @@ abstract class _TimerSession extends TimerSession {
   const factory _TimerSession(
       {required final TimerType sessionType,
       required final DateTime startedAt,
-      required final DateTime endedAt,
+      required final DateTime? endedAt,
       required final List<PauseRecord> pauses,
       required final Duration totalDuration}) = _$TimerSessionImpl;
   const _TimerSession._() : super._();
@@ -249,7 +244,7 @@ abstract class _TimerSession extends TimerSession {
 
   /// When the session ended (completed or stopped)
   @override
-  DateTime get endedAt;
+  DateTime? get endedAt;
 
   /// List of all pauses during this session
   @override

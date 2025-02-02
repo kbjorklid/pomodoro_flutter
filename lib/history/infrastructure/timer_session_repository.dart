@@ -12,6 +12,7 @@ import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'dtos/pause_record_dto.dart';
 
 final _logger = Logger();
+
 class TimerSessionRepository implements TimerSessionRepositoryPort {
   static const _boxName = 'timerSessions';
   late final Box<TimerSessionDTO> _box;
@@ -60,12 +61,14 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
                     : !dto.toDomain().isCompleted)))
         .map((dto) => dto.toDomain())
         .toList();
-        
+
     // Sort by start time descending
     sessions.sort((a, b) => b.startedAt.compareTo(a.startedAt));
-    var debugStr = sessions.fold(
-        "", (previousValue, element) => '$previousValue\n  $element');
-    _logger.d('Found ${sessions.length} matching sessions: $debugStr');
+    if (Logger.level.index <= Level.debug.index) {
+      var debugStr = sessions.fold(
+          "", (previousValue, element) => '$previousValue\n  $element');
+      _logger.d('Found ${sessions.length} matching sessions: $debugStr');
+    }
     return sessions;
   }
 

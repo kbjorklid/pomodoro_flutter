@@ -65,7 +65,6 @@ class _TimerRuntimeState {
     _pausedAt = null;
   }
 
-
   Duration getRemainingTime(DateTime now) {
     if (_status == TimerStatus.notStarted) return _totalDuration;
     if (_status == TimerStatus.ended) return Duration.zero;
@@ -261,17 +260,26 @@ class TimerService {
     now ??= DateTime.now();
     if (_state._startedAt != null) {
       _timer?.cancel();
-      final session = TimerSession(
-        sessionType: _state._timerType,
-        startedAt: _state._startedAt!,
-        endedAt: now,
-        pauses: _state._pauses,
-        totalDuration: _state._totalDuration,
-      );
+      final session = _toSession(now);
       _state.reset();
       return session;
     }
     return null;
+  }
+
+  TimerSession? getRunningSession() {
+    return _toSession();
+  }
+
+  TimerSession? _toSession([DateTime? endTime]) {
+    if (_state._startedAt == null) return null;
+    return TimerSession(
+      sessionType: _state._timerType,
+      startedAt: _state._startedAt!,
+      endedAt: endTime,
+      pauses: _state._pauses,
+      totalDuration: _state._totalDuration,
+    );
   }
 
   void dispose() {
