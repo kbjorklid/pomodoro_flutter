@@ -26,11 +26,8 @@ class TimerSessionDTO {
     required this.totalDuration,
   });
 
-  factory TimerSessionDTO.fromDomain(TimerSession session) {
-    DateTime? end = session.endedAt;
-    if (end == null) {
-      throw ArgumentError('Cannot convert an incomplete session to DTO');
-    }
+  factory TimerSessionDTO.fromDomain(EndedTimerSession session) {
+    DateTime? end = session.timerRangeEnd;
     return TimerSessionDTO(
       sessionTypeCode: session.sessionType.index,
       startedAt: session.startedAt,
@@ -40,7 +37,7 @@ class TimerSessionDTO {
     );
   }
 
-  TimerSession toDomain() => TimerSession(
+  EndedTimerSession toDomain() => EndedTimerSession(
         sessionType: _timerTypeFromCode(sessionTypeCode),
         startedAt: startedAt,
         endedAt: endedAt,

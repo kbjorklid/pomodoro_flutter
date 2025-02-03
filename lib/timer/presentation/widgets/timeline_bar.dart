@@ -9,105 +9,13 @@ import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dar
 import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
-import 'package:pomodoro_app2/timer/domain/timer_state.dart';
+import 'package:pomodoro_app2/timer/application/get_todays_timer_sessions_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
-import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
+import 'package:pomodoro_app2/timer/presentation/providers/get_todays_timer_sessions_use_case_provider.dart';
 
 final _borderRadius = BorderRadius.circular(1);
 final _logger = Logger();
-
-class _CurrentlyRunningSession {
-  StreamSubscription? _runtimeEventSubscription;
-  StreamSubscription? _timerStoppedSubscription;
-  TimerState? state;
-  _SessionSegment? _currentSegment;
-  List<_PauseSegment> _pauseSegments = [];
-
-  _SessionSegment? getCurrentSegment(
-      DateTimeRange timebarRange, double timelinePixelWidth) {
-    _updateCurrentSegment(timebarRange, timelinePixelWidth);
-    return _currentSegment;
-  }
-
-  List<_PauseSegment> getPauseSegments(
-      DateTimeRange timebarRange, double timelinePixelWidth) {
-    _updatePauseSegments(timebarRange, timelinePixelWidth);
-    return _pauseSegments;
-  }
-
-  _CurrentlyRunningSession() {
-    _runtimeEventSubscription =
-        DomainEventBus.of<TimerRuntimeEvent>().listen((event) {
-      if (event.runtimeType == TimerSecondsChangedEvent) return;
-      state = event.timerState;
-      _invalidateSegments();
-    });
-    _timerStoppedSubscription =
-        DomainEventBus.of<TimerStoppedEvent>().listen((event) {
-      state = null;
-      _invalidateSegments();
-    });
-  }
-
-  void dispose() {
-    _runtimeEventSubscription?.cancel();
-    _timerStoppedSubscription?.cancel();
-  }
-
-  void _updateCurrentSegment(
-      DateTimeRange timeBarRange, double timelinePixelWidth,
-      [DateTime? now]) {
-    TimerState? state = this.state;
-    if (state == null || state.startedAt == null) {
-      _invalidateSegments();
-    } else {
-      now ??= DateTime.now();
-      DateTime startTime = state.startedAt!;
-      DateTime endTime = now;
-      DateTimeRange segmentRange =
-          DateTimeRange(start: startTime, end: endTime);
-      final segmentPosition = _SegmentPosition(
-          segmentRange: segmentRange,
-          timeBarRange: timeBarRange,
-          timelinePixelWidth: timelinePixelWidth);
-      _currentSegment =
-          _SessionSegment.fromValues(segmentPosition, state.timerType, true);
-    }
-  }
-
-  void _updatePauseSegments(
-      DateTimeRange timeBarRange, double timelinePixelWidth,
-      [DateTime? now]) {
-    TimerState? state = this.state;
-    if (state == null || state.startedAt == null) {
-      _invalidateSegments();
-    } else {
-      now ??= DateTime.now();
-      _pauseSegments = state.pauses.map((pause) {
-        final segmentPosition = _SegmentPosition(
-            segmentRange: pause.range,
-            timeBarRange: timeBarRange,
-            timelinePixelWidth: timelinePixelWidth);
-        return _PauseSegment(segmentPosition: segmentPosition, pause: pause);
-      }).toList();
-      if (state.pausedAt != null) {
-        final pauseSegment = _PauseSegment(
-            segmentPosition: _SegmentPosition(
-                segmentRange: DateTimeRange(start: state.pausedAt!, end: now),
-                timeBarRange: timeBarRange,
-                timelinePixelWidth: timelinePixelWidth),
-            pause: PauseRecord(pausedAt: state.pausedAt!, resumedAt: now));
-        _pauseSegments.add(pauseSegment);
-      }
-    }
-  }
-
-  void _invalidateSegments() {
-    _currentSegment = null;
-    _pauseSegments = [];
-  }
-}
 
 class TimelineBar extends ConsumerStatefulWidget {
   const TimelineBar({super.key});
@@ -117,17 +25,17 @@ class TimelineBar extends ConsumerStatefulWidget {
 }
 
 class _TimelineBarState extends ConsumerState<TimelineBar> {
-  final _CurrentlyRunningSession _currentSession = _CurrentlyRunningSession();
   StreamSubscription? _timerHistorySubscription;
   StreamSubscription? _timerRuntimeSubscription;
+  late final GetTodaysTimerSessionsUseCase _todaysTimerSessionsUseCase;
   Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
+    _todaysTimerSessionsUseCase = ref.read(todaysTimerSessionsUseCaseProvider);
     _timerHistorySubscription =
         DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
-      ref.invalidate(todaySessionsProvider);
       _refresh();
     });
     _timerRuntimeSubscription =
@@ -149,13 +57,13 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     _refreshTimer = null;
     _timerHistorySubscription?.cancel();
     _timerRuntimeSubscription?.cancel();
-    _currentSession.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final sessionsAsync = ref.watch(todaySessionsProvider);
+    Future<List<TimerSession>> todaySessionsFuture =
+        _todaysTimerSessionsUseCase.getTodaysSessions();
 
     final screenWidth = MediaQuery.of(context).size.width;
     final horizontalMargin = screenWidth * 0.05;
@@ -168,17 +76,28 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         borderRadius: _borderRadius,
         color: Colors.grey[200],
       ),
-      child: LayoutBuilder(builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        return sessionsAsync.when(
-            data: (sessions) => _buildTimeline(sessions, width),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => throw error);
-      }),
+      child: FutureBuilder<List<ClosedTimerSession>>(
+        future: _todaysTimerSessionsUseCase.getTodaysSessions(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final sessions = snapshot.data ?? [];
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              return _buildTimeline(sessions, width);
+            },
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildTimeline(List<TimerSession> sessions, double timelineWidth) {
+  Widget _buildTimeline(
+      List<ClosedTimerSession> sessions, double timelineWidth) {
     DateTime now = DateTime.now();
     final timeBarRange = _getTimeBarRange(sessions, now);
     _logger.d("Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
@@ -194,25 +113,27 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     if (sessions.isEmpty) {
       start = end.subtract(const Duration(hours: 1));
     } else {
-      sessions.sort((a, b) => a.startedAt.compareTo(b.startedAt));
-      start = sessions.first.startedAt;
+      // TODO this should be sorted already?
+      var sortedSessions = List.of(sessions);
+      sortedSessions.sort((a, b) => a.startedAt.compareTo(b.startedAt));
+      start = sortedSessions.first.startedAt;
       if (end.difference(start).inMinutes < 60) {
         start = end.subtract(const Duration(hours: 1));
       }
     }
-    DateTime? currentSessionStart = _currentSession.state?.startedAt;
-    if (currentSessionStart != null && currentSessionStart.isBefore(start)) {
-      start = currentSessionStart;
-    }
     return DateTimeRange(start: start, end: end);
   }
 
-  List<Widget> _children(List<TimerSession> sessions,
-      DateTimeRange timeBarRange, double timelineWidth) {
+  List<Widget> _children(List<ClosedTimerSession> sessions,
+      DateTimeRange timeBarRange, double timelineWidth,
+      [DateTime? now]) {
+    now ??= DateTime.now();
     final children = <Widget>[];
     for (final session in sessions) {
+      DateTimeRange range =
+          session.range ?? DateTimeRange(start: session.startedAt, end: now);
       _SegmentPosition segmentPosition = _SegmentPosition(
-          segmentRange: session.range!,
+          segmentRange: range,
           timeBarRange: timeBarRange,
           timelinePixelWidth: timelineWidth);
       if (segmentPosition.isEmpty) continue;
@@ -220,11 +141,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       _logger.d("Session: $session\n    SegmentPosition: $segmentPosition");
       children.add(
           _SessionSegment(segmentPosition: segmentPosition, session: session));
-    }
-    _SessionSegment? current =
-        _currentSession.getCurrentSegment(timeBarRange, timelineWidth);
-    if (current != null) {
-      children.add(current);
     }
     // Add pauses at the end, on top of everything else.
     for (final session in sessions) {
@@ -239,9 +155,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
             .add(_PauseSegment(segmentPosition: segmentPosition, pause: pause));
       }
     }
-    List<_PauseSegment> currentPauseSegments =
-        _currentSession.getPauseSegments(timeBarRange, timelineWidth);
-    children.addAll(currentPauseSegments);
     return children;
   }
 }
@@ -272,11 +185,13 @@ abstract class _TimelineSegment extends StatelessWidget {
 class _SessionSegment extends _TimelineSegment {
   late final TimerType _timerType;
   late final bool _isCompleted;
+  late final bool _isRunning;
 
   _SessionSegment(
-      {required super.segmentPosition, required TimerSession session}) {
+      {required super.segmentPosition, required ClosedTimerSession session}) {
     _timerType = session.sessionType;
     _isCompleted = session.isCompleted;
+    _isRunning = !session.isEnded;
   }
 
   _SessionSegment.fromValues(
@@ -289,7 +204,9 @@ class _SessionSegment extends _TimelineSegment {
   @override
   Color get color {
     if (_timerType == TimerType.work) {
-      return _isCompleted ? AppColors.work : AppColors.workIncomplete;
+      return _isCompleted || _isRunning
+          ? AppColors.work
+          : AppColors.workIncomplete;
     }
     return AppColors.rest;
   }

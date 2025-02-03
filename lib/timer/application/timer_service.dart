@@ -92,7 +92,7 @@ class _TimerRuntimeState {
 }
 
 typedef TimerStateListener = void Function(TimerState);
-typedef TimerSessionListener = void Function(TimerSession);
+typedef TimerSessionListener = void Function(EndedTimerSession);
 
 /// A service class that manages the timer logic,
 /// independently of the UI.
@@ -147,7 +147,7 @@ class TimerService {
     return state;
   }
 
-  void _notifySessionListeners(TimerSession session) {
+  void _notifySessionListeners(EndedTimerSession session) {
     if (_sessionListeners.isEmpty) return;
     for (var listener in _sessionListeners) {
       listener(session);
@@ -248,7 +248,7 @@ class TimerService {
   }
 
   void _completeSessionIfStarted([DateTime? now]) {
-    TimerSession? session = finalizeSessionIfStarted(now);
+    EndedTimerSession? session = finalizeSessionIfStarted(now);
     if (session != null) {
       _notifySessionListeners(session);
       DomainEventBus.publish(TimerStoppedEvent(timerSession: session));
@@ -256,30 +256,42 @@ class TimerService {
     }
   }
 
-  TimerSession? finalizeSessionIfStarted([DateTime? now]) {
+  EndedTimerSession? finalizeSessionIfStarted([DateTime? now]) {
     now ??= DateTime.now();
     if (_state._startedAt != null) {
       _timer?.cancel();
-      final session = _toSession(now);
+      final session = _toEndedSession(now);
       _state.reset();
       return session;
     }
     return null;
   }
 
-  TimerSession? getRunningSession() {
+  RunningTimerSession? getRunningSession() {
     return _toSession();
   }
 
-  TimerSession? _toSession([DateTime? endTime]) {
+  RunningTimerSession? _toSession() {
     if (_state._startedAt == null) return null;
-    return TimerSession(
-      sessionType: _state._timerType,
-      startedAt: _state._startedAt!,
-      endedAt: endTime,
-      pauses: _state._pauses,
-      totalDuration: _state._totalDuration,
-    );
+    return RunningTimerSession(
+        sessionType: _state._timerType,
+        startedAt: _state._startedAt!,
+        pausedAt: _state._pausedAt,
+        pauses: _state._pauses,
+        totalDuration: _state._totalDuration);
+  }
+
+  EndedTimerSession _toEndedSession([DateTime? endTime]) {
+    endTime ??= DateTime.now();
+    if (_state._startedAt == null) {
+      throw StateError('No session is running');
+    }
+    return EndedTimerSession(
+        sessionType: _state._timerType,
+        startedAt: _state._startedAt!,
+        endedAt: endTime,
+        pauses: _state._pauses,
+        totalDuration: _state._totalDuration);
   }
 
   void dispose() {

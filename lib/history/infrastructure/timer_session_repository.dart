@@ -30,7 +30,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   }
 
   @override
-  Future<void> save(TimerSession session) async {
+  Future<void> save(EndedTimerSession session) async {
     _logger.d('Saving timer session: ${session.sessionType} '
         'started at ${session.startedAt}, pauses: ${session.pauses}');
     var dto = TimerSessionDTO.fromDomain(session);
@@ -44,7 +44,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   }
 
   @override
-  Future<List<TimerSession>> query(TimerSessionQuery query) async {
+  Future<List<EndedTimerSession>> query(TimerSessionQuery query) async {
     await _initialized;
     _logger.d('Querying sessions: '
         'start=${query.start}, end=${query.end}, '

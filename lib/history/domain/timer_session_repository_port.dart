@@ -3,10 +3,10 @@ import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 
 abstract class TimerSessionRepositoryPort {
   /// Saves a timer session
-  Future<void> save(TimerSession session);
+  Future<void> save(EndedTimerSession session);
 
   /// Gets all sessions matching the query parameters
-  Future<List<TimerSession>> query(TimerSessionQuery query);
+  Future<List<EndedTimerSession>> query(TimerSessionQuery query);
 
   /// Deletes a session by its start time
   Future<void> delete(DateTime startedAt);

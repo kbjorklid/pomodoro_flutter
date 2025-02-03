@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
-import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
 import 'package:pomodoro_app2/timer/application/timer_service.dart';
@@ -12,7 +11,7 @@ class GetTodaysTimerSessionsUseCase {
   final TimerSessionRepositoryPort _repository;
   final DateTime Function() _getCurrentTime;
   final TimerService _timerService;
-  List<TimerSession> _todaysHistoryOfTimerSessions = [];
+  List<ClosedTimerSession> _todaysHistoryOfTimerSessions = [];
   late final Future<void> _initializationFuture;
   StreamSubscription? _historyEventSubscription;
 
@@ -43,13 +42,17 @@ class GetTodaysTimerSessionsUseCase {
     _todaysHistoryOfTimerSessions = List.unmodifiable(sessions);
   }
 
-  Future<List<TimerSession>> getTodaysSessions() async {
+  Future<List<ClosedTimerSession>> getTodaysSessions([DateTime? now]) async {
+    now ??= _getCurrentTime();
     await _initializationFuture;
-    TimerSession? runningSession = _timerService.getRunningSession();
+    RunningTimerSession? runningSession = _timerService.getRunningSession();
     if (runningSession == null) {
       return _todaysHistoryOfTimerSessions;
     }
-    return _todaysHistoryOfTimerSessions.followedBy([runningSession]).toList();
+    ClosedTimerSession runningSessionSnapshot = new TimerSessionSnapshot(
+        runningTimerSession: runningSession, timerRangeEnd: now);
+    return _todaysHistoryOfTimerSessions
+        .followedBy([runningSessionSnapshot]).toList();
   }
 
   void dispose() {

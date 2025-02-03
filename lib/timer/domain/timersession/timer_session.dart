@@ -1,61 +1,114 @@
 import 'package:flutter/material.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 
 import 'pause_record.dart';
 
-part 'timer_session.freezed.dart';
+abstract class TimerSession {
+  TimerType get sessionType;
 
-/// Represents a completed or incomplete timer session
-@freezed
-class TimerSession with _$TimerSession {
-  const TimerSession._();
+  DateTime get startedAt;
 
-  const factory TimerSession({
-    /// Type of session (work or rest)
-    required TimerType sessionType,
+  List<PauseRecord> get pauses;
 
-    /// When the session started
-    required DateTime startedAt,
+  Duration get totalDuration;
 
-    /// When the session ended (completed or stopped)
-    required DateTime? endedAt,
-
-    /// List of all pauses during this session
-    required List<PauseRecord> pauses,
-
-    /// Total intended duration of the session
-    required Duration totalDuration,
-  }) = _TimerSession;
-
-  bool get isEndecd => endedAt != null;
-
-  /// Whether the session was completed (derived value)
-  bool get isCompleted {
-    Duration? duration = durationWithoutPauseTime;
-    if (duration == null) return false;
-    return duration >= totalDuration;
-  }
-
-  Duration? get durationWithoutPauseTime {
-    DateTime? end = endedAt;
-    if (end == null) return null;
-    return end.difference(startedAt) -
-        pauses.fold(Duration.zero, (sum, pause) => sum + pause.duration);
-  }
-
-  DateTimeRange? get range {
-    DateTime? end = endedAt;
-    if (end == null) return null;
-    return DateTimeRange(start: startedAt, end: end);
-  }
+  bool get isEnded;
 
   @override
   String toString() {
     return 'TimerSession(sessionType: $sessionType, '
         'startedAt: ${startedAt.toString().split('.').first}, '
-        'endedAt: ${endedAt.toString().split('.').first}, '
-        'totalDuration: $totalDuration, '
-        'isCompleted: $isCompleted)';
+        'totalDuration: $totalDuration)';
   }
+}
+
+class RunningTimerSession extends TimerSession {
+  final TimerType sessionType;
+  final DateTime startedAt;
+  final DateTime? pausedAt;
+  final List<PauseRecord> pauses;
+  final Duration totalDuration;
+  final bool isEnded = false;
+
+  RunningTimerSession(
+      {required this.sessionType,
+      required this.startedAt,
+      required this.pausedAt,
+      required Iterable<PauseRecord> pauses,
+      required this.totalDuration})
+      : pauses = List.unmodifiable(pauses);
+}
+
+abstract class ClosedTimerSession extends TimerSession {
+  DateTime get timerRangeEnd;
+
+  DateTimeRange get range =>
+      DateTimeRange(start: startedAt, end: timerRangeEnd);
+
+  Duration get durationWithoutPauseTime =>
+      timerRangeEnd.difference(startedAt) -
+      pauses.fold(Duration.zero, (sum, pause) => sum + pause.duration);
+
+  bool get isCompleted => durationWithoutPauseTime >= totalDuration;
+}
+
+class TimerSessionSnapshot extends ClosedTimerSession {
+  @override
+  TimerType get sessionType => _runningTimerSession.sessionType;
+
+  @override
+  DateTime get startedAt => _runningTimerSession.startedAt;
+
+  @override
+  bool get isEnded => _runningTimerSession.isEnded;
+
+  @override
+  DateTime timerRangeEnd;
+
+  @override
+  List<PauseRecord> get pauses {
+    if (_runningTimerSession.pausedAt == null)
+      return _runningTimerSession.pauses;
+    return _runningTimerSession.pauses +
+        [
+          PauseRecord(
+            pausedAt: _runningTimerSession.pausedAt!,
+            resumedAt: timerRangeEnd,
+          )
+        ];
+  }
+
+  @override
+  Duration get totalDuration => _runningTimerSession.totalDuration;
+
+  TimerSessionSnapshot({
+    required runningTimerSession,
+    required this.timerRangeEnd,
+  }) : _runningTimerSession = runningTimerSession;
+
+  final RunningTimerSession _runningTimerSession;
+}
+
+class EndedTimerSession extends ClosedTimerSession {
+  @override
+  final TimerType sessionType;
+  @override
+  final DateTime startedAt;
+  @override
+  final DateTime timerRangeEnd;
+  @override
+  final List<PauseRecord> pauses;
+  @override
+  final Duration totalDuration;
+  @override
+  final bool isEnded = true;
+
+  EndedTimerSession(
+      {required this.sessionType,
+      required this.startedAt,
+      required endedAt,
+      required Iterable<PauseRecord> pauses,
+      required this.totalDuration})
+      : timerRangeEnd = endedAt,
+        pauses = List.unmodifiable(pauses);
 }
