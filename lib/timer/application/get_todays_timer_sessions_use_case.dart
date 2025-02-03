@@ -9,10 +9,12 @@ import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 
 class GetTodaysTimerSessionsUseCase {
   final TimerSessionRepositoryPort _repository;
-  final DateTime Function() _getCurrentTime;
   final TimerService _timerService;
-  List<ClosedTimerSession> _todaysHistoryOfTimerSessions = [];
+
+  final DateTime Function() _getCurrentTime;
+  List<ClosedTimerSession> _historyOfTimerSessionsForToday = [];
   late final Future<void> _initializationFuture;
+
   StreamSubscription? _historyEventSubscription;
 
   GetTodaysTimerSessionsUseCase(
@@ -29,8 +31,7 @@ class GetTodaysTimerSessionsUseCase {
   }
 
   Future<void> _refreshFromDataStore() async {
-    final now = _getCurrentTime();
-    final startOfDay = DateTime(now.year, now.month, now.day);
+    final startOfDay = _startOfToday();
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     final query = TimerSessionQuery(
@@ -39,24 +40,41 @@ class GetTodaysTimerSessionsUseCase {
     );
 
     final sessions = await _repository.query(query);
-    _todaysHistoryOfTimerSessions = List.unmodifiable(sessions);
+    _historyOfTimerSessionsForToday = List.unmodifiable(sessions);
   }
 
   Future<List<ClosedTimerSession>> getTodaysSessions([DateTime? now]) async {
     now ??= _getCurrentTime();
     await _initializationFuture;
     RunningTimerSession? runningSession = _timerService.getRunningSession();
+    _removeYesterdaysSessions(now);
     if (runningSession == null) {
-      return _todaysHistoryOfTimerSessions;
+      return _historyOfTimerSessionsForToday;
     }
-    ClosedTimerSession runningSessionSnapshot = new TimerSessionSnapshot(
+    ClosedTimerSession runningSessionSnapshot = TimerSessionSnapshot(
         runningTimerSession: runningSession, timerRangeEnd: now);
-    return _todaysHistoryOfTimerSessions
+    return _historyOfTimerSessionsForToday
         .followedBy([runningSessionSnapshot]).toList();
   }
 
   void dispose() {
     _historyEventSubscription?.cancel();
     _historyEventSubscription = null;
+  }
+
+  void _removeYesterdaysSessions(DateTime? now) {
+    DateTime startOfToday = _startOfToday(now);
+    containsSessionsFromYesterday(ClosedTimerSession session) =>
+        session.range.end.isBefore(startOfToday);
+    if (_historyOfTimerSessionsForToday.any(containsSessionsFromYesterday)) {
+      final filteredSessions = _historyOfTimerSessionsForToday
+          .where((session) => !containsSessionsFromYesterday(session));
+      _historyOfTimerSessionsForToday = List.unmodifiable(filteredSessions);
+    }
+  }
+
+  DateTime _startOfToday([DateTime? now]) {
+    now ??= _getCurrentTime();
+    return DateTime(now.year, now.month, now.day);
   }
 }

@@ -98,8 +98,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   Widget _buildTimeline(
       List<ClosedTimerSession> sessions, double timelineWidth) {
-    DateTime now = DateTime.now();
-    final timeBarRange = _getTimeBarRange(sessions, now);
+    final timeBarRange = _getTimeBarRange(sessions);
     _logger.d("Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
     return Stack(
       children: _children(sessions, timeBarRange, timelineWidth),
@@ -121,7 +120,19 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         start = end.subtract(const Duration(hours: 1));
       }
     }
+    DateTime startOfToday = _startOfToday(now);
+    if (start.isBefore(startOfToday)) {
+      start = startOfToday;
+    }
+    if (end.difference(start).inMinutes < 60) {
+      end = start.add(const Duration(hours: 1));
+    }
     return DateTimeRange(start: start, end: end);
+  }
+
+  DateTime _startOfToday([DateTime? now]) {
+    now ??= DateTime.now();
+    return DateTime(now.year, now.month, now.day);
   }
 
   List<Widget> _children(List<ClosedTimerSession> sessions,
