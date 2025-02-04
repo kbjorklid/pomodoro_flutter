@@ -8,12 +8,10 @@ class TimerControls extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Row(
+    return const Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
+      children: [
         StartPauseButton(),
-        SizedBox(width: 20),
-        SwitchTimerButton(),
       ],
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timeline_bar.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timer_label.dart';
+import 'package:pomodoro_app2/timer/presentation/widgets/timer_type_toggle.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timercontrols/timer_controls.dart';
 
 class TimerDisplay extends ConsumerWidget {
@@ -13,11 +14,13 @@ class TimerDisplay extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.max,
       children: [
-        TimerLabel(),
-        SizedBox(height: 20),
-        TimerControls(),
-        SizedBox(height: 40),
-        TimelineBar(),
+        const ToggleTimerTypeButtons(),
+        const SizedBox(height: 20),
+        const TimerLabel(),
+        const SizedBox(height: 20),
+        const TimerControls(),
+        const SizedBox(height: 40),
+        const TimelineBar(),
       ],
     );
   }
