@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/core/presentation/colors.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
 
 class ToggleTimerTypeButtons extends ConsumerWidget {
@@ -45,7 +46,12 @@ class _TimerTypeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: isActive ? Colors.green : null,
+        backgroundColor: isActive
+            ? (type == TimerType.work 
+                ? AppColors.work 
+                : AppColors.rest)
+            : null,
+        foregroundColor: isActive ? Colors.white : null,
       ),
       onPressed: () {
         if (!isActive) {
