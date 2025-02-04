@@ -11,54 +11,46 @@ class ToggleTimerTypeButtons extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final timerState = ref.watch(timerStateProvider).value;
     final timerService = ref.read(timerProvider);
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _TimerTypeButton(
-          type: TimerType.work,
-          isActive: timerState?.timerType == TimerType.work,
-          onPressed: () => timerService.setTimerType(TimerType.work),
+    final currentType = timerState?.timerType ?? TimerType.work;
+
+    return SegmentedButton<TimerType>(
+      segments: const [
+        ButtonSegment<TimerType>(
+          value: TimerType.work,
+          label: Text('Work'),
+          icon: Icon(Icons.work),
         ),
-        const SizedBox(width: 16),
-        _TimerTypeButton(
-          type: TimerType.rest,
-          isActive: timerState?.timerType == TimerType.rest,
-          onPressed: () => timerService.setTimerType(TimerType.rest),
+        ButtonSegment<TimerType>(
+          value: TimerType.rest,
+          label: Text('Rest'),
+          icon: Icon(Icons.coffee),
         ),
       ],
+      selected: {currentType},
+      onSelectionChanged: (Set<TimerType> newSelection) {
+        timerService.setTimerType(newSelection.first);
+      },
+      style: ButtonStyle(
+        backgroundColor: colorSelect(workOrRestColor(currentType)),
+        foregroundColor: colorSelect(Colors.white),
+        iconColor: colorSelect(Colors.white),
+      ),
     );
   }
-}
 
-class _TimerTypeButton extends StatelessWidget {
-  final TimerType type;
-  final bool isActive;
-  final VoidCallback onPressed;
+  Color workOrRestColor(TimerType currentType) {
+    return currentType == TimerType.work ? AppColors.work : AppColors.rest;
+  }
 
-  const _TimerTypeButton({
-    required this.type,
-    required this.isActive,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: isActive
-            ? (type == TimerType.work 
-                ? AppColors.work 
-                : AppColors.rest)
-            : null,
-        foregroundColor: isActive ? Colors.white : null,
-      ),
-      onPressed: () {
-        if (!isActive) {
-          onPressed();
+  WidgetStateProperty<Color?> colorSelect(Color? selected,
+      [Color? unselected]) {
+    return WidgetStateProperty.resolveWith<Color?>(
+      (Set<WidgetState> states) {
+        if (states.contains(WidgetState.selected)) {
+          return selected;
         }
+        return unselected;
       },
-      child: Text(type == TimerType.work ? 'Work' : 'Rest'),
     );
   }
 }
