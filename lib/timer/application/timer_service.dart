@@ -247,6 +247,18 @@ class TimerService {
     return _state.getRemainingTime(now) <= Duration.zero;
   }
 
+  Future<void> refreshDuration() async {
+    final timerType = _state._timerType;
+    Duration totalDuration = await (timerType == TimerType.work
+        ? _settings.getWorkDuration()
+        : _settings.getRestDuration());
+
+    if (_state._totalDuration != totalDuration) {
+      _state._totalDuration = totalDuration;
+      _notifyStateListeners();
+    }
+  }
+
   void _completeSessionIfStarted([DateTime? now]) {
     EndedTimerSession? session = finalizeSessionIfStarted(now);
     if (session != null) {

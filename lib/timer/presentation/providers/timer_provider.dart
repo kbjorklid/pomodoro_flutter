@@ -55,6 +55,14 @@ final timerStateProvider = StreamProvider<TimerState>((ref) {
     controller.add(state);
   }
 
+  ref.watch(settingsRepositoryProvider);
+
+  Future<void> refreshDuration() async {
+    await timerService.refreshDuration();
+  }
+
+  refreshDuration();
+
   timerService.addStateListener(listener);
   ref.onDispose(() {
     timerService.removeStateListener(listener);
