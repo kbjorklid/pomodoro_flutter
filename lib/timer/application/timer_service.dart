@@ -229,6 +229,12 @@ class TimerService {
     _notifyStateListeners(now);
   }
 
+  void stop() {
+    var now = DateTime.now();
+    _completeSessionIfStarted(now);
+    _notifyStateListeners(now);
+  }
+
   bool _stopTimerIfEnded([DateTime? now]) {
     now ??= DateTime.now();
     if (_isTimerEndReached(now)) {
