@@ -17,6 +17,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Duration restDuration = const Duration(minutes: 5); // Initialize with default
   NotificationSound selectedSound = NotificationSound.ding;
   bool pauseEnabled = true;
+  TimeOfDay typicalWorkDayStart = const TimeOfDay(hour: 8, minute: 0);
+  Duration typicalWorkDayLength = const Duration(hours: 8);
   bool isLoading = true;
 
   @override
@@ -31,12 +33,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final loadedRestDuration = await repository.getRestDuration();
     final loadedSelectedSound = await repository.getTimerEndSound();
     final loadedPauseEnabled = await repository.isPauseEnabled();
+    final loadedTypicalWorkDayStart = await repository.getTypicalWorkDayStart();
+    final loadedTypicalWorkDayLength =
+        await repository.getTypicalWorkDayLength();
 
     setState(() {
       workDuration = loadedWorkDuration;
       restDuration = loadedRestDuration;
       selectedSound = loadedSelectedSound;
       pauseEnabled = loadedPauseEnabled;
+      typicalWorkDayStart = loadedTypicalWorkDayStart;
+      typicalWorkDayLength = loadedTypicalWorkDayLength;
       isLoading = false;
     });
   }
@@ -68,6 +75,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       restDuration = duration;
     });
     // Notify listeners that settings have changed
+    ref.invalidate(settingsRepositoryProvider);
+  }
+
+  Future<void> _saveTypicalWorkDayStart(TimeOfDay time) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setTypicalWorkDayStart(time);
+    setState(() {
+      typicalWorkDayStart = time;
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
+
+  Future<void> _saveTypicalWorkDayLength(Duration duration) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setTypicalWorkDayLength(duration);
+    setState(() {
+      typicalWorkDayLength = duration;
+    });
     ref.invalidate(settingsRepositoryProvider);
   }
 
@@ -121,6 +146,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const Text('Enable Pause'),
               ],
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                const Text('Typical Work Day Start:'),
+                TextButton(
+                  child: Text(typicalWorkDayStart.format(context)),
+                  onPressed: () async {
+                    final TimeOfDay? newTime = await showTimePicker(
+                      context: context,
+                      initialTime: typicalWorkDayStart,
+                    );
+                    if (newTime != null) {
+                      _saveTypicalWorkDayStart(newTime);
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            DurationSlider(
+              label: 'Typical Work Day Length',
+              duration: typicalWorkDayLength,
+              minDuration: const Duration(hours: 1),
+              maxDuration: const Duration(hours: 16),
+              onChanged: _saveTypicalWorkDayLength,
+              step: const Duration(minutes: 15),
             ),
           ],
         ),

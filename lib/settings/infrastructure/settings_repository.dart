@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,9 +8,14 @@ class SettingsRepository implements SettingsRepositoryPort {
   static const _restDurationKey = 'rest_duration';
   static const _selectedSoundKey = 'selected_sound';
   static const _pauseEnabledKey = 'pause_enabled';
+  static const _typicalWorkDayStartKey = 'typical_workday_start';
+  static const _typicalWorkDayLengthKey = 'typical_workday_length';
+
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultRestDuration = Duration(minutes: 5);
   static const bool _defaultPauseEnabled = true;
+  static final _defaultTypicalWorkDayStart = TimeOfDay(hour: 8, minute: 0);
+  static final _defaultTypicalWorkDayLength = Duration(hours: 8);
 
   @override
   Future<Duration> getWorkDuration() async {
@@ -65,5 +71,41 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setPauseEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_pauseEnabledKey, enabled);
+  }
+
+  @override
+  Future<TimeOfDay> getTypicalWorkDayStart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final timeString = prefs.getString(_typicalWorkDayStartKey);
+    if (timeString == null) {
+      return _defaultTypicalWorkDayStart;
+    }
+    final parts = timeString.split(':');
+    return TimeOfDay(
+      hour: int.parse(parts[0]),
+      minute: int.parse(parts[1]),
+    );
+  }
+
+  @override
+  Future<void> setTypicalWorkDayStart(TimeOfDay time) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        _typicalWorkDayStartKey, '${time.hour}:${time.minute}');
+  }
+
+  @override
+  Future<Duration> getTypicalWorkDayLength() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seconds = prefs.getInt(_typicalWorkDayLengthKey);
+    return seconds != null
+        ? Duration(seconds: seconds)
+        : _defaultTypicalWorkDayLength;
+  }
+
+  @override
+  Future<void> setTypicalWorkDayLength(Duration duration) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_typicalWorkDayLengthKey, duration.inSeconds);
   }
 }
