@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
-import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/sound_selector.dart';
+import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -14,8 +14,9 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Duration workDuration = const Duration(minutes: 25); // Initialize with default
-  Duration restDuration = const Duration(minutes: 5);  // Initialize with default
+  Duration restDuration = const Duration(minutes: 5); // Initialize with default
   NotificationSound selectedSound = NotificationSound.ding;
+  bool pauseEnabled = true;
   bool isLoading = true;
 
   @override
@@ -29,11 +30,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final loadedWorkDuration = await repository.getWorkDuration();
     final loadedRestDuration = await repository.getRestDuration();
     final loadedSelectedSound = await repository.getTimerEndSound();
-    
+    final loadedPauseEnabled = await repository.isPauseEnabled();
+
     setState(() {
       workDuration = loadedWorkDuration;
       restDuration = loadedRestDuration;
       selectedSound = loadedSelectedSound;
+      pauseEnabled = loadedPauseEnabled;
       isLoading = false;
     });
   }
@@ -68,6 +71,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ref.invalidate(settingsRepositoryProvider);
   }
 
+  Future<void> _savePauseEnabled(bool enabled) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setPauseEnabled(enabled);
+    setState(() {
+      pauseEnabled = enabled;
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -99,6 +111,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             SoundSelector(
               selectedSound: selectedSound,
               onChanged: _saveSelectedSound,
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Switch(
+                  value: pauseEnabled,
+                  onChanged: _savePauseEnabled,
+                ),
+                const Text('Enable Pause'),
+              ],
             ),
           ],
         ),

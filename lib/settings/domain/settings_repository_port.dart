@@ -8,6 +8,8 @@ abstract class SettingsRepositoryPort {
   Future<void> setRestDuration(Duration duration);
 
   Future<NotificationSound> getTimerEndSound();
-
   Future<void> setTimerEndSound(NotificationSound sound);
+
+  Future<bool> isPauseEnabled();
+  Future<void> setPauseEnabled(bool enabled);
 }

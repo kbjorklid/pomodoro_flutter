@@ -6,8 +6,10 @@ class SettingsRepository implements SettingsRepositoryPort {
   static const _workDurationKey = 'work_duration';
   static const _restDurationKey = 'rest_duration';
   static const _selectedSoundKey = 'selected_sound';
+  static const _pauseEnabledKey = 'pause_enabled';
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultRestDuration = Duration(minutes: 5);
+  static const bool _defaultPauseEnabled = true;
 
   @override
   Future<Duration> getWorkDuration() async {
@@ -51,5 +53,17 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setRestDuration(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_restDurationKey, duration.inSeconds);
+  }
+
+  @override
+  Future<bool> isPauseEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_pauseEnabledKey) ?? _defaultPauseEnabled;
+  }
+
+  @override
+  Future<void> setPauseEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_pauseEnabledKey, enabled);
   }
 }
