@@ -13,8 +13,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  Duration workDuration = const Duration(minutes: 25); // Initialize with default
-  Duration restDuration = const Duration(minutes: 5); // Initialize with default
+  Duration workDuration = const Duration(minutes: 25);
+  Duration restDuration = const Duration(minutes: 5);
   NotificationSound selectedSound = NotificationSound.ding;
   bool pauseEnabled = true;
   TimeOfDay typicalWorkDayStart = const TimeOfDay(hour: 8, minute: 0);
@@ -54,7 +54,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       workDuration = duration;
     });
-    // Notify listeners that settings have changed
     ref.invalidate(settingsRepositoryProvider);
   }
 
@@ -74,7 +73,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     setState(() {
       restDuration = duration;
     });
-    // Notify listeners that settings have changed
     ref.invalidate(settingsRepositoryProvider);
   }
 
@@ -105,76 +103,137 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ref.invalidate(settingsRepositoryProvider);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+      ),
+    );
+  }
 
-    return Scaffold(
-      body: Padding(
+  Widget _buildCard({required String title, required List<Widget> children}) {
+    return Card(
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 16.0),
+      child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DurationSlider(
-              label: 'Work Duration',
-              duration: workDuration,
-              minDuration: const Duration(minutes: 1),
-              maxDuration: const Duration(minutes: 60),
-              onChanged: _saveWorkDuration,
-            ),
-            const SizedBox(height: 20),
-            DurationSlider(
-              label: 'Rest Duration',
-              duration: restDuration,
-              minDuration: const Duration(minutes: 1),
-              maxDuration: const Duration(minutes: 30),
-              onChanged: _saveRestDuration,
-            ),
-            const SizedBox(height: 20),
-            SoundSelector(
-              selectedSound: selectedSound,
-              onChanged: _saveSelectedSound,
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Switch(
-                  value: pauseEnabled,
-                  onChanged: _savePauseEnabled,
-                ),
-                const Text('Enable Pause'),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                const Text('Typical Work Day Start:'),
-                TextButton(
-                  child: Text(typicalWorkDayStart.format(context)),
-                  onPressed: () async {
-                    final TimeOfDay? newTime = await showTimePicker(
-                      context: context,
-                      initialTime: typicalWorkDayStart,
-                    );
-                    if (newTime != null) {
-                      _saveTypicalWorkDayStart(newTime);
-                    }
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            DurationSlider(
-              label: 'Typical Work Day Length',
-              duration: typicalWorkDayLength,
-              minDuration: const Duration(hours: 1),
-              maxDuration: const Duration(hours: 16),
-              onChanged: _saveTypicalWorkDayLength,
-              step: const Duration(minutes: 15),
-            ),
+            _buildSectionTitle(title),
+            ...children,
           ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildCard(
+                title: 'Timer Settings',
+                children: [
+                  DurationSlider(
+                    label: 'Work Duration',
+                    duration: workDuration,
+                    minDuration: const Duration(minutes: 1),
+                    maxDuration: const Duration(minutes: 60),
+                    onChanged: _saveWorkDuration,
+                  ),
+                  const SizedBox(height: 16),
+                  DurationSlider(
+                    label: 'Rest Duration',
+                    duration: restDuration,
+                    minDuration: const Duration(minutes: 1),
+                    maxDuration: const Duration(minutes: 30),
+                    onChanged: _saveRestDuration,
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    title: const Text(
+                      'Pause enabled',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Show pause button on timer screen',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    trailing: Switch(
+                      value: pauseEnabled,
+                      onChanged: _savePauseEnabled,
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+              _buildCard(
+                title: 'Notification Settings',
+                children: [
+                  SoundSelector(
+                    selectedSound: selectedSound,
+                    onChanged: _saveSelectedSound,
+                  ),
+                ],
+              ),
+              _buildCard(
+                title: 'Work Schedule',
+                children: [
+                  ListTile(
+                    title: const Text('Typical Work Day Start'),
+                    trailing: TextButton(
+                      child: Text(typicalWorkDayStart.format(context)),
+                      onPressed: () async {
+                        final TimeOfDay? newTime = await showTimePicker(
+                          context: context,
+                          initialTime: typicalWorkDayStart,
+                        );
+                        if (newTime != null) {
+                          _saveTypicalWorkDayStart(newTime);
+                        }
+                      },
+                    ),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: 16),
+                  DurationSlider(
+                    label: 'Typical Work Day Length',
+                    duration: typicalWorkDayLength,
+                    minDuration: const Duration(hours: 1),
+                    maxDuration: const Duration(hours: 16),
+                    onChanged: _saveTypicalWorkDayLength,
+                    step: const Duration(minutes: 15),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
