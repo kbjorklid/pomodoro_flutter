@@ -9,6 +9,7 @@ import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dar
 import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
+import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/timer/application/get_todays_timer_sessions_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
@@ -62,8 +63,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   @override
   Widget build(BuildContext context) {
-    Future<List<TimerSession>> todaySessionsFuture =
-        _todaysTimerSessionsUseCase.getTodaysSessions();
 
     final screenWidth = MediaQuery.of(context).size.width;
     final horizontalMargin = screenWidth * 0.05;
@@ -76,19 +75,19 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         borderRadius: _borderRadius,
         color: Colors.grey[200],
       ),
-      child: FutureBuilder<List<ClosedTimerSession>>(
-        future: _todaysTimerSessionsUseCase.getTodaysSessions(),
+      child: FutureBuilder<_TimelineData>(
+        future: _getTimelineData(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final sessions = snapshot.data ?? [];
+          final timelineData = snapshot.data ?? _TimelineData.empty();
 
           return LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              return _buildTimeline(sessions, width);
+              return _buildTimeline(timelineData, width);
             },
           );
         },
@@ -96,12 +95,11 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     );
   }
 
-  Widget _buildTimeline(
-      List<ClosedTimerSession> sessions, double timelineWidth) {
-    final timeBarRange = _getTimeBarRange(sessions);
+  Widget _buildTimeline(_TimelineData timelineData, double timelineWidth) {
+    final timeBarRange = _getTimeBarRange(timelineData.sessions);
     _logger.d("Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
     return Stack(
-      children: _children(sessions, timeBarRange, timelineWidth),
+      children: _children(timelineData, timeBarRange, timelineWidth),
     );
   }
 
@@ -135,12 +133,21 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     return DateTime(now.year, now.month, now.day);
   }
 
-  List<Widget> _children(List<ClosedTimerSession> sessions,
-      DateTimeRange timeBarRange, double timelineWidth,
+  List<Widget> _children(_TimelineData timelineData, DateTimeRange timeBarRange,
+      double timelineWidth,
       [DateTime? now]) {
     now ??= DateTime.now();
     final children = <Widget>[];
-    for (final session in sessions) {
+    if (timelineData.typicalWorkDayStart != null &&
+        timelineData.typicalWorkDayLength != null) {
+      final workdaySegment = _WorkDaySegment(
+          workdayStart: timelineData.typicalWorkDayStart!,
+          workdayDuration: timelineData.typicalWorkDayLength!,
+          timeBarRange: timeBarRange,
+          timelinePixelWidth: timelineWidth);
+      children.add(workdaySegment);
+    }
+    for (final session in timelineData.sessions) {
       DateTimeRange range =
           session.range ?? DateTimeRange(start: session.startedAt, end: now);
       _SegmentPosition segmentPosition = _SegmentPosition(
@@ -154,7 +161,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
           _SessionSegment(segmentPosition: segmentPosition, session: session));
     }
     // Add pauses at the end, on top of everything else.
-    for (final session in sessions) {
+    for (final session in timelineData.sessions) {
       for (final pause in session.pauses) {
         _SegmentPosition segmentPosition = _SegmentPosition(
             segmentRange: pause.range,
@@ -168,6 +175,71 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     }
     return children;
   }
+
+  Future<_TimelineData> _getTimelineData() async {
+    final settings = ref.read(settingsRepositoryProvider);
+    final results = await Future.wait([
+      settings.getTypicalWorkDayStart(),
+      settings.getTypicalWorkDayLength(),
+      _todaysTimerSessionsUseCase.getTodaysSessions(),
+    ]);
+
+    return _TimelineData(
+        sessions: results[2] as List<ClosedTimerSession>,
+        typicalWorkDayStart: results[0] as TimeOfDay,
+        typicalWorkDayLength: results[1] as Duration);
+  }
+}
+
+class _TimelineData {
+  final List<ClosedTimerSession> sessions;
+  final TimeOfDay? typicalWorkDayStart;
+  final Duration? typicalWorkDayLength;
+
+  _TimelineData(
+      {required this.sessions,
+      required this.typicalWorkDayStart,
+      required this.typicalWorkDayLength});
+
+  _TimelineData.empty()
+      : this(
+            sessions: [],
+            typicalWorkDayStart: null,
+            typicalWorkDayLength: null);
+}
+
+class _WorkDaySegment extends _TimelineSegment {
+  _WorkDaySegment._internal({required super.segmentPosition});
+
+  factory _WorkDaySegment(
+      {required TimeOfDay workdayStart,
+      required Duration workdayDuration,
+      required DateTimeRange timeBarRange,
+      required double timelinePixelWidth}) {
+    DateTime workdayStartDateTime = DateTime(
+        timeBarRange.start.year,
+        timeBarRange.start.month,
+        timeBarRange.start.day,
+        workdayStart.hour,
+        workdayStart.minute);
+    DateTime workdayEndDateTime = workdayStartDateTime.add(workdayDuration);
+    DateTime dayEnd = DateTime(timeBarRange.start.year,
+            timeBarRange.start.month, timeBarRange.start.day)
+        .add(Duration(days: 1));
+    if (workdayEndDateTime.isAfter(dayEnd)) {
+      workdayEndDateTime = dayEnd;
+    }
+    DateTimeRange workdayRange =
+        DateTimeRange(start: workdayStartDateTime, end: workdayEndDateTime);
+    final pos = _SegmentPosition(
+        segmentRange: workdayRange,
+        timeBarRange: timeBarRange,
+        timelinePixelWidth: timelinePixelWidth);
+    return _WorkDaySegment._internal(segmentPosition: pos);
+  }
+
+  @override
+  Color get color => AppColors.timelineWorkdayBackground;
 }
 
 abstract class _TimelineSegment extends StatelessWidget {

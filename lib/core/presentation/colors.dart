@@ -16,4 +16,6 @@ class AppColors {
   static const rest = green;
   static const restPaused = lightGreen;
   static const workIncomplete = mediumGrey;
+  
+  static const timelineWorkdayBackground = Color(0xFFFAEEE5);
 }
