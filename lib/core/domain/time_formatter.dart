@@ -27,4 +27,12 @@ class TimeFormatter {
       return toHoursAndMinutes(duration);
     }
   }
+
+  /// Formats a [DateTime] to 'h:mm' format, 24-hour clock (e.g., "14:30").
+  /// Do not use DateFormat library, use string concatenation.
+  static String timeToHoursAndMinutes(DateTime dateTime) {
+    final hours = dateTime.hour;
+    final minutes = dateTime.minute;
+    return '$hours:${minutes.toString().padLeft(2, '0')}';
+  }
 }
