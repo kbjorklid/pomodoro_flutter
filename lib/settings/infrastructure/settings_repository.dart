@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsRepository implements SettingsRepositoryPort {
   static const _workDurationKey = 'work_duration';
-  static const _restDurationKey = 'rest_duration';
+  static const _shortRestDurationKey = 'short_rest_duration';
+  static const _longRestDurationKey = 'long_rest_duration';
   static const _selectedSoundKey = 'selected_sound';
   static const _pauseEnabledKey = 'pause_enabled';
   static const _typicalWorkDayStartKey = 'typical_workday_start';
@@ -13,7 +14,8 @@ class SettingsRepository implements SettingsRepositoryPort {
   static const _alwaysShowWorkdayTimespanInTimelineKey = 'always_show_workday_timespan_in_timeline';
 
   static const _defaultWorkDuration = Duration(minutes: 25);
-  static const _defaultRestDuration = Duration(minutes: 5);
+  static const _defaultShortRestDuration = Duration(minutes: 5);
+  static const _defaultLongRestDuration = Duration(minutes: 15);
   static const bool _defaultPauseEnabled = true;
   static final _defaultTypicalWorkDayStart = TimeOfDay(hour: 8, minute: 0);
   static final _defaultTypicalWorkDayLength = Duration(hours: 8);
@@ -51,16 +53,31 @@ class SettingsRepository implements SettingsRepositoryPort {
   }
 
   @override
-  Future<Duration> getRestDuration() async {
+  Future<Duration> getShortRestDuration() async {
     final prefs = await SharedPreferences.getInstance();
-    final seconds = prefs.getInt(_restDurationKey);
-    return seconds != null ? Duration(seconds: seconds) : _defaultRestDuration;
+    final seconds = prefs.getInt(_shortRestDurationKey);
+    return seconds != null ? Duration(seconds: seconds) : _defaultShortRestDuration;
   }
 
   @override
-  Future<void> setRestDuration(Duration duration) async {
+  Future<void> setShortRestDuration(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_restDurationKey, duration.inSeconds);
+    await prefs.setInt(_shortRestDurationKey, duration.inSeconds);
+  }
+
+  @override
+  Future<Duration> getLongRestDuration() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seconds = prefs.getInt(_longRestDurationKey);
+    return seconds != null
+        ? Duration(seconds: seconds)
+        : _defaultLongRestDuration;
+  }
+
+  @override
+  Future<void> setLongRestDuration(Duration duration) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_longRestDurationKey, duration.inSeconds);
   }
 
   @override

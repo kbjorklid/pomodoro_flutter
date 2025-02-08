@@ -29,19 +29,24 @@ class ToggleTimerTypeButtons extends ConsumerWidget {
               icon: Icon(Icons.work),
             ),
             ButtonSegment<TimerType>(
-              value: TimerType.rest,
-              label: Text('Rest'),
-              icon: Icon(Icons.coffee),
+              value: TimerType.shortRest,
+              label: Text('Short Rest'),
+              icon: Icon(Icons.coffee_maker),
+            ),
+             ButtonSegment<TimerType>(
+              value: TimerType.longRest,
+              label: Text('Long Rest'),
+              icon: Icon(Icons.local_cafe),
             ),
           ],
           selected: {currentType},
-          onSelectionChanged: disableTimerTypeSwitch
-              ? null
-              : (Set<TimerType> newSelection) {
-                  timerService.setTimerType(newSelection.first);
-                },
+          onSelectionChanged: (Set<TimerType> newSelection) {
+            if (!disableTimerTypeSwitch) {
+              timerService.setTimerType(newSelection.first);
+            }
+          },
           style: ButtonStyle(
-            backgroundColor: colorSelect(workOrRestColor(currentType)),
+            backgroundColor: colorSelect(timerTypeColor(currentType)),
             foregroundColor: colorSelect(Colors.white),
             iconColor: colorSelect(Colors.white),
           ),
@@ -53,8 +58,14 @@ class ToggleTimerTypeButtons extends ConsumerWidget {
     );
   }
 
-  Color workOrRestColor(TimerType currentType) {
-    return currentType == TimerType.work ? AppColors.work : AppColors.rest;
+  Color timerTypeColor(TimerType currentType) {
+    switch (currentType) {
+      case TimerType.work:
+        return AppColors.work;
+      case TimerType.shortRest:
+      case TimerType.longRest:
+        return AppColors.rest;
+    }
   }
 
   WidgetStateProperty<Color?> colorSelect(Color? selected,

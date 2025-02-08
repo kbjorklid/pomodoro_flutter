@@ -5,8 +5,11 @@ abstract class SettingsRepositoryPort {
   Future<Duration> getWorkDuration();
   Future<void> setWorkDuration(Duration duration);
   
-  Future<Duration> getRestDuration();
-  Future<void> setRestDuration(Duration duration);
+  Future<Duration> getShortRestDuration();
+  Future<void> setShortRestDuration(Duration duration);
+
+  Future<Duration> getLongRestDuration();
+  Future<void> setLongRestDuration(Duration duration);
 
   Future<NotificationSound> getTimerEndSound();
   Future<void> setTimerEndSound(NotificationSound sound);

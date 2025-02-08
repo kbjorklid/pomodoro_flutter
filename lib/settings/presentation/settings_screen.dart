@@ -15,7 +15,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Duration workDuration = const Duration(minutes: 25);
-  Duration restDuration = const Duration(minutes: 5);
+  Duration shortRestDuration = const Duration(minutes: 5);
+  Duration longRestDuration = const Duration(minutes: 15);
   NotificationSound selectedSound = NotificationSound.ding;
   bool pauseEnabled = true;
   TimeOfDay typicalWorkDayStart = const TimeOfDay(hour: 8, minute: 0);
@@ -32,7 +33,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Future<void> _loadSettings() async {
     final repository = ref.read(settingsRepositoryProvider);
     final loadedWorkDuration = await repository.getWorkDuration();
-    final loadedRestDuration = await repository.getRestDuration();
+    final loadedShortRestDuration = await repository.getShortRestDuration();
+    final loadedLongRestDuration = await repository.getLongRestDuration();
     final loadedSelectedSound = await repository.getTimerEndSound();
     final loadedPauseEnabled = await repository.isPauseEnabled();
     final loadedTypicalWorkDayStart = await repository.getTypicalWorkDayStart();
@@ -41,7 +43,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     setState(() {
       workDuration = loadedWorkDuration;
-      restDuration = loadedRestDuration;
+      shortRestDuration = loadedShortRestDuration;
+      longRestDuration = loadedLongRestDuration;
       selectedSound = loadedSelectedSound;
       pauseEnabled = loadedPauseEnabled;
       typicalWorkDayStart = loadedTypicalWorkDayStart;
@@ -70,11 +73,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     ref.invalidate(settingsRepositoryProvider);
   }
 
-  Future<void> _saveRestDuration(Duration duration) async {
+  Future<void> _saveShortRestDuration(Duration duration) async {
     final repository = ref.read(settingsRepositoryProvider);
-    await repository.setRestDuration(duration);
+    await repository.setShortRestDuration(duration);
     setState(() {
-      restDuration = duration;
+      shortRestDuration = duration;
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
+
+  Future<void> _saveLongRestDuration(Duration duration) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setLongRestDuration(duration);
+    setState(() {
+      longRestDuration = duration;
     });
     ref.invalidate(settingsRepositoryProvider);
   }
@@ -176,11 +188,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
                   DurationSlider(
-                    label: 'Rest Duration',
-                    duration: restDuration,
+                    label: 'Short Rest Duration',
+                    duration: shortRestDuration,
                     minDuration: const Duration(minutes: 1),
                     maxDuration: const Duration(minutes: 30),
-                    onChanged: _saveRestDuration,
+                    onChanged: _saveShortRestDuration,
+                  ),
+                  const SizedBox(height: 16),
+                  DurationSlider(
+                    label: 'Long Rest Duration',
+                    duration: longRestDuration,
+                    minDuration: const Duration(minutes: 5),
+                    maxDuration: const Duration(minutes: 60),
+                    onChanged: _saveLongRestDuration,
                   ),
                   const SizedBox(height: 16),
                   ListTile(

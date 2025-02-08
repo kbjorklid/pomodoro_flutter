@@ -49,8 +49,10 @@ class TimerSessionDTO {
     switch (code) {
       case 0:
         return TimerType.work;
+      case 1:
+        return TimerType.shortRest;
       default:
-        return TimerType.rest;
+        return TimerType.longRest;
     }
   }
 

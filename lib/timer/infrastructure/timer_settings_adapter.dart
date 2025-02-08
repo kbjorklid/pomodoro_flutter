@@ -10,5 +10,8 @@ class TimerSettingsAdapter implements TimerSettingsPort {
   Future<Duration> get workDuration => _repository.getWorkDuration();
 
   @override
-  Future<Duration> get restDuration => _repository.getRestDuration();
+  Future<Duration> get shortRestDuration => _repository.getShortRestDuration();
+
+  @override
+  Future<Duration> get longRestDuration => _repository.getLongRestDuration();
 }

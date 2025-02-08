@@ -27,7 +27,8 @@ class TimerLabel extends ConsumerWidget {
           case TimerType.work:
             color = paused ? AppColors.workPaused : AppColors.work;
             break;
-          case TimerType.rest:
+          case TimerType.shortRest:
+          case TimerType.longRest:
             color = paused ? AppColors.restPaused : AppColors.rest;
             break;
         }

@@ -3,8 +3,11 @@ enum TimerType {
   /// Work session
   work,
   
-  /// Rest session
-  rest,
+  /// Short rest session
+  shortRest,
+  
+  /// Long rest session
+  longRest,
 
 }
 
