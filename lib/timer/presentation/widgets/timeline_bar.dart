@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logger/logger.dart';
+import 'package:pomodoro_app2/core/domain/date_time_range_builder.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
@@ -106,36 +107,22 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   DateTimeRange _getTimeBarRange(_TimelineData timelineData, [DateTime? now]) {
     now ??= DateTime.now();
-    var end = now;
-    DateTime start;
-    if (timelineData.sessions.isEmpty) {
-      start = end.subtract(const Duration(hours: 1));
-    } else {
-      // TODO this should be sorted already?
-      var sortedSessions = List.of(timelineData.sessions);
-      sortedSessions.sort((a, b) => a.startedAt.compareTo(b.startedAt));
-      start = sortedSessions.first.startedAt;
-      if (end.difference(start).inMinutes < 60) {
-        start = end.subtract(const Duration(hours: 1));
-      }
-    }
-    DateTime startOfToday = _startOfToday(now);
-    if (start.isBefore(startOfToday)) {
-      start = startOfToday;
-    }
+    final rangeBuilder = DateTimeRangeBuilder.forDay(now);
+
     final minimumRange = timelineData.minimumRange;
     if (minimumRange != null) {
-      if (start.isAfter(minimumRange.start)) {
-        start = minimumRange.start;
-      }
-      if (end.isBefore(minimumRange.end)) {
-        end = minimumRange.end;
-      }
+      rangeBuilder.includeRange(minimumRange);
     }
-    if (end.difference(start).inMinutes < 60) {
-      end = start.add(const Duration(hours: 1));
+    rangeBuilder.include(now);
+
+    for (final session in timelineData.sessions) {
+      rangeBuilder.include(session.startedAt);
+      rangeBuilder.include(session.timerRangeEnd);
     }
-    return DateTimeRange(start: start, end: end);
+    rangeBuilder.ensureMinDurationExpandingToPast(
+        amount: const Duration(hours: 1));
+
+    return rangeBuilder.getDateTimeRange();
   }
 
   DateTime _startOfToday([DateTime? now]) {
