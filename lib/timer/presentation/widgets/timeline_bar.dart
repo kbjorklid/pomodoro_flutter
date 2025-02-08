@@ -96,22 +96,23 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
   }
 
   Widget _buildTimeline(_TimelineData timelineData, double timelineWidth) {
-    final timeBarRange = _getTimeBarRange(timelineData.sessions);
-    _logger.d("Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
+    final timeBarRange = _getTimeBarRange(timelineData);
+    _logger.d(
+        "TimeBarRange Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
     return Stack(
       children: _children(timelineData, timeBarRange, timelineWidth),
     );
   }
 
-  DateTimeRange _getTimeBarRange(List<TimerSession> sessions, [DateTime? now]) {
+  DateTimeRange _getTimeBarRange(_TimelineData timelineData, [DateTime? now]) {
     now ??= DateTime.now();
     var end = now;
     DateTime start;
-    if (sessions.isEmpty) {
+    if (timelineData.sessions.isEmpty) {
       start = end.subtract(const Duration(hours: 1));
     } else {
       // TODO this should be sorted already?
-      var sortedSessions = List.of(sessions);
+      var sortedSessions = List.of(timelineData.sessions);
       sortedSessions.sort((a, b) => a.startedAt.compareTo(b.startedAt));
       start = sortedSessions.first.startedAt;
       if (end.difference(start).inMinutes < 60) {
@@ -121,6 +122,15 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     DateTime startOfToday = _startOfToday(now);
     if (start.isBefore(startOfToday)) {
       start = startOfToday;
+    }
+    final minimumRange = timelineData.minimumRange;
+    if (minimumRange != null) {
+      if (start.isAfter(minimumRange.start)) {
+        start = minimumRange.start;
+      }
+      if (end.isBefore(minimumRange.end)) {
+        end = minimumRange.end;
+      }
     }
     if (end.difference(start).inMinutes < 60) {
       end = start.add(const Duration(hours: 1));
@@ -182,12 +192,35 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       settings.getTypicalWorkDayStart(),
       settings.getTypicalWorkDayLength(),
       _todaysTimerSessionsUseCase.getTodaysSessions(),
+      settings.isAlwaysShowWorkdayTimespanInTimeline(),
     ]);
 
+    final alwaysShowWorkdayTimespan = results[3] as bool;
+    final typicalWorkDayStart = results[0] as TimeOfDay;
+    final typicalWorkDayLength = results[1] as Duration;
+
+    if (alwaysShowWorkdayTimespan) {
+      DateTime workdayStartDateTime = DateTime(
+          DateTime.now().year,
+          DateTime.now().month,
+          DateTime.now().day,
+          typicalWorkDayStart.hour,
+          typicalWorkDayStart.minute);
+      DateTime workdayEndDateTime =
+          workdayStartDateTime.add(typicalWorkDayLength);
+      DateTimeRange minimumRange =
+          DateTimeRange(start: workdayStartDateTime, end: workdayEndDateTime);
+      return _TimelineData(
+          sessions: results[2] as List<ClosedTimerSession>,
+          typicalWorkDayStart: typicalWorkDayStart,
+          typicalWorkDayLength: typicalWorkDayLength,
+          minimumRange: minimumRange);
+    }
     return _TimelineData(
         sessions: results[2] as List<ClosedTimerSession>,
-        typicalWorkDayStart: results[0] as TimeOfDay,
-        typicalWorkDayLength: results[1] as Duration);
+        typicalWorkDayStart: typicalWorkDayStart,
+        typicalWorkDayLength: typicalWorkDayLength,
+        minimumRange: null);
   }
 }
 
@@ -195,17 +228,20 @@ class _TimelineData {
   final List<ClosedTimerSession> sessions;
   final TimeOfDay? typicalWorkDayStart;
   final Duration? typicalWorkDayLength;
+  final DateTimeRange? minimumRange;
 
   _TimelineData(
       {required this.sessions,
       required this.typicalWorkDayStart,
-      required this.typicalWorkDayLength});
+      required this.typicalWorkDayLength,
+      this.minimumRange});
 
   _TimelineData.empty()
       : this(
             sessions: [],
             typicalWorkDayStart: null,
-            typicalWorkDayLength: null);
+            typicalWorkDayLength: null,
+            minimumRange: null);
 }
 
 class _WorkDaySegment extends _TimelineSegment {
