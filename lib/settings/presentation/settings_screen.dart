@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
+import 'package:pomodoro_app2/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/sound_selector.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
@@ -217,8 +218,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _buildCard(
                 title: 'Work Schedule',
                 children: [
-                  ListTile(
-                    title: const Text('Typical Work Day Start'),
+                  SettingsListTile(
+                    title: 'Typical Work Day Start',
                     trailing: TextButton(
                       child: Text(typicalWorkDayStart.format(context)),
                       onPressed: () async {
@@ -231,7 +232,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         }
                       },
                     ),
-                    contentPadding: EdgeInsets.zero,
                   ),
                   const SizedBox(height: 16),
                   DurationSlider(
@@ -243,26 +243,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     step: const Duration(minutes: 15),
                   ),
                   const SizedBox(height: 16),
-                  ListTile(
-                    title: const Text(
-                      'Always show workday timespan in timeline',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    subtitle: const Text(
-                      'If enabled, timeline bar will always show typical workday timespan, even if it is outside of the timer session history range.',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
+                  SettingsListTile(
+                    title: 'Always show workday timespan in timeline',
+                    subtitle:
+                        'If enabled, timeline bar will always show typical workday timespan, even if it is outside of the timer session history range.',
                     trailing: Switch(
                       value: alwaysShowWorkdayTimespanInTimeline,
                       onChanged: _saveAlwaysShowWorkdayTimespanInTimeline,
                     ),
-                    contentPadding: EdgeInsets.zero,
                   ),
                 ],
               ),

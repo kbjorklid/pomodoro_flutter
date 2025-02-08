@@ -24,7 +24,13 @@ class DurationSlider extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label: ${TimeFormatter.toHumanReadable(duration)}'),
+        Text(
+          '$label: ${TimeFormatter.toHumanReadable(duration)}',
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         Slider(
           value: duration.inMinutes.toDouble(),
           min: minDuration.inMinutes.toDouble(),
