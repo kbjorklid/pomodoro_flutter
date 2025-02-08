@@ -8,6 +8,7 @@ import 'package:pomodoro_app2/core/domain/date_time_range_builder.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
+import 'package:pomodoro_app2/core/domain/time_formatter.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
@@ -72,10 +73,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       width: double.infinity,
       height: 30,
       margin: EdgeInsets.symmetric(vertical: 20, horizontal: horizontalMargin),
-      decoration: BoxDecoration(
-        borderRadius: _borderRadius,
-        color: Colors.grey[200],
-      ),
       child: FutureBuilder<_TimelineData>(
         future: _getTimelineData(),
         builder: (context, snapshot) {
@@ -84,20 +81,40 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
           }
 
           final timelineData = snapshot.data ?? _TimelineData.empty();
+          final timeBarRange = _getTimeBarRange(timelineData);
 
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              return _buildTimeline(timelineData, width);
-            },
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: _borderRadius,
+              color: Colors.grey[200],
+            ),
+            child: Stack(
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final width = constraints.maxWidth;
+                    return _buildTimelineSegments(
+                        timelineData, timeBarRange, width);
+                  },
+                ),
+                _TimelineTimeLabel(
+                  time: timeBarRange.start,
+                  position: _TimeLabelPosition.start,
+                ),
+                _TimelineTimeLabel(
+                  time: timeBarRange.end,
+                  position: _TimeLabelPosition.end,
+                ),
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildTimeline(_TimelineData timelineData, double timelineWidth) {
-    final timeBarRange = _getTimeBarRange(timelineData);
+  Widget _buildTimelineSegments(_TimelineData timelineData,
+      DateTimeRange timeBarRange, double timelineWidth) {
     _logger.d(
         "TimeBarRange Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
     return Stack(
@@ -373,3 +390,39 @@ class _SegmentPosition {
         'width: ${width.toStringAsFixed(2)}, isEmpty: $isEmpty}';
   }
 }
+
+/// Widget for displaying time labels at the ends of the timeline bar.
+class _TimelineTimeLabel extends StatelessWidget {
+  final DateTime time;
+  final _TimeLabelPosition position;
+
+  const _TimelineTimeLabel({required this.time, required this.position});
+
+  @override
+  Widget build(BuildContext context) {
+    double? left = position == _TimeLabelPosition.start ? 0 : null;
+    double? right = position == _TimeLabelPosition.end ? 0 : null;
+    return Positioned(
+      left: left,
+      right: right,
+      top: 0,
+      bottom: 0,
+      child: Align(
+        alignment: position == _TimeLabelPosition.start
+            ? Alignment.centerLeft
+            : Alignment.centerRight,
+        child: Padding(
+          padding: position == _TimeLabelPosition.start
+              ? const EdgeInsets.only(left: 6.0)
+              : const EdgeInsets.only(right: 6.0),
+          child: Text(
+            TimeFormatter.timeToHoursAndMinutes(time),
+            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+enum _TimeLabelPosition { start, end }
