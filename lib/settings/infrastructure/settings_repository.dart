@@ -10,12 +10,14 @@ class SettingsRepository implements SettingsRepositoryPort {
   static const _pauseEnabledKey = 'pause_enabled';
   static const _typicalWorkDayStartKey = 'typical_workday_start';
   static const _typicalWorkDayLengthKey = 'typical_workday_length';
+  static const _alwaysShowWorkdayTimespanInTimelineKey = 'always_show_workday_timespan_in_timeline';
 
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultRestDuration = Duration(minutes: 5);
   static const bool _defaultPauseEnabled = true;
   static final _defaultTypicalWorkDayStart = TimeOfDay(hour: 8, minute: 0);
   static final _defaultTypicalWorkDayLength = Duration(hours: 8);
+  static const bool _defaultAlwaysShowWorkdayTimespanInTimeline = false;
 
   @override
   Future<Duration> getWorkDuration() async {
@@ -107,5 +109,17 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setTypicalWorkDayLength(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_typicalWorkDayLengthKey, duration.inSeconds);
+  }
+
+  @override
+  Future<bool> isAlwaysShowWorkdayTimespanInTimeline() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_alwaysShowWorkdayTimespanInTimelineKey) ?? _defaultAlwaysShowWorkdayTimespanInTimeline;
+  }
+
+  @override
+  Future<void> setAlwaysShowWorkdayTimespanInTimeline(bool alwaysShow) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_alwaysShowWorkdayTimespanInTimelineKey, alwaysShow);
   }
 }

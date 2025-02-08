@@ -21,4 +21,7 @@ abstract class SettingsRepositoryPort {
   Future<Duration> getTypicalWorkDayLength();
 
   Future<void> setTypicalWorkDayLength(Duration duration);
+
+  Future<bool> isAlwaysShowWorkdayTimespanInTimeline();
+  Future<void> setAlwaysShowWorkdayTimespanInTimeline(bool alwaysShow);
 }

@@ -20,6 +20,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   TimeOfDay typicalWorkDayStart = const TimeOfDay(hour: 8, minute: 0);
   Duration typicalWorkDayLength = const Duration(hours: 8);
   bool isLoading = true;
+  bool alwaysShowWorkdayTimespanInTimeline = false;
 
   @override
   void initState() {
@@ -34,8 +35,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final loadedSelectedSound = await repository.getTimerEndSound();
     final loadedPauseEnabled = await repository.isPauseEnabled();
     final loadedTypicalWorkDayStart = await repository.getTypicalWorkDayStart();
-    final loadedTypicalWorkDayLength =
-        await repository.getTypicalWorkDayLength();
+    final loadedTypicalWorkDayLength = await repository.getTypicalWorkDayLength();
+    final loadedAlwaysShowWorkdayTimespanInTimeline = await repository.isAlwaysShowWorkdayTimespanInTimeline();
 
     setState(() {
       workDuration = loadedWorkDuration;
@@ -44,6 +45,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       pauseEnabled = loadedPauseEnabled;
       typicalWorkDayStart = loadedTypicalWorkDayStart;
       typicalWorkDayLength = loadedTypicalWorkDayLength;
+      alwaysShowWorkdayTimespanInTimeline = loadedAlwaysShowWorkdayTimespanInTimeline;
       isLoading = false;
     });
   }
@@ -90,25 +92,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await repository.setTypicalWorkDayLength(duration);
     setState(() {
       typicalWorkDayLength = duration;
-    });
-    ref.invalidate(settingsRepositoryProvider);
-  }
+   });
+   ref.invalidate(settingsRepositoryProvider);
+ }
 
-  Future<void> _savePauseEnabled(bool enabled) async {
-    final repository = ref.read(settingsRepositoryProvider);
-    await repository.setPauseEnabled(enabled);
-    setState(() {
-      pauseEnabled = enabled;
-    });
-    ref.invalidate(settingsRepositoryProvider);
-  }
+ Future<void> _savePauseEnabled(bool enabled) async {
+   final repository = ref.read(settingsRepositoryProvider);
+   await repository.setPauseEnabled(enabled);
+   setState(() {
+     pauseEnabled = enabled;
+   });
+   ref.invalidate(settingsRepositoryProvider);
+ }
 
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+ Future<void> _saveAlwaysShowWorkdayTimespanInTimeline(bool alwaysShow) async {
+   final repository = ref.read(settingsRepositoryProvider);
+   await repository.setAlwaysShowWorkdayTimespanInTimeline(alwaysShow);
+   setState(() {
+     alwaysShowWorkdayTimespanInTimeline = alwaysShow;
+   });
+   ref.invalidate(settingsRepositoryProvider);
+
+ }
+
+ Widget _buildSectionTitle(String title) {
+   return Padding(
+     padding: const EdgeInsets.only(bottom: 16.0),
+     child: Text(
+       title,
+       style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
       ),
@@ -229,6 +241,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     maxDuration: const Duration(hours: 16),
                     onChanged: _saveTypicalWorkDayLength,
                     step: const Duration(minutes: 15),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    title: const Text(
+                      'Always show workday timespan in timeline',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'If enabled, timeline bar will always show typical workday timespan, even if it is outside of the timer session history range.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
+                    ),
+                    trailing: Switch(
+                      value: alwaysShowWorkdayTimespanInTimeline,
+                      onChanged: _saveAlwaysShowWorkdayTimespanInTimeline,
+                    ),
+                    contentPadding: EdgeInsets.zero,
                   ),
                 ],
               ),
