@@ -417,7 +417,10 @@ class _TimelineTimeLabel extends StatelessWidget {
               : const EdgeInsets.only(right: 6.0),
           child: Text(
             TimeFormatter.timeToHoursAndMinutes(time),
-            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+                fontWeight: FontWeight.bold),
           ),
         ),
       ),
