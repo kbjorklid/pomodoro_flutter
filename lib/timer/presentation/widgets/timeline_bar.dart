@@ -87,6 +87,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
             decoration: BoxDecoration(
               borderRadius: _borderRadius,
               color: Colors.grey[200],
+              border: Border.all(color: Colors.grey[350]!),
             ),
             child: Stack(
               children: [
