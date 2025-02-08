@@ -104,6 +104,7 @@ class TimerService {
 
   final List<TimerStateListener> _stateListeners = [];
   final List<TimerSessionListener> _sessionListeners = [];
+  
   DateTime? _lastTimeSecondsChanged;
   DateTime? _lastTimeMinutesChanged;
 

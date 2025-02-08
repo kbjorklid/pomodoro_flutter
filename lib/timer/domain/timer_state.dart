@@ -17,6 +17,15 @@ class TimerState {
   final List<PauseRecord> pauses;
   final DateTime? pausedAt;
 
+  bool get isStarted => startedAt != null;
+
+  Duration get elapsedTime {
+    if (!isStarted) {
+      return Duration.zero;
+    }
+    return timerDuration - remainingTime;
+  }
+
   const TimerState({
     required this.timerType,
     required this.status,
