@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/domain/time_formatter.dart';
 class DurationSlider extends StatelessWidget {
   final String label;
   final Duration duration;
@@ -23,13 +24,13 @@ class DurationSlider extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label: ${_timeLabel(duration)}'),
+        Text('$label: ${TimeFormatter.toHumanReadable(duration)}'),
         Slider(
           value: duration.inMinutes.toDouble(),
           min: minDuration.inMinutes.toDouble(),
           max: maxDuration.inMinutes.toDouble(),
           divisions: _divisions(),
-          label: _timeLabel(duration),
+          label: TimeFormatter.toHumanReadable(duration),
           onChanged: (value) {
             onChanged(Duration(minutes: value.toInt()));
           },
@@ -44,13 +45,5 @@ class DurationSlider extends StatelessWidget {
       return minutes;
     }
     return (minutes / step.inMinutes).toInt();
-  }
-
-  String _timeLabel(Duration duration) {
-    if (duration.inHours > 0) {
-      String minutes = (duration.inMinutes % 60).toString().padLeft(2, '0');
-      return '${duration.inHours}:$minutes';
-    }
-    return '${duration.inMinutes} minutes';
   }
 }

@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Utility class for formatting time durations into human-readable strings.
 class TimeFormatter {
   /// Formats a [Duration] into "h:mm" format (e.g., "3:42").
@@ -9,6 +7,13 @@ class TimeFormatter {
     return '$hours:${minutes.toString().padLeft(2, '0')}';
   }
 
+  /// Formats a [Duration] into "mm:ss" format (e.g., "59:30").
+  static String toMinutesAndSeconds(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds.remainder(60);
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+  }
+
   /// Formats a [Duration] into a human-readable string.
   ///
   /// If the duration is less than 60 minutes, it outputs "m minutes" (e.g., "58 minutes").
@@ -16,6 +21,7 @@ class TimeFormatter {
   static String toHumanReadable(Duration duration) {
     if (duration < const Duration(minutes: 60)) {
       final minutes = duration.inMinutes;
+      if (minutes == 1) return '1 minute';
       return '$minutes minutes';
     } else {
       return toHoursAndMinutes(duration);

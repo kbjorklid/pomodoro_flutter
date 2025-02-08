@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoro_app2/core/domain/time_formatter.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
@@ -17,8 +18,7 @@ class TimerLabel extends ConsumerWidget {
         final remaining = timerState.remainingTime;
         final total = timerState.timerDuration;
         final progress = total.inSeconds > 0 ? remaining.inSeconds / total.inSeconds : 0.0;
-        final minutes = (remaining.inMinutes).toString();
-        final seconds = (remaining.inSeconds % 60).toString().padLeft(2, '0');
+        final timeLabel = TimeFormatter.toMinutesAndSeconds(remaining);
 
         final bool paused = timerState.status == TimerStatus.paused;
 
@@ -44,7 +44,7 @@ class TimerLabel extends ConsumerWidget {
                 child: CircularProgressIndicator(
                     value: progress, strokeWidth: 8, color: color),
               ),
-              Text('$minutes:$seconds', style: const TextStyle(fontSize: 48)),
+              Text(timeLabel, style: const TextStyle(fontSize: 48)),
             ],
           ),
         );
