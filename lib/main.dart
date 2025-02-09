@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pomodoro_app2/history/presentation/providers/timer_session_repository_provider.dart';
+import 'package:pomodoro_app2/navigation_view.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
-import 'package:pomodoro_app2/timer/presentation/timer_screen.dart';
 
 void main() async {
   await Hive.initFlutter();
@@ -81,7 +81,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
         ),
         useMaterial3: true,
       ),
-      home: const TimerScreen(),
+      home: const NavigationView(),
     );
   }
 }
