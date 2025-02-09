@@ -4,6 +4,7 @@ import 'package:pomodoro_app2/settings/presentation/providers/settings_repositor
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/sound_selector.dart';
+import 'package:pomodoro_app2/settings/presentation/widgets/workday_timespan_slider.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -238,29 +239,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               _buildCard(
                 title: 'Work Schedule',
                 children: [
-                  SettingsListTile(
-                    title: 'Typical Work Day Start',
-                    trailing: TextButton(
-                      child: Text(typicalWorkDayStart.format(context)),
-                      onPressed: () async {
-                        final TimeOfDay? newTime = await showTimePicker(
-                          context: context,
-                          initialTime: typicalWorkDayStart,
-                        );
-                        if (newTime != null) {
-                          _saveTypicalWorkDayStart(newTime);
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  DurationSlider(
-                    label: 'Typical Work Day Length',
-                    duration: typicalWorkDayLength,
-                    minDuration: const Duration(hours: 1),
-                    maxDuration: const Duration(hours: 16),
-                    onChanged: _saveTypicalWorkDayLength,
-                    step: const Duration(minutes: 15),
+                  WorkdayTimespanSlider(
+                    startTime: typicalWorkDayStart,
+                    dayLength: typicalWorkDayLength,
+                    onStartTimeChanged: _saveTypicalWorkDayStart,
+                    onDayLengthChanged: _saveTypicalWorkDayLength,
                   ),
                   const SizedBox(height: 16),
                   SettingsListTile(
