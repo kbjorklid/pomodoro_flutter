@@ -15,7 +15,8 @@ class SoundSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return IntrinsicWidth(
+        child: Row(
       children: [
         const Text('Sound: '),
         DropdownButton<NotificationSound>(
@@ -41,6 +42,6 @@ class SoundSelector extends StatelessWidget {
           },
         ),
       ],
-    );
+    ));
   }
 }

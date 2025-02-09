@@ -6,17 +6,24 @@ import 'package:flutter/material.dart';
 class SettingsListTile extends StatelessWidget {
   final String title;
   final String? subtitle;
-  final Widget trailing;
+  final Widget? trailing;
+  final Widget? below;
 
   const SettingsListTile({
     super.key,
     required this.title,
     this.subtitle,
-    required this.trailing,
-  });
+      this.trailing,
+      this.below});
 
   @override
   Widget build(BuildContext context) {
+    return below == null
+        ? _buildListTile(context)
+        : _buildListTileAndBelowWidget(context);
+  }
+
+  Widget _buildListTile(BuildContext context) {
     return ListTile(
       title: Text(
         title,
@@ -36,6 +43,16 @@ class SettingsListTile extends StatelessWidget {
           : null,
       trailing: trailing,
       contentPadding: EdgeInsets.zero,
+    );
+  }
+
+  Widget _buildListTileAndBelowWidget(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildListTile(context),
+        below!,
+      ],
     );
   }
 }

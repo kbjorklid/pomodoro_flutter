@@ -204,35 +204,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onChanged: _saveLongRestDuration,
                   ),
                   const SizedBox(height: 16),
-                  ListTile(
-                    title: const Text(
-                      'Pause enabled',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    subtitle: const Text(
-                      'Show pause button on timer screen',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
+                  SettingsListTile(
+                    title: 'Pause enabled',
+                    subtitle: 'Show pause button on timer screen',
                     trailing: Switch(
                       value: pauseEnabled,
                       onChanged: _savePauseEnabled,
                     ),
-                    contentPadding: EdgeInsets.zero,
                   ),
                 ],
               ),
               _buildCard(
                 title: 'Notification Settings',
                 children: [
-                  SoundSelector(
-                    selectedSound: selectedSound,
-                    onChanged: _saveSelectedSound,
+                  SettingsListTile(
+                    title: 'Timer end sound',
+                    trailing: SoundSelector(
+                      selectedSound: selectedSound,
+                      onChanged: _saveSelectedSound,
+                    ),
                   ),
                 ],
               ),

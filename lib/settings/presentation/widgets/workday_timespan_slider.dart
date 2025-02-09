@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoro_app2/settings/presentation/widgets/settings_list_tile.dart';
 
 class WorkdayTimespanSlider extends ConsumerWidget {
   final TimeOfDay startTime;
@@ -29,10 +30,10 @@ class WorkdayTimespanSlider extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ListTile(
-          title: const Text('Typical Work Day Timespan'),
-          subtitle: Text(
-              '${startTime.format(context)} - ${TimeOfDay(hour: startTime.hour + dayLength.inHours, minute: startTime.minute).format(context)}'),
+        SettingsListTile(
+          title: 'Typical Work Day Timespan',
+          subtitle:
+              '${startTime.format(context)} - ${TimeOfDay(hour: startTime.hour + dayLength.inHours, minute: startTime.minute).format(context)}',
         ),
         RangeSlider(
           values: RangeValues(startHour.toDouble(), endHour.toDouble()),

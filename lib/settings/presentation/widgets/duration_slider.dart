@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pomodoro_app2/settings/presentation/widgets/settings_list_tile.dart';
 
 import '../../../core/domain/time_formatter.dart';
 class DurationSlider extends StatelessWidget {
@@ -21,18 +22,10 @@ class DurationSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '$label: ${TimeFormatter.toHumanReadable(duration)}',
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Slider(
-          value: duration.inMinutes.toDouble(),
+    return SettingsListTile(
+      title: '$label: ${TimeFormatter.toHumanReadable(duration)}',
+      below: Slider(
+        value: duration.inMinutes.toDouble(),
           min: minDuration.inMinutes.toDouble(),
           max: maxDuration.inMinutes.toDouble(),
           divisions: _divisions(),
@@ -41,7 +34,6 @@ class DurationSlider extends StatelessWidget {
             onChanged(Duration(minutes: value.toInt()));
           },
         ),
-      ],
     );
   }
   
