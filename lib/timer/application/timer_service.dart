@@ -25,6 +25,10 @@ class _TimerRuntimeState {
 
   void updateTimerType(TimerType newType, Duration totalDuration) {
     reset();
+    updateTimerTypeOnTheFly(newType, totalDuration);
+  }
+
+  void updateTimerTypeOnTheFly(TimerType newType, Duration totalDuration) {
     _timerType = newType;
     _totalDuration = totalDuration;
   }
@@ -155,9 +159,28 @@ class TimerService {
     }
   }
 
-  void setTimerType(TimerType timerType) async {
+  void setTimerType(TimerType targetTimerType) async {
+    Duration totalDuration = await _getDurationForTimerType(targetTimerType);
+
+    assert(totalDuration.inSeconds > 0);
+
+    final runningOrPaused = _state.status == TimerStatus.running ||
+        _state.status == TimerStatus.paused;
+    if (runningOrPaused && targetTimerType.isRest && _state._timerType.isRest) {
+      _state.updateTimerTypeOnTheFly(targetTimerType, totalDuration);
+      _notifyStateListeners(DateTime.now());
+    } else if (_state._timerType != targetTimerType ||
+        _state._totalDuration != totalDuration) {
+      DateTime now = DateTime.now();
+      _completeSessionIfStarted(now);
+      _state.updateTimerType(targetTimerType, totalDuration);
+      _notifyStateListeners(now);
+    }
+  }
+
+  Future<Duration> _getDurationForTimerType(TimerType targetTimerType) async {
     Duration totalDuration;
-    switch (timerType) {
+    switch (targetTimerType) {
       case TimerType.work:
         totalDuration = await _settings.getWorkDuration();
         break;
@@ -168,15 +191,7 @@ class TimerService {
         totalDuration = await _settings.getLongRestDuration();
         break;
     }
-
-    assert(totalDuration.inSeconds > 0);
-    if (_state._timerType != timerType ||
-        _state._totalDuration != totalDuration) {
-      DateTime now = DateTime.now();
-      _completeSessionIfStarted(now);
-      _state.updateTimerType(timerType, totalDuration);
-      _notifyStateListeners(now);
-    }
+    return totalDuration;
   }
 
   void startFromBeginning([DateTime? now]) {
@@ -266,18 +281,7 @@ class TimerService {
 
   Future<void> refreshDuration() async {
     final timerType = _state._timerType;
-    Duration totalDuration;
-    switch (timerType) {
-      case TimerType.work:
-        totalDuration = await _settings.getWorkDuration();
-        break;
-      case TimerType.shortRest:
-        totalDuration = await _settings.getShortRestDuration();
-        break;
-      case TimerType.longRest:
-        totalDuration = await _settings.getLongRestDuration();
-        break;
-    }
+    final Duration totalDuration = await _getDurationForTimerType(timerType);
 
     if (_state._totalDuration != totalDuration) {
       _state._totalDuration = totalDuration;

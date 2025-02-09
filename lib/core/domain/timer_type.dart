@@ -7,7 +7,10 @@ enum TimerType {
   shortRest,
   
   /// Long rest session
-  longRest,
+  longRest;
 
+  bool get isRest => this != work;
+
+  bool get isWork => this == work;
 }
 
