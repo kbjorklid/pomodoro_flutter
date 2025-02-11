@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
-import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
 
@@ -17,99 +16,68 @@ class _TimerTypeToggleState {
   });
 }
 
-final _timerTypeToggleProvider = NotifierProvider.autoDispose<
-    _TimerTypeToggleNotifier, AsyncValue<_TimerTypeToggleState>>(() {
-  return _TimerTypeToggleNotifier();
-});
-
-class _TimerTypeToggleNotifier
-    extends AutoDisposeNotifier<AsyncValue<_TimerTypeToggleState>> {
-  @override
-  AsyncValue<_TimerTypeToggleState> build() {
-    // Start with loading state
-    state = const AsyncValue.loading();
-
-    // Listen to timer state changes
-    ref.listen(timerStateProvider, (previous, next) async {
-      next.whenData((timerState) async {
-        final settings = ref.read(settingsRepositoryProvider);
-
-        final currentType = timerState.timerType;
-        final isTimerActive = timerState.status == TimerStatus.running ||
-            timerState.status == TimerStatus.paused;
-
-        final Set<TimerType> enabledTypes = {};
-        if (isTimerActive) {
-          enabledTypes.add(currentType);
-          enabledTypes.add(TimerType.work);
-          if (currentType == TimerType.shortRest &&
-              timerState.elapsedTime < await settings.getLongRestDuration()) {
-            enabledTypes.add(TimerType.longRest);
-          }
-          if (currentType == TimerType.longRest &&
-              timerState.elapsedTime < await settings.getShortRestDuration()) {
-            enabledTypes.add(TimerType.shortRest);
-          }
-        } else {
-          enabledTypes.addAll(TimerType.values);
-        }
-
-        state = AsyncValue.data(_TimerTypeToggleState(
-          timerState: timerState,
-          enabledTypes: enabledTypes,
-        ));
-      });
-    });
-
-    // Return initial loading state
-    return const AsyncValue.loading();
-  }
-}
-
 class ToggleTimerTypeButtons extends ConsumerWidget {
   const ToggleTimerTypeButtons({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final toggleStateAsync = ref.watch(_timerTypeToggleProvider);
+    // Watch the timerStateProvider to get the TimerState
+    final timerState = ref.watch(timerStateProvider);
+
+    // Read the timerProvider to access timerService methods
     final timerService = ref.read(timerProvider);
 
-    return toggleStateAsync.when(
-      data: (state) => SegmentedButton<TimerType>(
-        segments: [
-          ButtonSegment<TimerType>(
-              value: TimerType.work,
-              label: Text('Work'),
-              icon: Icon(Icons.work),
-              enabled: state.enabledTypes.contains(TimerType.work)),
-          ButtonSegment<TimerType>(
-              value: TimerType.shortRest,
-              label: Text('Short Rest'),
-              icon: Icon(Icons.coffee_maker),
-              enabled: state.enabledTypes.contains(TimerType.shortRest)),
-          ButtonSegment<TimerType>(
-              value: TimerType.longRest,
-              label: Text('Long Rest'),
-              icon: Icon(Icons.local_cafe),
-              enabled: state.enabledTypes.contains(TimerType.longRest)),
-        ],
-        selected: {state.timerState.timerType},
-        onSelectionChanged: (Set<TimerType> newSelection) {
-          timerService.setTimerType(newSelection.first);
-        },
-        style: ButtonStyle(
-          backgroundColor:
-              colorSelect(timerTypeColor(state.timerState.timerType)),
-          foregroundColor: colorSelect(Colors.white),
-          iconColor: colorSelect(Colors.white),
+    // Determine the enabled TimerTypes based on the timer state
+    final Set<TimerType> enabledTypes = _getEnabledTimerTypes(timerState);
+
+    return SegmentedButton<TimerType>(
+      segments: [
+        ButtonSegment<TimerType>(
+          value: TimerType.work,
+          label: const Text('Work'),
+          icon: const Icon(Icons.work),
+          enabled: enabledTypes.contains(TimerType.work),
         ),
+        ButtonSegment<TimerType>(
+          value: TimerType.shortRest,
+          label: const Text('Short Rest'),
+          icon: const Icon(Icons.coffee_maker),
+          enabled: enabledTypes.contains(TimerType.shortRest),
+        ),
+        ButtonSegment<TimerType>(
+          value: TimerType.longRest,
+          label: const Text('Long Rest'),
+          icon: const Icon(Icons.local_cafe),
+          enabled: enabledTypes.contains(TimerType.longRest),
+        ),
+      ],
+      selected: {timerState.timerType},
+      onSelectionChanged: (Set<TimerType> newSelection) {
+        timerService.setTimerType(newSelection.first);
+      },
+      style: ButtonStyle(
+        backgroundColor: _colorSelect(_timerTypeColor(timerState.timerType)),
+        foregroundColor: _colorSelect(Colors.white),
+        iconColor: _colorSelect(Colors.white),
       ),
-      loading: () => const CircularProgressIndicator(),
-      error: (_, __) => const Text('Error loading timer state'),
     );
   }
 
-  Color timerTypeColor(TimerType currentType) {
+  // Helper function to determine enabled timer types
+  Set<TimerType> _getEnabledTimerTypes(TimerState timerState) {
+    final Set<TimerType> enabledTypes = {};
+    if (timerState.status == TimerStatus.running ||
+        timerState.status == TimerStatus.paused) {
+      enabledTypes.add(timerState.timerType);
+      enabledTypes.add(TimerType.work);
+    } else {
+      enabledTypes.addAll(TimerType.values);
+    }
+    return enabledTypes;
+  }
+
+  // Helper function to determine timer type color
+  Color _timerTypeColor(TimerType currentType) {
     switch (currentType) {
       case TimerType.work:
         return AppColors.work;
@@ -119,7 +87,8 @@ class ToggleTimerTypeButtons extends ConsumerWidget {
     }
   }
 
-  WidgetStateProperty<Color?> colorSelect(Color? selected,
+  // Helper function to select color based on widget state
+  WidgetStateProperty<Color?> _colorSelect(Color? selected,
       [Color? unselected]) {
     return WidgetStateProperty.resolveWith<Color?>(
       (Set<WidgetState> states) {

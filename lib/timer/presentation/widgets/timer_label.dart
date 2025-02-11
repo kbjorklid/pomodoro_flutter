@@ -11,47 +11,48 @@ class TimerLabel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final timerStateAsync = ref.watch(timerStateProvider);
+    // Watch the timerStateProvider to get the TimerState directly
+    final timerState = ref.watch(timerStateProvider);
 
-    return timerStateAsync.when(
-      data: (timerState) {
-        final remaining = timerState.remainingTime;
-        final total = timerState.timerDuration;
-        final progress = total.inSeconds > 0 ? remaining.inSeconds / total.inSeconds : 0.0;
-        final timeLabel = TimeFormatter.toMinutesAndSeconds(remaining);
+    final remaining = timerState.remainingTime;
+    final total = timerState.timerDuration;
+    final progress =
+        total.inSeconds > 0 ? remaining.inSeconds / total.inSeconds : 0.0;
+    final timeLabel = TimeFormatter.toMinutesAndSeconds(remaining);
 
-        final bool paused = timerState.status == TimerStatus.paused;
+    final bool paused = timerState.status == TimerStatus.paused;
 
-        final Color color;
-        switch (timerState.timerType) {
-          case TimerType.work:
-            color = paused ? AppColors.workPaused : AppColors.work;
-            break;
-          case TimerType.shortRest:
-          case TimerType.longRest:
-            color = paused ? AppColors.restPaused : AppColors.rest;
-            break;
-        }
+    final Color color = _getColor(timerState.timerType, paused);
 
-        return SizedBox(
-          width: 200,
-          height: 200,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: CircularProgressIndicator(
-                    value: progress, strokeWidth: 8, color: color),
-              ),
-              Text(timeLabel, style: const TextStyle(fontSize: 48)),
-            ],
+    return SizedBox(
+      width: 200,
+      height: 200,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 200,
+            height: 200,
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 8,
+              color: color,
+            ),
           ),
-        );
-      },
-      loading: () => const CircularProgressIndicator(),
-      error: (error, stack) => const Text('Error loading timer state'),
+          Text(timeLabel, style: const TextStyle(fontSize: 48)),
+        ],
+      ),
     );
+  }
+
+  // Helper function to determine the color based on timer type and paused state
+  Color _getColor(TimerType timerType, bool paused) {
+    switch (timerType) {
+      case TimerType.work:
+        return paused ? AppColors.workPaused : AppColors.work;
+      case TimerType.shortRest:
+      case TimerType.longRest:
+        return paused ? AppColors.restPaused : AppColors.rest;
+    }
   }
 }

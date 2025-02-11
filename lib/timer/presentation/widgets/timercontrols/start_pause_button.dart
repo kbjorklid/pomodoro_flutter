@@ -9,19 +9,15 @@ class StartPauseButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Directly watch the TimerState
+    final timerState = ref.watch(timerStateProvider);
 
-    final timerStateAsync = ref.watch(timerStateProvider);
+    // Read the toggleUseCase
     final toggleUseCase = ref.read(toggleTimerUseCaseProvider);
 
-    return timerStateAsync.when(
-        data: (timerState) {
-          return ElevatedButton(
-            onPressed: () => toggleUseCase.execute(),
-            child: Text(_label(timerState.status)),
-          );
-        },
-        error: (error, stack) => const Text('Error loading timer state'),
-        loading: () => Text('Start')
+    return ElevatedButton(
+      onPressed: () => toggleUseCase.execute(),
+      child: Text(_label(timerState.status)),
     );
   }
 
@@ -31,6 +27,9 @@ class StartPauseButton extends ConsumerWidget {
         return 'Pause';
       case TimerStatus.ended:
         return 'Restart';
+      case TimerStatus
+            .paused: // Add this case. Without this, an error can occur
+        return 'Resume';
       default:
         return 'Start';
     }

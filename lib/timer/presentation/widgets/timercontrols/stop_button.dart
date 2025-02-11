@@ -9,27 +9,19 @@ class StopButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final timerStateAsync = ref.watch(timerStateProvider);
+    // Directly watch the TimerState
+    final timerState = ref.watch(timerStateProvider);
+
+    // Read the timerService
     final timerService = ref.read(timerProvider);
 
-    return timerStateAsync.when(
-      data: (TimerState timerState) {
-        final isStopEnabled = timerState.status == TimerStatus.running ||
-            timerState.status == TimerStatus.paused;
+    // Determine if the button should be enabled
+    final isStopEnabled = timerState.status == TimerStatus.running ||
+        timerState.status == TimerStatus.paused;
 
-        return ElevatedButton(
-          onPressed: isStopEnabled ? () => timerService.stop() : null,
-          child: const Text('Stop'),
-        );
-      },
-      loading: () => ElevatedButton(
-        onPressed: null,
-        child: const Text('Stop'),
-      ),
-      error: (Object error, StackTrace stackTrace) => ElevatedButton(
-        onPressed: null,
-        child: const Text('Error'),
-      ),
+    return ElevatedButton(
+      onPressed: isStopEnabled ? () => timerService.stop() : null,
+      child: const Text('Stop'),
     );
   }
 }

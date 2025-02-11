@@ -47,29 +47,41 @@ final timerHistoryUpdateProvider = StreamProvider.autoDispose<void>((ref) {
   return DomainEventBus.of<TimerHistoryUpdatedEvent>();
 });
 
-final timerStateProvider = StreamProvider<TimerState>((ref) {
-  final timerService = ref.watch(timerProvider);
-  final controller = StreamController<TimerState>();
+final timerStateProvider =
+    StateNotifierProvider<TimerStateNotifier, TimerState>((ref) {
+  return TimerStateNotifier(ref);
+});
 
-  void listener(TimerState state) {
-    controller.add(state);
+class TimerStateNotifier extends StateNotifier<TimerState> {
+  final Ref ref;
+  late final timerService = ref.read(timerProvider); // Use read here, not watch
+  // This code is only executed once.
+
+  TimerStateNotifier(this.ref) : super(TimerState.initial()) {
+    // Call initial state.
+    _initialize();
   }
 
-  ref.watch(settingsRepositoryProvider);
+  Future<void> _initialize() async {
+    // This function is called only on initialization
+    timerService.addStateListener(_stateListener);
 
-  Future<void> refreshDuration() async {
+    // Perform initial refresh of duration and set initial state only once
+    await _refreshDuration();
+    state = timerService.state;
+  }
+
+  Future<void> _refreshDuration() async {
     await timerService.refreshDuration();
   }
 
-  refreshDuration();
+  void _stateListener(TimerState newState) {
+    state = newState; // Update state when timerService emits a new state
+  }
 
-  timerService.addStateListener(listener);
-  ref.onDispose(() {
-    timerService.removeStateListener(listener);
-    controller.close();
-  });
-
-  controller.add(timerService.state);
-
-  return controller.stream;
-});
+  @override
+  void dispose() {
+    timerService.removeStateListener(_stateListener);
+    super.dispose();
+  }
+}

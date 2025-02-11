@@ -35,4 +35,15 @@ class TimerState {
     required this.pauses,
     required this.pausedAt,
   });
+
+  TimerState.initial()
+      : this(
+          timerType: TimerType.work,
+          status: TimerStatus.notStarted,
+          timerDuration: Duration(minutes: 25),
+          remainingTime: Duration(minutes: 25),
+          startedAt: null,
+          pauses: [],
+          pausedAt: null,
+        );
 }
