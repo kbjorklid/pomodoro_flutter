@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
+typedef SettingsChangedCallback = void Function();
+
 abstract class SettingsRepositoryPort {
+  void addListener(SettingsChangedCallback listener);
+
+  void removeListener(SettingsChangedCallback listener);
+
   Future<Duration> getWorkDuration();
   Future<void> setWorkDuration(Duration duration);
   

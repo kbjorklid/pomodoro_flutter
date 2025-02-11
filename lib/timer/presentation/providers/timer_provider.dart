@@ -54,19 +54,15 @@ final timerStateProvider =
 
 class TimerStateNotifier extends StateNotifier<TimerState> {
   final Ref ref;
-  late final timerService = ref.read(timerProvider); // Use read here, not watch
-  // This code is only executed once.
+  late final timerService = ref.read(timerProvider);
 
   TimerStateNotifier(this.ref) : super(TimerState.initial()) {
-    // Call initial state.
     _initialize();
   }
 
   Future<void> _initialize() async {
-    // This function is called only on initialization
     timerService.addStateListener(_stateListener);
 
-    // Perform initial refresh of duration and set initial state only once
     await _refreshDuration();
     state = timerService.state;
   }
@@ -76,7 +72,7 @@ class TimerStateNotifier extends StateNotifier<TimerState> {
   }
 
   void _stateListener(TimerState newState) {
-    state = newState; // Update state when timerService emits a new state
+    state = newState;
   }
 
   @override

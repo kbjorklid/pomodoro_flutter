@@ -11,7 +11,6 @@ class TimerLabel extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the timerStateProvider to get the TimerState directly
     final timerState = ref.watch(timerStateProvider);
 
     final remaining = timerState.remainingTime;

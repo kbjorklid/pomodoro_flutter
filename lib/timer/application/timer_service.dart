@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
-import 'package:pomodoro_app2/settings/infrastructure/settings_repository.dart';
+import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
 import 'package:pomodoro_app2/timer/application/play_timer_end_sound_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
@@ -101,7 +101,7 @@ typedef TimerSessionListener = void Function(EndedTimerSession);
 /// A service class that manages the timer logic,
 /// independently of the UI.
 class TimerService {
-  final SettingsRepository _settings;
+  final SettingsRepositoryPort _settings;
   final PlayTimerEndSoundUseCase _playTimerEndSoundUseCase;
   Timer? _timer;
   final _TimerRuntimeState _state = _TimerRuntimeState();
@@ -116,6 +116,11 @@ class TimerService {
 
   TimerService(this._settings, this._playTimerEndSoundUseCase) {
     setTimerType(TimerType.work);
+    _settings.addListener(_onSettingsChanged);
+  }
+
+  void _onSettingsChanged() {
+    unawaited(refreshDuration());
   }
 
   void addStateListener(TimerStateListener listener) {
@@ -341,5 +346,6 @@ class TimerService {
     _timer = null;
     _stateListeners.clear();
     _sessionListeners.clear();
+    _settings.removeListener(_onSettingsChanged);
   }
 }

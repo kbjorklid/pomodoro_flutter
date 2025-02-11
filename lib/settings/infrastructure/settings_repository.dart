@@ -21,6 +21,34 @@ class SettingsRepository implements SettingsRepositoryPort {
   static final _defaultTypicalWorkDayLength = Duration(hours: 8);
   static const bool _defaultAlwaysShowWorkdayTimespanInTimeline = false;
 
+  static final SettingsRepository _instance = SettingsRepository._();
+
+  SettingsRepository._();
+
+  factory SettingsRepository() {
+    return _instance;
+  }
+
+  final List<SettingsChangedCallback> _listeners = [];
+
+  @override
+  void addListener(SettingsChangedCallback listener) {
+    if (!_listeners.contains(listener)) {
+      _listeners.add(listener);
+    }
+  }
+
+  @override
+  void removeListener(SettingsChangedCallback listener) {
+    _listeners.remove(listener);
+  }
+
+  void _notifySettingsChange() {
+    for (final listener in _listeners) {
+      listener();
+    }
+  }
+
   @override
   Future<Duration> getWorkDuration() async {
     final prefs = await SharedPreferences.getInstance();
@@ -44,12 +72,14 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setTimerEndSound(NotificationSound sound) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_selectedSoundKey, sound.name);
+    _notifySettingsChange();
   }
 
   @override
   Future<void> setWorkDuration(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_workDurationKey, duration.inSeconds);
+    _notifySettingsChange();
   }
 
   @override
@@ -63,6 +93,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setShortRestDuration(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_shortRestDurationKey, duration.inSeconds);
+    _notifySettingsChange();
   }
 
   @override
@@ -78,6 +109,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setLongRestDuration(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_longRestDurationKey, duration.inSeconds);
+    _notifySettingsChange();
   }
 
   @override
@@ -90,6 +122,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setPauseEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_pauseEnabledKey, enabled);
+    _notifySettingsChange();
   }
 
   @override
@@ -111,6 +144,7 @@ class SettingsRepository implements SettingsRepositoryPort {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
         _typicalWorkDayStartKey, '${time.hour}:${time.minute}');
+    _notifySettingsChange();
   }
 
   @override
@@ -126,6 +160,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setTypicalWorkDayLength(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_typicalWorkDayLengthKey, duration.inSeconds);
+    _notifySettingsChange();
   }
 
   @override
@@ -138,5 +173,6 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setAlwaysShowWorkdayTimespanInTimeline(bool alwaysShow) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_alwaysShowWorkdayTimespanInTimelineKey, alwaysShow);
+    _notifySettingsChange();
   }
 }
