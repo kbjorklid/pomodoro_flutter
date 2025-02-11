@@ -23,11 +23,17 @@ abstract class TimerSession {
 }
 
 class RunningTimerSession extends TimerSession {
+  @override
   final TimerType sessionType;
+  @override
   final DateTime startedAt;
+  @override
   final DateTime? pausedAt;
+  @override
   final List<PauseRecord> pauses;
+  @override
   final Duration totalDuration;
+  @override
   final bool isEnded = false;
 
   RunningTimerSession(

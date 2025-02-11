@@ -16,6 +16,7 @@ import 'package:pomodoro_app2/timer/application/get_todays_timer_sessions_use_ca
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/get_todays_timer_sessions_use_case_provider.dart';
+import 'package:pomodoro_app2/timer/presentation/widgets/timer_details_dialog.dart';
 
 final _borderRadius = BorderRadius.circular(1);
 final _logger = Logger();
@@ -172,8 +173,16 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       if (segmentPosition.isEmpty) continue;
 
       _logger.d("Session: $session\n    SegmentPosition: $segmentPosition");
-      children.add(
-          _SessionSegment(segmentPosition: segmentPosition, session: session));
+      VoidCallback? onTap = session.isEnded
+          ? () {
+              _showTimerDetailsPopup(context, session);
+            }
+          : null;
+      children.add(_SessionSegment(
+        segmentPosition: segmentPosition,
+        session: session,
+        onTap: onTap,
+      ));
     }
     // Add pauses at the end, on top of everything else.
     for (final session in timelineData.sessions) {
@@ -184,11 +193,23 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
             timelinePixelWidth: timelineWidth);
 
         _logger.d("Pause: $pause\n    SegmentPosition: $segmentPosition");
-        children
-            .add(_PauseSegment(segmentPosition: segmentPosition, pause: pause));
+        children.add(_PauseSegment(
+          segmentPosition: segmentPosition,
+          pause: pause,
+        ));
       }
     }
     return children;
+  }
+
+  void _showTimerDetailsPopup(
+      BuildContext context, ClosedTimerSession session) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return TimerDetailsDialog(session: session);
+      },
+    );
   }
 
   Future<_TimelineData> _getTimelineData() async {
@@ -286,8 +307,9 @@ class _WorkDaySegment extends _TimelineSegment {
 abstract class _TimelineSegment extends StatelessWidget {
   final _SegmentPosition segmentPosition;
   abstract final Color color;
+  final VoidCallback? onTap;
 
-  const _TimelineSegment({required this.segmentPosition});
+  const _TimelineSegment({required this.segmentPosition, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -295,11 +317,14 @@ abstract class _TimelineSegment extends StatelessWidget {
 
     return Padding(
       padding: EdgeInsets.only(left: segmentPosition.left),
-      child: Container(
-        width: max(1, segmentPosition.width),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: _borderRadius,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: max(1, segmentPosition.width),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: _borderRadius,
+          ),
         ),
       ),
     );
@@ -311,18 +336,14 @@ class _SessionSegment extends _TimelineSegment {
   late final bool _isCompleted;
   late final bool _isRunning;
 
-  _SessionSegment(
-      {required super.segmentPosition, required ClosedTimerSession session}) {
+  _SessionSegment({
+    required super.segmentPosition,
+    required ClosedTimerSession session,
+    VoidCallback? onTap,
+  }) : super(onTap: onTap) {
     _timerType = session.sessionType;
     _isCompleted = session.isCompleted;
     _isRunning = !session.isEnded;
-  }
-
-  _SessionSegment.fromValues(
-      _SegmentPosition position, TimerType timerType, bool isCompleted)
-      : super(segmentPosition: position) {
-    _timerType = timerType;
-    _isCompleted = isCompleted;
   }
 
   @override
@@ -339,7 +360,11 @@ class _SessionSegment extends _TimelineSegment {
 class _PauseSegment extends _TimelineSegment {
   final PauseRecord pause;
 
-  const _PauseSegment({required super.segmentPosition, required this.pause});
+  const _PauseSegment(
+      {required super.segmentPosition,
+      required this.pause,
+      VoidCallback? onTap})
+      : super(onTap: onTap);
 
   @override
   Color get color => Color(0x88ffffff);

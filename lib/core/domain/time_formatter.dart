@@ -35,4 +35,8 @@ class TimeFormatter {
     final minutes = dateTime.minute;
     return '$hours:${minutes.toString().padLeft(2, '0')}';
   }
+
+  static formatDateTime(DateTime dateTime) {
+    return '${dateTime.year}-${dateTime.month}-${dateTime.day} ${dateTime.hour}:${dateTime.minute}:${dateTime.second}';
+  }
 }
