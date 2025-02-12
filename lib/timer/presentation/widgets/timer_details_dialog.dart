@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pomodoro_app2/core/domain/time_formatter.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 
+import '../../../core/presentation/icons.dart';
+
 class TimerDetailsDialog extends StatelessWidget {
   final ClosedTimerSession session;
 
@@ -9,6 +11,17 @@ class TimerDetailsDialog extends StatelessWidget {
     super.key,
     required this.session
   });
+
+  Icon? get _statusIcon {
+    if (session.sessionType.isWork) {
+      if (session.isCompleted) {
+        return AppIcon.completedWorkSession;
+      } else {
+        return AppIcon.incompleteWorkSession;
+      }
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,55 +37,46 @@ class TimerDetailsDialog extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.timer, color: Theme.of(context).primaryColor),
+              AppIcon.timerTypeIcon(session.sessionType, color: Colors.black),
               const SizedBox(width: 8),
               Text(
-                'Timer Details',
+                _typeText(),
                 style: Theme.of(context).textTheme.titleLarge,
               ),
             ],
           ),
-          Icon(Icons.check_circle, color: Colors.green[400]),
+          if (_statusIcon != null) _statusIcon!
         ],
       ),
       content: SizedBox(
         width: 320,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
+            Expanded(
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Type',
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    _typeText(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  _buildTimeDetail('Started', session.startedAt),
+                  const SizedBox(height: 12),
+                  _buildDurationDetail(
+                      'Duration', session.durationWithoutPauseTime),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            _buildTimeDetail('Started', session.startedAt),
-            const SizedBox(height: 12),
-            _buildTimeDetail('Ended', session.timerRangeEnd),
+            const SizedBox(width: 24), // Spacing between columns
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTimeDetail('Ended', session.timerRangeEnd),
+                  const SizedBox(height: 12),
+                  // You could add another detail here if needed
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -102,6 +106,15 @@ class TimerDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildTimeDetail(String label, DateTime time) {
+    return _buildDetails(
+        label, TimeFormatter.timeToHoursMinutesAndSeconds(time));
+  }
+
+  Widget _buildDurationDetail(String label, Duration duration) {
+    return _buildDetails(label, TimeFormatter.toMinutesAndSeconds(duration));
+  }
+
+  Widget _buildDetails(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -114,7 +127,7 @@ class TimerDetailsDialog extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          TimeFormatter.timeToHoursAndMinutes(time),
+          value,
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w500,

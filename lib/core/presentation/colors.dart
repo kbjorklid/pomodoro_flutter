@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pomodoro_app2/core/domain/timer_type.dart';
 
 /// Application color palette
 class AppColors {
@@ -18,4 +19,12 @@ class AppColors {
   static const workIncomplete = mediumGrey;
   
   static const timelineWorkdayBackground = Color(0xFFFAEEE5);
+
+  static Color timerTypeColor(TimerType type) {
+    if (type == TimerType.work) {
+      return work;
+    } else {
+      return rest;
+    }
+  }
 }
