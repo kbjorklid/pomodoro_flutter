@@ -27,7 +27,6 @@ class RunningTimerSession extends TimerSession {
   final TimerType sessionType;
   @override
   final DateTime startedAt;
-  @override
   final DateTime? pausedAt;
   @override
   final List<PauseRecord> pauses;
