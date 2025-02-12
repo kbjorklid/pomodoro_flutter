@@ -14,11 +14,36 @@ abstract class TimerSession {
 
   bool get isEnded;
 
+  late final TimerSessionKey key = TimerSessionKey(startedAt);
+
   @override
   String toString() {
     return 'TimerSession(sessionType: $sessionType, '
         'startedAt: ${startedAt.toString().split('.').first}, '
         'totalDuration: $totalDuration)';
+  }
+}
+
+class TimerSessionKey {
+  final DateTime startedAt;
+
+  TimerSessionKey(this.startedAt);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TimerSessionKey &&
+          runtimeType == other.runtimeType &&
+          toString() == other.toString();
+
+  @override
+  int get hashCode => startedAt.hashCode;
+
+  @override
+  String toString() {
+    // Do not modify this, it may be used to store and access stored
+    // sessions.
+    return 'TSK(${startedAt.toIso8601String()})';
   }
 }
 

@@ -35,12 +35,18 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
         'started at ${session.startedAt}, pauses: ${session.pauses}');
     var dto = TimerSessionDTO.fromDomain(session);
     await _initialized;
-    await _box.put(
-      session.startedAt.toIso8601String(),
-      dto,
-    );
+    await _put(session.key, dto);
     _sendEventForHistoryUpdate();
     _logger.d('Session saved successfully');
+  }
+
+  Future<void> _put(TimerSessionKey key, TimerSessionDTO dto) async {
+    await _initialized;
+    await _box.put(key.toString(), dto);
+  }
+
+  TimerSessionDTO? _get(TimerSessionKey key) {
+    return _box.get(key.toString());
   }
 
   @override
@@ -51,8 +57,11 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
         'type=${query.sessionType}, status=${query.completionStatus}');
     final sessions = _box.values
         .where((dto) =>
-            dto.startedAt.isAfter(query.start) &&
-            dto.startedAt.isBefore(query.end) &&
+            !dto.deleted &&
+            ((dto.startedAt.isAfter(query.start) &&
+                    dto.startedAt.isBefore(query.end)) ||
+                (dto.endedAt.isAfter(query.start) &&
+                    dto.endedAt.isBefore(query.end))) &&
             (query.sessionType == null ||
                 dto.sessionTypeCode == query.sessionType?.index) &&
             (query.completionStatus == CompletionStatus.any ||
@@ -73,18 +82,32 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   }
 
   @override
-  Future<void> delete(DateTime startedAt) async {
+  Future<void> delete(TimerSessionKey key) async {
     await _initialized;
-    _logger.d('Deleting session started at $startedAt');
-    await _box.delete(startedAt.toIso8601String());
-    _sendEventForHistoryUpdate();
-    _logger.d('Session deleted successfully');
+    _logger.d('Soft deleting session with key ${key.toString()}');
+    final dto = _get(key);
+    if (dto != null) {
+      final updatedDto = TimerSessionDTO(
+        sessionTypeCode: dto.sessionTypeCode,
+        startedAt: dto.startedAt,
+        endedAt: dto.endedAt,
+        pauses: dto.pauses,
+        totalDuration: dto.totalDuration,
+        deleted: true,
+      );
+      await _put(key, updatedDto);
+      _sendEventForHistoryUpdate();
+      _logger.d('Session soft deleted successfully');
+    } else {
+      _logger.w('Session not found for soft deletion');
+    }
   }
 
   @override
   Future<List<({DateTime date, int count})>> queryDailyCounts(
     TimerSessionQuery query,
   ) async {
+    await _initialized;
     _logger.d('Querying daily counts: '
         'start=${query.start}, end=${query.end}, '
         'type=${query.sessionType}, status=${query.completionStatus}');

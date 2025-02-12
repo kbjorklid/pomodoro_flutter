@@ -20,6 +20,7 @@ class TimerSessionDTOAdapter extends TypeAdapter<TimerSessionDTO> {
       sessionTypeCode: fields[0] as int,
       startedAt: fields[1] as DateTime,
       endedAt: fields[2] as DateTime,
+      deleted: fields[5] == null ? false : fields[5] as bool,
       pauses: (fields[3] as List).cast<PauseRecordDTO>(),
       totalDuration: fields[4] as Duration,
     );
@@ -28,7 +29,7 @@ class TimerSessionDTOAdapter extends TypeAdapter<TimerSessionDTO> {
   @override
   void write(BinaryWriter writer, TimerSessionDTO obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.sessionTypeCode)
       ..writeByte(1)
@@ -38,7 +39,9 @@ class TimerSessionDTOAdapter extends TypeAdapter<TimerSessionDTO> {
       ..writeByte(3)
       ..write(obj.pauses)
       ..writeByte(4)
-      ..write(obj.totalDuration);
+      ..write(obj.totalDuration)
+      ..writeByte(5)
+      ..write(obj.deleted);
   }
 
   @override

@@ -17,16 +17,20 @@ class TimerSessionDTO {
   final List<PauseRecordDTO> pauses;
   @HiveField(4)
   final Duration totalDuration;
+  @HiveField(5, defaultValue: false)
+  final bool deleted;
 
   TimerSessionDTO({
     required this.sessionTypeCode,
     required this.startedAt,
     required this.endedAt,
+    this.deleted = false,
     required this.pauses,
     required this.totalDuration,
   });
 
-  factory TimerSessionDTO.fromDomain(EndedTimerSession session) {
+  factory TimerSessionDTO.fromDomain(EndedTimerSession session,
+      {bool deleted = false}) {
     DateTime? end = session.timerRangeEnd;
     return TimerSessionDTO(
       sessionTypeCode: session.sessionType.index,
@@ -34,6 +38,7 @@ class TimerSessionDTO {
       endedAt: end,
       pauses: session.pauses.map(PauseRecordDTO.fromDomain).toList(),
       totalDuration: session.totalDuration,
+      deleted: deleted,
     );
   }
 

@@ -9,7 +9,7 @@ abstract class TimerSessionRepositoryPort {
   Future<List<EndedTimerSession>> query(TimerSessionQuery query);
 
   /// Deletes a session by its start time
-  Future<void> delete(DateTime startedAt);
+  Future<void> delete(TimerSessionKey startedAt);
 
   /// Gets daily session counts matching the query parameters
   Future<List<({DateTime date, int count})>> queryDailyCounts(

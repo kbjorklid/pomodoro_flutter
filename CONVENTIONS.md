@@ -94,8 +94,6 @@ Some specific coding principles to follow:
 - Hive for storing more complex data
 - Mocktail for mocking
 - 'logger' for logging
-- 'freezed' for immutable classes
-- 'json_serializable' for serialization
 - 'golden_toolkit'
 - 'go_router' for routing
 
