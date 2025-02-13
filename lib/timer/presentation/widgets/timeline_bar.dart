@@ -207,7 +207,15 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return TimerDetailsDialog(session: session);
+        return TimerDetailsDialog(
+          session: session,
+          onDelete: (session) {
+            // Implement delete logic
+          },
+          onUndoDelete: (session) {
+            // Implement undo delete logic
+          },
+        );
       },
     );
   }

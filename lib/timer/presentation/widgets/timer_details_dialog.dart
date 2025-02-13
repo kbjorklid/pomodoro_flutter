@@ -6,10 +6,14 @@ import '../../../core/presentation/icons.dart';
 
 class TimerDetailsDialog extends StatelessWidget {
   final ClosedTimerSession session;
+  final Function(ClosedTimerSession) onDelete;
+  final Function(ClosedTimerSession) onUndoDelete;
 
   const TimerDetailsDialog({
     super.key,
-    required this.session
+    required this.session,
+    required this.onDelete,
+    required this.onUndoDelete,
   });
 
   Icon? get _statusIcon {
@@ -21,6 +25,24 @@ class TimerDetailsDialog extends StatelessWidget {
       }
     }
     return null;
+  }
+
+  void _handleDelete(BuildContext context) {
+    onDelete(session);
+    Navigator.of(context).pop();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Timer session deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () {
+            onUndoDelete(session);
+          },
+        ),
+        duration: const Duration(seconds: 5),
+      ),
+    );
   }
 
   @override
@@ -45,7 +67,7 @@ class TimerDetailsDialog extends StatelessWidget {
               ),
             ],
           ),
-          if (_statusIcon != null) _statusIcon!
+          if (_statusIcon != null) _statusIcon!,
         ],
       ),
       content: SizedBox(
@@ -65,7 +87,7 @@ class TimerDetailsDialog extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 24), // Spacing between columns
+            const SizedBox(width: 24),
             Expanded(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -73,7 +95,6 @@ class TimerDetailsDialog extends StatelessWidget {
                 children: [
                   _buildTimeDetail('Ended', session.timerRangeEnd),
                   const SizedBox(height: 12),
-                  // You could add another detail here if needed
                 ],
               ),
             ),
@@ -81,18 +102,30 @@ class TimerDetailsDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        Row(
+          children: [
+            TextButton.icon(
+              onPressed: () => _handleDelete(context),
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              label: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.red),
               ),
             ),
-            child: const Text('Close'),
-          ),
+            const Spacer(),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Close'),
+              ),
+            ),
+          ],
         ),
       ],
     );
