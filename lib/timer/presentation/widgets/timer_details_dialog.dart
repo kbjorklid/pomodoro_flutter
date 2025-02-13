@@ -6,8 +6,8 @@ import '../../../core/presentation/icons.dart';
 
 class TimerDetailsDialog extends StatelessWidget {
   final ClosedTimerSession session;
-  final Function(ClosedTimerSession) onDelete;
-  final Function(ClosedTimerSession) onUndoDelete;
+  final Future<void> Function(ClosedTimerSession) onDelete;
+  final Future<void> Function(ClosedTimerSession) onUndoDelete;
 
   const TimerDetailsDialog({
     super.key,
@@ -27,8 +27,8 @@ class TimerDetailsDialog extends StatelessWidget {
     return null;
   }
 
-  void _handleDelete(BuildContext context) {
-    onDelete(session);
+  void _handleDelete(BuildContext context) async {
+    await onDelete(session);
     Navigator.of(context).pop();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -36,8 +36,8 @@ class TimerDetailsDialog extends StatelessWidget {
         content: const Text('Timer session deleted'),
         action: SnackBarAction(
           label: 'Undo',
-          onPressed: () {
-            onUndoDelete(session);
+          onPressed: () async {
+            await onUndoDelete(session);
           },
         ),
         duration: const Duration(seconds: 5),

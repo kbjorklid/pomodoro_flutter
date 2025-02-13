@@ -31,6 +31,8 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
   @override
   Future<void> save(EndedTimerSession session) async {
+    _logger.d('Saving timer session with key: ${session.key}');
+
     _logger.d('Saving timer session: ${session.sessionType} '
         'started at ${session.startedAt}, pauses: ${session.pauses}');
     var dto = TimerSessionDTO.fromDomain(session);
@@ -77,6 +79,9 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
       var debugStr = sessions.fold(
           "", (previousValue, element) => '$previousValue\n  $element');
       _logger.d('Found ${sessions.length} matching sessions: $debugStr');
+      for (var session in sessions) {
+        _logger.d('Session key: ${session.key.toString()}');
+      }
     }
     return sessions;
   }
@@ -84,8 +89,11 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   @override
   Future<void> delete(TimerSessionKey key) async {
     await _initialized;
+    _logger.d('Attempting to delete session with key: ${key}'); // Add th
+
     _logger.d('Soft deleting session with key ${key.toString()}');
     final dto = _get(key);
+    _logger.d('Found DTO: $dto');
     if (dto != null) {
       final updatedDto = TimerSessionDTO(
         sessionTypeCode: dto.sessionTypeCode,
@@ -100,6 +108,28 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
       _logger.d('Session soft deleted successfully');
     } else {
       _logger.w('Session not found for soft deletion');
+    }
+  }
+
+  @override
+  Future<void> undelete(TimerSessionKey key) async {
+    await _initialized;
+    _logger.d('Restoring session with key ${key.toString()}');
+    final dto = _get(key);
+    if (dto != null) {
+      final updatedDto = TimerSessionDTO(
+        sessionTypeCode: dto.sessionTypeCode,
+        startedAt: dto.startedAt,
+        endedAt: dto.endedAt,
+        pauses: dto.pauses,
+        totalDuration: dto.totalDuration,
+        deleted: false,
+      );
+      await _put(key, updatedDto);
+      _sendEventForHistoryUpdate();
+      _logger.d('Session restored successfully');
+    } else {
+      _logger.w('Session not found for restore');
     }
   }
 

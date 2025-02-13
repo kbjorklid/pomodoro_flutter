@@ -11,6 +11,7 @@ import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/core/domain/time_formatter.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
+import 'package:pomodoro_app2/history/presentation/providers/timer_session_repository_provider.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/timer/application/get_todays_timer_sessions_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
@@ -209,11 +210,13 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       builder: (BuildContext context) {
         return TimerDetailsDialog(
           session: session,
-          onDelete: (session) {
-            // Implement delete logic
+          onDelete: (session) async {
+            await ref.read(timerSessionRepositoryProvider).delete(session.key);
           },
-          onUndoDelete: (session) {
-            // Implement undo delete logic
+          onUndoDelete: (session) async {
+            await ref
+                .read(timerSessionRepositoryProvider)
+                .undelete(session.key);
           },
         );
       },

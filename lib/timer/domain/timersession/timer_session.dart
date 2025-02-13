@@ -27,7 +27,10 @@ abstract class TimerSession {
 class TimerSessionKey {
   final DateTime startedAt;
 
-  TimerSessionKey(this.startedAt);
+  TimerSessionKey(DateTime dateTime)
+      : startedAt = DateTime.fromMillisecondsSinceEpoch(
+            dateTime.millisecondsSinceEpoch,
+            isUtc: true);
 
   @override
   bool operator ==(Object other) =>
