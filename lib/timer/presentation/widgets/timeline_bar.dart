@@ -19,11 +19,21 @@ import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/get_todays_timer_sessions_use_case_provider.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timer_details_dialog.dart';
 
-final _borderRadius = BorderRadius.circular(1);
-final _logger = Logger();
+// Constants should be declared before the class.
+final BorderRadius _borderRadius = BorderRadius.circular(1);
+final Logger _logger = Logger();
 
 class TimelineBar extends ConsumerStatefulWidget {
-  const TimelineBar({super.key});
+  const TimelineBar({
+    super.key,
+    this.targetDate,
+    this.timerSessions,
+  });
+
+  final DateTime?
+      targetDate; // Optional date for historical data.  If null, defaults to today.
+  final List<ClosedTimerSession>?
+      timerSessions; //Optional session list. If null, defaults to todays session
 
   @override
   ConsumerState<TimelineBar> createState() => _TimelineBarState();
@@ -39,17 +49,27 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
   void initState() {
     super.initState();
     _todaysTimerSessionsUseCase = ref.read(todaysTimerSessionsUseCaseProvider);
-    _timerHistorySubscription =
-        DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
-      _refresh();
-    });
-    _timerRuntimeSubscription =
-        DomainEventBus.of<TimerRuntimeEvent>().listen((event) {
-      _refresh();
-    });
-    // Add periodic refresh timer
-    _refreshTimer =
-        Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
+
+    // Only subscribe to events if we're showing today's timeline.
+    if (widget.targetDate == null) {
+      _timerHistorySubscription = DomainEventBus.of<TimerHistoryUpdatedEvent>()
+          .listen(_onTimerHistoryUpdated);
+      _timerRuntimeSubscription =
+          DomainEventBus.of<TimerRuntimeEvent>().listen(_onTimerRuntimeEvent);
+
+      // Add periodic refresh timer only for today's timeline
+      _refreshTimer =
+          Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
+    }
+  }
+
+  // extracted event handler methods
+  void _onTimerHistoryUpdated(TimerHistoryUpdatedEvent event) {
+    _refresh();
+  }
+
+  void _onTimerRuntimeEvent(TimerRuntimeEvent event) {
+    _refresh();
   }
 
   void _refresh() {
@@ -67,7 +87,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   @override
   Widget build(BuildContext context) {
-
     final screenWidth = MediaQuery.of(context).size.width;
     final horizontalMargin = screenWidth * 0.05;
 
@@ -85,33 +104,37 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
           final timelineData = snapshot.data ?? _TimelineData.empty();
           final timeBarRange = _getTimeBarRange(timelineData);
 
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: _borderRadius,
-              color: Colors.grey[200],
-              border: Border.all(color: Colors.grey[350]!),
-            ),
-            child: Stack(
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.maxWidth;
-                    return _buildTimelineSegments(
-                        timelineData, timeBarRange, width);
-                  },
-                ),
-                _TimelineTimeLabel(
-                  time: timeBarRange.start,
-                  position: _TimeLabelPosition.start,
-                ),
-                _TimelineTimeLabel(
-                  time: timeBarRange.end,
-                  position: _TimeLabelPosition.end,
-                ),
-              ],
-            ),
-          );
+          return _buildTimelineContainer(timeBarRange, timelineData);
         },
+      ),
+    );
+  }
+
+  Widget _buildTimelineContainer(
+      DateTimeRange timeBarRange, _TimelineData timelineData) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: _borderRadius,
+        color: Colors.grey[200],
+        border: Border.all(color: Colors.grey[350]!),
+      ),
+      child: Stack(
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              return _buildTimelineSegments(timelineData, timeBarRange, width);
+            },
+          ),
+          _TimelineTimeLabel(
+            time: timeBarRange.start,
+            position: _TimeLabelPosition.start,
+          ),
+          _TimelineTimeLabel(
+            time: timeBarRange.end,
+            position: _TimeLabelPosition.end,
+          ),
+        ],
       ),
     );
   }
@@ -121,12 +144,75 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     _logger.d(
         "TimeBarRange Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
     return Stack(
-      children: _children(timelineData, timeBarRange, timelineWidth),
+      children:
+          _buildTimelineChildren(timelineData, timeBarRange, timelineWidth),
     );
   }
 
-  DateTimeRange _getTimeBarRange(_TimelineData timelineData, [DateTime? now]) {
+  List<Widget> _buildTimelineChildren(_TimelineData timelineData,
+      DateTimeRange timeBarRange, double timelineWidth,
+      [DateTime? now]) {
     now ??= DateTime.now();
+    final children = <Widget>[];
+
+    if (timelineData.typicalWorkDayStart != null &&
+        timelineData.typicalWorkDayLength != null) {
+      children.add(
+        _WorkDaySegment(
+            workdayStart: timelineData.typicalWorkDayStart!,
+            workdayDuration: timelineData.typicalWorkDayLength!,
+            timeBarRange: timeBarRange,
+            timelinePixelWidth: timelineWidth),
+      );
+    }
+
+    for (final session in timelineData.sessions) {
+      final range =
+          session.range ?? DateTimeRange(start: session.startedAt, end: now);
+      final segmentPosition = _SegmentPosition(
+          segmentRange: range,
+          timeBarRange: timeBarRange,
+          timelinePixelWidth: timelineWidth);
+
+      if (segmentPosition.isEmpty) continue;
+
+      _logger.d("Session: $session\n    SegmentPosition: $segmentPosition");
+
+      final onTap = session.isEnded
+          ? () {
+              _showTimerDetailsPopup(context, session);
+            }
+          : null;
+
+      children.add(_SessionSegment(
+        segmentPosition: segmentPosition,
+        session: session,
+        onTap: onTap,
+      ));
+    }
+
+    // Add pauses at the end, on top of everything else.
+    for (final session in timelineData.sessions) {
+      for (final pause in session.pauses) {
+        final segmentPosition = _SegmentPosition(
+            segmentRange: pause.range,
+            timeBarRange: timeBarRange,
+            timelinePixelWidth: timelineWidth);
+
+        _logger.d("Pause: $pause\n    SegmentPosition: $segmentPosition");
+        children.add(_PauseSegment(
+          segmentPosition: segmentPosition,
+          pause: pause,
+        ));
+      }
+    }
+
+    return children;
+  }
+
+  DateTimeRange _getTimeBarRange(_TimelineData timelineData, [DateTime? now]) {
+    now ??= widget.targetDate ??
+        DateTime.now(); // Use the widget's date, or today if null
     final rangeBuilder = DateTimeRangeBuilder.forDay(now);
 
     final minimumRange = timelineData.minimumRange;
@@ -143,64 +229,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         amount: const Duration(hours: 1));
 
     return rangeBuilder.getDateTimeRange();
-  }
-
-  DateTime _startOfToday([DateTime? now]) {
-    now ??= DateTime.now();
-    return DateTime(now.year, now.month, now.day);
-  }
-
-  List<Widget> _children(_TimelineData timelineData, DateTimeRange timeBarRange,
-      double timelineWidth,
-      [DateTime? now]) {
-    now ??= DateTime.now();
-    final children = <Widget>[];
-    if (timelineData.typicalWorkDayStart != null &&
-        timelineData.typicalWorkDayLength != null) {
-      final workdaySegment = _WorkDaySegment(
-          workdayStart: timelineData.typicalWorkDayStart!,
-          workdayDuration: timelineData.typicalWorkDayLength!,
-          timeBarRange: timeBarRange,
-          timelinePixelWidth: timelineWidth);
-      children.add(workdaySegment);
-    }
-    for (final session in timelineData.sessions) {
-      DateTimeRange range =
-          session.range ?? DateTimeRange(start: session.startedAt, end: now);
-      _SegmentPosition segmentPosition = _SegmentPosition(
-          segmentRange: range,
-          timeBarRange: timeBarRange,
-          timelinePixelWidth: timelineWidth);
-      if (segmentPosition.isEmpty) continue;
-
-      _logger.d("Session: $session\n    SegmentPosition: $segmentPosition");
-      VoidCallback? onTap = session.isEnded
-          ? () {
-              _showTimerDetailsPopup(context, session);
-            }
-          : null;
-      children.add(_SessionSegment(
-        segmentPosition: segmentPosition,
-        session: session,
-        onTap: onTap,
-      ));
-    }
-    // Add pauses at the end, on top of everything else.
-    for (final session in timelineData.sessions) {
-      for (final pause in session.pauses) {
-        _SegmentPosition segmentPosition = _SegmentPosition(
-            segmentRange: pause.range,
-            timeBarRange: timeBarRange,
-            timelinePixelWidth: timelineWidth);
-
-        _logger.d("Pause: $pause\n    SegmentPosition: $segmentPosition");
-        children.add(_PauseSegment(
-          segmentPosition: segmentPosition,
-          pause: pause,
-        ));
-      }
-    }
-    return children;
   }
 
   void _showTimerDetailsPopup(
@@ -225,39 +253,54 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   Future<_TimelineData> _getTimelineData() async {
     final settings = ref.read(settingsRepositoryProvider);
-    final results = await Future.wait([
-      settings.getTypicalWorkDayStart(),
-      settings.getTypicalWorkDayLength(),
-      _todaysTimerSessionsUseCase.getTodaysSessions(),
-      settings.isAlwaysShowWorkdayTimespanInTimeline(),
-    ]);
+    final DateTime targetDate = widget.targetDate ?? DateTime.now();
+    final List<ClosedTimerSession>? timerSessions = widget.timerSessions;
+
+    List<dynamic> results;
+
+    if (timerSessions != null) {
+      //Use timerSessions if specified
+      results = await Future.wait([
+        settings.getTypicalWorkDayStart(),
+        settings.getTypicalWorkDayLength(),
+        Future.value(timerSessions),
+        settings.isAlwaysShowWorkdayTimespanInTimeline(),
+      ]);
+    } else {
+      //Load timerSessions for targetDate
+      results = await Future.wait([
+        settings.getTypicalWorkDayStart(),
+        settings.getTypicalWorkDayLength(),
+        _todaysTimerSessionsUseCase.getTodaysSessions(targetDate),
+        settings.isAlwaysShowWorkdayTimespanInTimeline(),
+      ]);
+    }
 
     final alwaysShowWorkdayTimespan = results[3] as bool;
     final typicalWorkDayStart = results[0] as TimeOfDay;
     final typicalWorkDayLength = results[1] as Duration;
 
+    DateTimeRange? minimumRange;
+
     if (alwaysShowWorkdayTimespan) {
       DateTime workdayStartDateTime = DateTime(
-          DateTime.now().year,
-          DateTime.now().month,
-          DateTime.now().day,
+          targetDate.year,
+          targetDate.month,
+          targetDate.day,
           typicalWorkDayStart.hour,
           typicalWorkDayStart.minute);
       DateTime workdayEndDateTime =
           workdayStartDateTime.add(typicalWorkDayLength);
-      DateTimeRange minimumRange =
+      minimumRange =
           DateTimeRange(start: workdayStartDateTime, end: workdayEndDateTime);
-      return _TimelineData(
-          sessions: results[2] as List<ClosedTimerSession>,
-          typicalWorkDayStart: typicalWorkDayStart,
-          typicalWorkDayLength: typicalWorkDayLength,
-          minimumRange: minimumRange);
     }
+
     return _TimelineData(
-        sessions: results[2] as List<ClosedTimerSession>,
-        typicalWorkDayStart: typicalWorkDayStart,
-        typicalWorkDayLength: typicalWorkDayLength,
-        minimumRange: null);
+      sessions: results[2] as List<ClosedTimerSession>,
+      typicalWorkDayStart: typicalWorkDayStart,
+      typicalWorkDayLength: typicalWorkDayLength,
+      minimumRange: minimumRange,
+    );
   }
 }
 
@@ -267,11 +310,12 @@ class _TimelineData {
   final Duration? typicalWorkDayLength;
   final DateTimeRange? minimumRange;
 
-  _TimelineData(
-      {required this.sessions,
-      required this.typicalWorkDayStart,
-      required this.typicalWorkDayLength,
-      this.minimumRange});
+  _TimelineData({
+    required this.sessions,
+    required this.typicalWorkDayStart,
+    required this.typicalWorkDayLength,
+    this.minimumRange,
+  });
 
   _TimelineData.empty()
       : this(
@@ -284,11 +328,12 @@ class _TimelineData {
 class _WorkDaySegment extends _TimelineSegment {
   _WorkDaySegment._internal({required super.segmentPosition});
 
-  factory _WorkDaySegment(
-      {required TimeOfDay workdayStart,
-      required Duration workdayDuration,
-      required DateTimeRange timeBarRange,
-      required double timelinePixelWidth}) {
+  factory _WorkDaySegment({
+    required TimeOfDay workdayStart,
+    required Duration workdayDuration,
+    required DateTimeRange timeBarRange,
+    required double timelinePixelWidth,
+  }) {
     DateTime workdayStartDateTime = DateTime(
         timeBarRange.start.year,
         timeBarRange.start.month,
@@ -298,7 +343,7 @@ class _WorkDaySegment extends _TimelineSegment {
     DateTime workdayEndDateTime = workdayStartDateTime.add(workdayDuration);
     DateTime dayEnd = DateTime(timeBarRange.start.year,
             timeBarRange.start.month, timeBarRange.start.day)
-        .add(Duration(days: 1));
+        .add(const Duration(days: 1));
     if (workdayEndDateTime.isAfter(dayEnd)) {
       workdayEndDateTime = dayEnd;
     }
@@ -343,19 +388,18 @@ abstract class _TimelineSegment extends StatelessWidget {
 }
 
 class _SessionSegment extends _TimelineSegment {
-  late final TimerType _timerType;
-  late final bool _isCompleted;
-  late final bool _isRunning;
+  final TimerType _timerType;
+  final bool _isCompleted;
+  final bool _isRunning;
 
   _SessionSegment({
     required super.segmentPosition,
     required ClosedTimerSession session,
     VoidCallback? onTap,
-  }) : super(onTap: onTap) {
-    _timerType = session.sessionType;
-    _isCompleted = session.isCompleted;
-    _isRunning = !session.isEnded;
-  }
+  })  : _timerType = session.sessionType,
+        _isCompleted = session.isCompleted,
+        _isRunning = !session.isEnded,
+        super(onTap: onTap);
 
   @override
   Color get color {
@@ -371,14 +415,14 @@ class _SessionSegment extends _TimelineSegment {
 class _PauseSegment extends _TimelineSegment {
   final PauseRecord pause;
 
-  const _PauseSegment(
-      {required super.segmentPosition,
-      required this.pause,
-      VoidCallback? onTap})
-      : super(onTap: onTap);
+  const _PauseSegment({
+    required super.segmentPosition,
+    required this.pause,
+    VoidCallback? onTap,
+  }) : super(onTap: onTap);
 
   @override
-  Color get color => Color(0x88ffffff);
+  Color get color => const Color(0x88ffffff);
 }
 
 class _SegmentPosition {
@@ -394,26 +438,20 @@ class _SegmentPosition {
 
   bool get isEmpty => width == 0;
 
-  _SegmentPosition(
-      {required DateTimeRange segmentRange,
-      required DateTimeRange timeBarRange,
-      required this.timelinePixelWidth}) {
-    relativeStart = _startPos(segmentRange, timeBarRange);
-    relativeEnd = _endPos(segmentRange, timeBarRange);
+  _SegmentPosition({
+    required DateTimeRange segmentRange,
+    required DateTimeRange timeBarRange,
+    required this.timelinePixelWidth,
+  }) {
+    relativeStart =
+        _calculateRelativePosition(segmentRange.start, timeBarRange);
+    relativeEnd = _calculateRelativePosition(segmentRange.end, timeBarRange);
   }
 
-  double _startPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
+  double _calculateRelativePosition(
+      DateTime time, DateTimeRange fullTimeRange) {
     final totalSeconds = fullTimeRange.duration.inSeconds;
-    final secondsFromStart =
-        sessionRange.start.difference(fullTimeRange.start).inSeconds;
-    if (totalSeconds == 0) return 0;
-    return (secondsFromStart / totalSeconds).clamp(0.0, 1.0);
-  }
-
-  double _endPos(DateTimeRange sessionRange, DateTimeRange fullTimeRange) {
-    final totalSeconds = fullTimeRange.duration.inSeconds;
-    final secondsFromStart =
-        sessionRange.end.difference(fullTimeRange.start).inSeconds;
+    final secondsFromStart = time.difference(fullTimeRange.start).inSeconds;
     if (totalSeconds == 0) return 0;
     return (secondsFromStart / totalSeconds).clamp(0.0, 1.0);
   }
@@ -437,19 +475,16 @@ class _TimelineTimeLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    double? left = position == _TimeLabelPosition.start ? 0 : null;
-    double? right = position == _TimeLabelPosition.end ? 0 : null;
+    final isStart = position == _TimeLabelPosition.start;
     return Positioned(
-      left: left,
-      right: right,
+      left: isStart ? 0 : null,
+      right: isStart ? null : 0,
       top: 0,
       bottom: 0,
       child: Align(
-        alignment: position == _TimeLabelPosition.start
-            ? Alignment.centerLeft
-            : Alignment.centerRight,
+        alignment: isStart ? Alignment.centerLeft : Alignment.centerRight,
         child: Padding(
-          padding: position == _TimeLabelPosition.start
+          padding: isStart
               ? const EdgeInsets.only(left: 6.0)
               : const EdgeInsets.only(right: 6.0),
           child: Text(
