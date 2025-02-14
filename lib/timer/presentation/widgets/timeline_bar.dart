@@ -109,24 +109,18 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     );
   }
 
-  /*
-  Widget _buildTimelineContainer(
-      DateTimeRange timeBarRange, _TimelineData timelineData) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: _borderRadius,
-        color: Colors.grey[200],
-        border: Border.all(color: Colors.grey[350]!),
-      ),
-      child: _buildMainTimeline(timelineData, timeBarRange),
-    );
-  }*/
-
   Widget _buildTimelineContainer(
       DateTimeRange timeBarRange, _TimelineData timelineData) {
     return Column(
       mainAxisSize: MainAxisSize.max,
       children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 18, right: 18),
+          child: Container(
+              height: 15,
+              child:
+                  _buildAnnotationsAboveTimeline(timelineData, timeBarRange)),
+        ),
         Padding(
             padding: const EdgeInsets.only(left: 18, right: 18),
             child: Container(
@@ -143,6 +137,19 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
             child: _buildAnnotationsBelowTimeline(timelineData, timeBarRange)),
       ],
     );
+  }
+
+  Widget _buildAnnotationsAboveTimeline(
+      _TimelineData timelineData, DateTimeRange timeBarRange) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          _buildCurrentTimeMarker(timeBarRange, width),
+        ],
+      );
+    });
   }
 
   Stack _buildAnnotationsBelowTimeline(
@@ -169,9 +176,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         return Stack(
           children: [
             _buildTimelineSegments(timelineData, timeBarRange, width),
-            if (widget.targetDate == null ||
-                DateUtils.isSameDay(widget.targetDate, DateTime.now()))
-              _buildCurrentTimeMarker(timeBarRange, width),
           ],
         );
       },
@@ -184,14 +188,19 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     final markerLeft = relativePosition * width;
 
     return Positioned(
-      left: markerLeft,
-      bottom: 0,
-      child: Container(
-        width: 2,
-        height: 15, // 50% of the timeline bar height (30)
-        color: Colors.black,
-      ),
-    );
+        width: 40,
+        left: markerLeft - 20,
+        bottom: -5,
+        child: Column(mainAxisSize: MainAxisSize.min, spacing: 0, children: [
+          Transform.translate(
+              offset: Offset(0, 5),
+              child: Text("Now",
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold))),
+          Icon(Icons.arrow_drop_down, color: Colors.black, size: 20),
+        ]));
   }
 
   double _calculateRelativePosition(
