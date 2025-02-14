@@ -92,7 +92,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
     return Container(
       width: double.infinity,
-      height: 30,
       margin: EdgeInsets.symmetric(vertical: 20, horizontal: horizontalMargin),
       child: FutureBuilder<_TimelineData>(
         future: _getTimelineData(),
@@ -110,6 +109,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     );
   }
 
+  /*
   Widget _buildTimelineContainer(
       DateTimeRange timeBarRange, _TimelineData timelineData) {
     return Container(
@@ -118,31 +118,63 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         color: Colors.grey[200],
         border: Border.all(color: Colors.grey[350]!),
       ),
-      child: Stack(
-        children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              return Stack(
-                children: [
-                  _buildTimelineSegments(timelineData, timeBarRange, width),
-                  if (widget.targetDate == null ||
-                      DateUtils.isSameDay(widget.targetDate, DateTime.now()))
-                    _buildCurrentTimeMarker(timeBarRange, width),
-                ],
-              );
-            },
-          ),
-          _TimelineTimeLabel(
-            time: timeBarRange.start,
-            position: _TimeLabelPosition.start,
-          ),
-          _TimelineTimeLabel(
-            time: timeBarRange.end,
-            position: _TimeLabelPosition.end,
-          ),
-        ],
-      ),
+      child: _buildMainTimeline(timelineData, timeBarRange),
+    );
+  }*/
+
+  Widget _buildTimelineContainer(
+      DateTimeRange timeBarRange, _TimelineData timelineData) {
+    return Column(
+      mainAxisSize: MainAxisSize.max,
+      children: [
+        Padding(
+            padding: const EdgeInsets.only(left: 18, right: 18),
+            child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: _borderRadius,
+                  color: Colors.grey[200],
+                  border: Border.all(color: Colors.grey[350]!),
+                ),
+                height: 30,
+                child: _buildMainTimeline(timelineData, timeBarRange))),
+        Container(
+            height: 20,
+            child: _buildAnnotationsBelowTimeline(timelineData, timeBarRange)),
+      ],
+    );
+  }
+
+  Stack _buildAnnotationsBelowTimeline(
+      _TimelineData timelineData, DateTimeRange timeBarRange) {
+    return Stack(
+      children: [
+        _TimelineTimeLabel(
+          time: timeBarRange.start,
+          position: _TimeLabelPosition.start,
+        ),
+        _TimelineTimeLabel(
+          time: timeBarRange.end,
+          position: _TimeLabelPosition.end,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMainTimeline(
+      _TimelineData timelineData, DateTimeRange timeBarRange) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return Stack(
+          children: [
+            _buildTimelineSegments(timelineData, timeBarRange, width),
+            if (widget.targetDate == null ||
+                DateUtils.isSameDay(widget.targetDate, DateTime.now()))
+              _buildCurrentTimeMarker(timeBarRange, width),
+          ],
+        );
+      },
     );
   }
 
@@ -495,7 +527,6 @@ class _SegmentPosition {
   }
 }
 
-/// Widget for displaying time labels at the ends of the timeline bar.
 class _TimelineTimeLabel extends StatelessWidget {
   final DateTime time;
   final _TimeLabelPosition position;
@@ -514,8 +545,8 @@ class _TimelineTimeLabel extends StatelessWidget {
         alignment: isStart ? Alignment.centerLeft : Alignment.centerRight,
         child: Padding(
           padding: isStart
-              ? const EdgeInsets.only(left: 6.0)
-              : const EdgeInsets.only(right: 6.0),
+              ? const EdgeInsets.only(left: 3.0)
+              : const EdgeInsets.only(right: 3.0),
           child: Text(
             TimeFormatter.timeToHoursAndMinutes(time),
             style: TextStyle(
