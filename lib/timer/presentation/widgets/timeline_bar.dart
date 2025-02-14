@@ -123,7 +123,14 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
           LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              return _buildTimelineSegments(timelineData, timeBarRange, width);
+              return Stack(
+                children: [
+                  _buildTimelineSegments(timelineData, timeBarRange, width),
+                  if (widget.targetDate == null ||
+                      DateUtils.isSameDay(widget.targetDate, DateTime.now()))
+                    _buildCurrentTimeMarker(timeBarRange, width),
+                ],
+              );
             },
           ),
           _TimelineTimeLabel(
@@ -139,6 +146,30 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     );
   }
 
+  Widget _buildCurrentTimeMarker(DateTimeRange timeBarRange, double width) {
+    final now = DateTime.now();
+    final relativePosition = _calculateRelativePosition(now, timeBarRange);
+    final markerLeft = relativePosition * width;
+
+    return Positioned(
+      left: markerLeft,
+      bottom: 0,
+      child: Container(
+        width: 2,
+        height: 15, // 50% of the timeline bar height (30)
+        color: Colors.black,
+      ),
+    );
+  }
+
+  double _calculateRelativePosition(
+      DateTime time, DateTimeRange fullTimeRange) {
+    final totalSeconds = fullTimeRange.duration.inSeconds;
+    final secondsFromStart = time.difference(fullTimeRange.start).inSeconds;
+    if (totalSeconds == 0) return 0;
+    return (secondsFromStart / totalSeconds).clamp(0.0, 1.0);
+  }
+
   Widget _buildTimelineSegments(_TimelineData timelineData,
       DateTimeRange timeBarRange, double timelineWidth) {
     _logger.d(
@@ -150,9 +181,8 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
   }
 
   List<Widget> _buildTimelineChildren(_TimelineData timelineData,
-      DateTimeRange timeBarRange, double timelineWidth,
-      [DateTime? now]) {
-    now ??= DateTime.now();
+      DateTimeRange timeBarRange, double timelineWidth) {
+    final now = DateTime.now();
     final children = <Widget>[];
 
     if (timelineData.typicalWorkDayStart != null &&
@@ -167,8 +197,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     }
 
     for (final session in timelineData.sessions) {
-      final range =
-          session.range ?? DateTimeRange(start: session.startedAt, end: now);
+      final range = session.range;
       final segmentPosition = _SegmentPosition(
           segmentRange: range,
           timeBarRange: timeBarRange,
