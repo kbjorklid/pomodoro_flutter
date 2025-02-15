@@ -12,6 +12,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   static const _typicalWorkDayStartKey = 'typical_workday_start';
   static const _typicalWorkDayLengthKey = 'typical_workday_length';
   static const _alwaysShowWorkdayTimespanInTimelineKey = 'always_show_workday_timespan_in_timeline';
+  static const _dailyPomodoroGoalKey = 'daily_pomodoro_goal';
 
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultShortRestDuration = Duration(minutes: 5);
@@ -173,6 +174,23 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setAlwaysShowWorkdayTimespanInTimeline(bool alwaysShow) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_alwaysShowWorkdayTimespanInTimelineKey, alwaysShow);
+    _notifySettingsChange();
+  }
+
+  @override
+  Future<int?> getDailyPomodoroGoal() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_dailyPomodoroGoalKey);
+  }
+
+  @override
+  Future<void> setDailyPomodoroGoal(int? goal) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (goal == null) {
+      await prefs.remove(_dailyPomodoroGoalKey);
+    } else {
+      await prefs.setInt(_dailyPomodoroGoalKey, goal);
+    }
     _notifySettingsChange();
   }
 }

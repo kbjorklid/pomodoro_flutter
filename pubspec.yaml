@@ -73,6 +73,7 @@ flutter:
     - assets/sounds/ding.wav
     - assets/sounds/gentle.wav
     - assets/sounds/jingle.wav
+    - assets/images/tomato.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -33,4 +33,7 @@ abstract class SettingsRepositoryPort {
 
   Future<bool> isAlwaysShowWorkdayTimespanInTimeline();
   Future<void> setAlwaysShowWorkdayTimespanInTimeline(bool alwaysShow);
+
+  Future<int?> getDailyPomodoroGoal();
+  Future<void> setDailyPomodoroGoal(int? goal);
 }
