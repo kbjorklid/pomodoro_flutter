@@ -18,4 +18,7 @@ abstract class TimerSessionRepositoryPort {
   Future<List<({DateTime date, int count})>> queryDailyCounts(
     TimerSessionQuery query,
   );
+
+  /// Gets the number of completed pomodoros for a specific date.
+  Future<int> getPomodoroCountForDate(DateTime date);
 }

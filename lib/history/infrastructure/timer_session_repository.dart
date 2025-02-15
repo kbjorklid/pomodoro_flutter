@@ -2,6 +2,7 @@ import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
+import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/infrastructure/duration_adapter.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
@@ -168,5 +169,26 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
   void _sendEventForHistoryUpdate() {
     DomainEventBus.publish(TimerHistoryUpdatedEvent());
+  }
+
+  @override
+  Future<int> getPomodoroCountForDate(DateTime date) async {
+    await _initialized;
+    _logger.d('Getting pomodoro count for date: $date');
+
+    final start = DateTime(date.year, date.month, date.day);
+    final end = start.add(const Duration(days: 1));
+
+    final query = TimerSessionQuery(
+      start: start,
+      end: end,
+      sessionType: TimerType.work,
+    );
+
+    final sessions = await this.query(query);
+    final count = sessions.where((s) => s.isCompleted).length;
+
+    _logger.d('Found $count pomodoros for date: $date');
+    return count;
   }
 }
