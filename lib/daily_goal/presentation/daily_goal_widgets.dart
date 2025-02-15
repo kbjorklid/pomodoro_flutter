@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 /// Base class for widgets that display tomatoes in a grid layout
 abstract class TomatoDisplayBase extends StatelessWidget {
   final int maxToDisplay;
-  final String title;
 
   const TomatoDisplayBase({
     super.key,
     required this.maxToDisplay,
-    required this.title,
   });
 
   @override
@@ -27,39 +25,18 @@ abstract class TomatoDisplayBase extends StatelessWidget {
 
         final itemsPerRow = (maxToDisplay / rows).ceil();
 
+        Widget? header = buildHeader(context);
+        Widget? footer = buildFooter(context);
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            buildHeader(context),
+            if (header != null) ...[header],
             const SizedBox(height: 16),
             if (shouldShowTomatoes) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(30),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceVariant,
-                  ),
-                  child: Column(
-                    children: List.generate(rows, (rowIndex) {
-                      final startIndex = rowIndex * itemsPerRow;
-                      final endIndex = (startIndex + itemsPerRow).clamp(0, maxToDisplay);
-
-                      return SizedBox(
-                        height: 60,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: List.generate(
-                            endIndex - startIndex,
-                                (index) => buildTomatoItem(context, startIndex + index),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              buildFooter(context),
+              _tomatoContainer(
+                  _tomatoesList(rows, itemsPerRow, context), context),
+              if (footer != null) ...[SizedBox(height: 8), footer]
             ],
           ],
         );
@@ -67,17 +44,43 @@ abstract class TomatoDisplayBase extends StatelessWidget {
     );
   }
 
+  Widget _tomatoContainer(Widget tomatoList, BuildContext context) {
+    return tomatoList;
+  }
+
+  Column _tomatoesList(int rows, int itemsPerRow, BuildContext context) {
+    return Column(
+      children: List.generate(rows, (rowIndex) {
+        final startIndex = rowIndex * itemsPerRow;
+        final endIndex = (startIndex + itemsPerRow).clamp(0, maxToDisplay);
+
+        return SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: _tomatoAlignment,
+            children: List.generate(
+              endIndex - startIndex,
+              (index) => buildTomatoItem(context, startIndex + index),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
   /// Build the header section of the display
-  Widget buildHeader(BuildContext context);
+  Widget? buildHeader(BuildContext context);
 
   /// Build a single tomato item
   Widget buildTomatoItem(BuildContext context, int index);
 
   /// Build the footer section of the display
-  Widget buildFooter(BuildContext context);
+  Widget? buildFooter(BuildContext context);
 
   /// Whether to show the tomatoes section
   bool get shouldShowTomatoes;
+
+  MainAxisAlignment get _tomatoAlignment;
 }
 
 /// Widget for selecting a daily goal of pomodoros
@@ -90,7 +93,7 @@ class PomodoroGoalSelector extends TomatoDisplayBase {
     required this.selectedGoal,
     required this.onChanged,
     int maxGoal = 20,
-  }) : super(maxToDisplay: maxGoal, title: 'Daily Pomodoro Goal');
+  }) : super(maxToDisplay: maxGoal);
 
   @override
   Widget buildHeader(BuildContext context) {
@@ -98,7 +101,7 @@ class PomodoroGoalSelector extends TomatoDisplayBase {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          title,
+          "Daily Pomodoro Goal",
           style: Theme.of(context).textTheme.titleMedium,
         ),
         Switch(
@@ -108,6 +111,18 @@ class PomodoroGoalSelector extends TomatoDisplayBase {
           },
         ),
       ],
+    );
+  }
+
+  @override
+  Widget _tomatoContainer(Widget tomatoList, BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceVariant,
+          ),
+          child: tomatoList),
     );
   }
 
@@ -132,6 +147,9 @@ class PomodoroGoalSelector extends TomatoDisplayBase {
 
   @override
   bool get shouldShowTomatoes => selectedGoal != null;
+
+  @override
+  MainAxisAlignment get _tomatoAlignment => MainAxisAlignment.spaceEvenly;
 }
 
 /// Widget for displaying progress towards daily pomodoro goal
@@ -144,16 +162,12 @@ class PomodoroProgressDisplay extends TomatoDisplayBase {
     required this.goalCount,
     required this.achievedCount,
   }) : super(
-    maxToDisplay: achievedCount > goalCount ? achievedCount : goalCount,
-    title: 'Daily Progress',
-  );
+            maxToDisplay:
+                achievedCount > goalCount ? achievedCount : goalCount);
 
   @override
-  Widget buildHeader(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(context).textTheme.titleMedium,
-    );
+  Widget? buildHeader(BuildContext context) {
+    return null;
   }
 
   @override
@@ -167,23 +181,15 @@ class PomodoroProgressDisplay extends TomatoDisplayBase {
   }
 
   @override
-  Widget buildFooter(BuildContext context) {
-    if (achievedCount >= goalCount) {
-      return Text(
-        'Goal achieved! ($achievedCount/${goalCount})',
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-        ),
-      );
-    }
-    return Text(
-      '$achievedCount/$goalCount pomodoros completed',
-      style: Theme.of(context).textTheme.bodyMedium,
-    );
+  Widget? buildFooter(BuildContext context) {
+    return null;
   }
 
   @override
   bool get shouldShowTomatoes => true;
+
+  @override
+  MainAxisAlignment get _tomatoAlignment => MainAxisAlignment.center;
 }
 
 class AnimatedTomato extends StatefulWidget {
