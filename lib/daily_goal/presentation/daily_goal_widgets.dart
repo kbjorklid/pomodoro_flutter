@@ -157,6 +157,8 @@ class PomodoroProgressDisplay extends TomatoDisplayBase {
   final int goalCount;
   final int achievedCount;
 
+  bool get _isEmpty => goalCount == 0 && achievedCount == 0;
+
   const PomodoroProgressDisplay({
     super.key,
     required this.goalCount,
@@ -164,6 +166,22 @@ class PomodoroProgressDisplay extends TomatoDisplayBase {
   }) : super(
             maxToDisplay:
                 achievedCount > goalCount ? achievedCount : goalCount);
+
+  factory PomodoroProgressDisplay.empty() {
+    return const PomodoroProgressDisplay(
+      goalCount: 0,
+      achievedCount: 0,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return super.build(context);
+  }
 
   @override
   Widget? buildHeader(BuildContext context) {

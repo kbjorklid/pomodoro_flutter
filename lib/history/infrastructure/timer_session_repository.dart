@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive/hive.dart';
 import 'package:logger/logger.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
@@ -7,6 +8,7 @@ import 'package:pomodoro_app2/core/infrastructure/duration_adapter.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
 import 'package:pomodoro_app2/history/infrastructure/dtos/timer_session_dto.dart';
+import 'package:pomodoro_app2/history/presentation/providers/timer_history_updates_provider.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/completion_status.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 
@@ -15,11 +17,12 @@ import 'dtos/pause_record_dto.dart';
 final _logger = Logger();
 
 class TimerSessionRepository implements TimerSessionRepositoryPort {
+  final Ref _ref;
   static const _boxName = 'timerSessions';
   late final Box<TimerSessionDTO> _box;
   late final Future<void> _initialized;
 
-  TimerSessionRepository() {
+  TimerSessionRepository(this._ref) {
     _initialized = _init();
   }
 
@@ -168,6 +171,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   }
 
   void _sendEventForHistoryUpdate() {
+    _ref.read(timerHistoryUpdatesProvider.notifier).notifyHistoryUpdated();
     DomainEventBus.publish(TimerHistoryUpdatedEvent());
   }
 
