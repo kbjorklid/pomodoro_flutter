@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoro_app2/dailygoal/presentation/daily_goal_widgets.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/settings_list_tile.dart';
@@ -7,7 +8,6 @@ import 'package:pomodoro_app2/settings/presentation/widgets/sound_selector.dart'
 import 'package:pomodoro_app2/settings/presentation/widgets/workday_timespan_slider.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
-import 'widgets/pomodoro_goal_selector.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
