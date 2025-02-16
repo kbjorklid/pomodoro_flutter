@@ -4,9 +4,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:pomodoro_app2/core/presentation/app_theme.dart';
 import 'package:pomodoro_app2/core/presentation/providers/common_providers.dart';
 import 'package:pomodoro_app2/history/presentation/providers/timer_session_repository_provider.dart';
 import 'package:pomodoro_app2/navigation_view.dart';
+import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
 
 void main() async {
@@ -25,12 +27,14 @@ final _sessionSaverProvider = Provider<void>((ref) {
   final timerService = ref.read(timerProvider);
   final repository = ref.read(timerSessionRepositoryProvider);
 
-  timerService.addSessionListener((session) async {
+  void saveSession(EndedTimerSession session) async {
     await repository.save(session);
-  });
+  }
+
+  timerService.addSessionListener(saveSession);
 
   ref.onDispose(() async {
-    timerService.removeSessionListener((session) async {});
+    timerService.removeSessionListener(saveSession);
   });
 });
 
@@ -42,7 +46,10 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
-  Timer? _dailyResetTimer; // Keep a reference to the timer
+  static const _dayChangeCheckInterval = Duration(minutes: 1);
+  static const _lastCheckedDateKey = 'lastCheckedDate';
+
+  Timer? _dailyResetTimer;
 
   @override
   void initState() {
@@ -87,13 +94,13 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Future<void> _initializeDailyResetTimer(WidgetRef ref) async {
     final kvRepo = ref.read(keyValueStoreProvider);
     final DateTime? lastCheckedDate =
-        await kvRepo.get<DateTime>('lastCheckedDate');
+        await kvRepo.get<DateTime>(_lastCheckedDateKey);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
     if (lastCheckedDate == null || lastCheckedDate.isBefore(today)) {
       ref.read(dailyResetProvider.notifier).state++;
-      await kvRepo.save<DateTime>('lastCheckedDate', today);
+      await kvRepo.save<DateTime>(_lastCheckedDateKey, today);
     }
   }
 
@@ -101,8 +108,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     // Cancel the existing timer if any
     _dailyResetTimer?.cancel();
     // Start a timer that checks every minute if the day has changed
-    _dailyResetTimer =
-        Timer.periodic(const Duration(minutes: 1), (timer) async {
+    _dailyResetTimer = Timer.periodic(_dayChangeCheckInterval, (timer) async {
       await _checkForDailyReset(ref);
     });
   }
@@ -112,10 +118,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final DateTime? lastCheckedDate =
-        await kvRepo.get<DateTime>('lastCheckedDate');
+        await kvRepo.get<DateTime>(_lastCheckedDateKey);
     if (lastCheckedDate == null || lastCheckedDate.isBefore(today)) {
       ref.read(dailyResetProvider.notifier).state++;
-      await kvRepo.save<DateTime>('lastCheckedDate', today);
+      await kvRepo.save<DateTime>(_lastCheckedDateKey, today);
     }
   }
 
@@ -123,14 +129,7 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Pomodoro Timer',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          secondary: Colors.teal,
-          tertiary: Colors.green,
-        ),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.light,
       home: const NavigationView(),
     );
   }
