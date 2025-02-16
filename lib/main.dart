@@ -42,24 +42,36 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+  Timer? _dailyResetTimer; // Keep a reference to the timer
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     ref.read(_sessionSaverProvider);
     _initializeDailyResetTimer(ref);
+    _startDailyResetTimer(); // Start the timer after initialization
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _dailyResetTimer?.cancel(); // Cancel the timer when the widget is disposed
     super.dispose();
   }
 
   @override
-  Future<AppExitResponse> didRequestAppExit() {
+  Future<AppExitResponse> didRequestAppExit() async {
     _finalizeAndSaveSessionIfRunning();
     return super.didRequestAppExit();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _checkForDailyReset(ref);
+    }
   }
 
   void _finalizeAndSaveSessionIfRunning() {
@@ -73,30 +85,38 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   }
 
   Future<void> _initializeDailyResetTimer(WidgetRef ref) async {
-    // Check if the day has changed since the last app open
     final kvRepo = ref.read(keyValueStoreProvider);
     final DateTime? lastCheckedDate =
         await kvRepo.get<DateTime>('lastCheckedDate');
-
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day); // Midnight today
+    final today = DateTime(now.year, now.month, now.day);
 
     if (lastCheckedDate == null || lastCheckedDate.isBefore(today)) {
-      // Day has changed, set dailyResetProvider to true
       ref.read(dailyResetProvider.notifier).state++;
       await kvRepo.save<DateTime>('lastCheckedDate', today);
     }
+  }
 
+  void _startDailyResetTimer() {
+    // Cancel the existing timer if any
+    _dailyResetTimer?.cancel();
     // Start a timer that checks every minute if the day has changed
-    Timer.periodic(const Duration(minutes: 1), (timer) async {
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-
-      if (lastCheckedDate == null || lastCheckedDate.isBefore(today)) {
-        ref.read(dailyResetProvider.notifier).state++;
-        await kvRepo.save<DateTime>('lastCheckedDate', today);
-      }
+    _dailyResetTimer =
+        Timer.periodic(const Duration(minutes: 1), (timer) async {
+      await _checkForDailyReset(ref);
     });
+  }
+
+  Future<void> _checkForDailyReset(WidgetRef ref) async {
+    final kvRepo = ref.read(keyValueStoreProvider);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final DateTime? lastCheckedDate =
+        await kvRepo.get<DateTime>('lastCheckedDate');
+    if (lastCheckedDate == null || lastCheckedDate.isBefore(today)) {
+      ref.read(dailyResetProvider.notifier).state++;
+      await kvRepo.save<DateTime>('lastCheckedDate', today);
+    }
   }
 
   @override
