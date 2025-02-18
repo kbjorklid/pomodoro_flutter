@@ -123,21 +123,28 @@ class _TimerTypeSelector extends ConsumerWidget {
 class _AsyncValueWidget<T> extends StatelessWidget {
   final AsyncValue<T> value;
   final Widget Function(T) data;
-  final Widget loadingWidget;
+  final Widget loadingWidget; // Keep this, even if unused, for clarity
 
   const _AsyncValueWidget({
     required this.value,
     required this.data,
-    required this.loadingWidget,
-    super.key,
-  });
+    required this.loadingWidget, // Kept for consistency, even though unused now.
+    Key? key, // Use Key, not super.key
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return value.when(
-      data: data,
-      error: (error, _) => Text('error: $error'),
-      loading: () => loadingWidget,
-    );
+    return value.maybeWhen(
+        skipLoadingOnReload: true,
+        data: (dataValue) {
+          // Always show the data, even if isLoading is true.
+          return data(dataValue);
+        },
+        orElse: () {
+          return value.asData?.value != null
+              ? data(value.asData!.value)
+              : loadingWidget;
+        },
+        error: (error, stackTrace) => Text("error: $error"));
   }
 }
