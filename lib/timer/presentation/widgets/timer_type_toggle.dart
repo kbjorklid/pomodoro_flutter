@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
 import 'package:pomodoro_app2/timer/application/get_timer_types_allowed_to_switch_to_use_case.dart';
+import 'package:pomodoro_app2/timer/application/set_timer_type_use_case.dart';
 import 'package:pomodoro_app2/timer/application/timer_state/timer_notifier.dart';
 
 class ToggleTimerTypeButtons extends ConsumerWidget {
@@ -42,7 +43,7 @@ class _TimerStateWidget extends ConsumerWidget {
   }
 }
 
-class _TimerTypeSelector extends StatelessWidget {
+class _TimerTypeSelector extends ConsumerWidget {
   final Set<TimerType> enabledTypes;
   final TimerType selectedType;
 
@@ -52,11 +53,14 @@ class _TimerTypeSelector extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SegmentedButton<TimerType>(
       segments: _buildSegments(),
       selected: {selectedType},
-      onSelectionChanged: (Set<TimerType> newSelection) {},
+      onSelectionChanged: (Set<TimerType> newSelection) async {
+        final selection = newSelection.first;
+        await ref.read(setTimerTypeUseCaseProvider).execute(selection);
+      },
       style: ButtonStyle(
         backgroundColor: _colorSelect(_timerTypeColor(selectedType)),
         foregroundColor: _colorSelect(Colors.white),
@@ -83,11 +87,9 @@ class _TimerTypeSelector extends StatelessWidget {
         ),
       ];
 
-  ButtonSegment<TimerType> _buildSegment(
-    TimerType type,
-    String label,
-    Icon icon,
-  ) =>
+  ButtonSegment<TimerType> _buildSegment(TimerType type,
+      String label,
+      Icon icon,) =>
       ButtonSegment<TimerType>(
         value: type,
         label: Text(label),

@@ -1,4 +1,3 @@
-// timer/application/get_timer_types_allowed_to_switch_to_use_case.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
@@ -75,6 +74,12 @@ class GetTimerTypesAllowedToSwitchToUseCase {
 
 @riverpod
 Future<Set<TimerType>> timerTypesAllowedToSwitchTo(Ref ref) async {
+  // Watch the timer state to react to changes
+  final timerState = ref.watch(pomodoroTimerProvider);
+
+  // Watch settings changes
+  ref.watch(settingsRepositoryProvider);
+
   final useCase = GetTimerTypesAllowedToSwitchToUseCase(
     timer: ref.watch(pomodoroTimerProvider.notifier),
     settings: ref.read(settingsRepositoryProvider),
@@ -85,6 +90,9 @@ Future<Set<TimerType>> timerTypesAllowedToSwitchTo(Ref ref) async {
 @riverpod
 GetTimerTypesAllowedToSwitchToUseCase getTimerTypesAllowedToSwitchToUseCase(
     Ref ref) {
+  ref.watch(pomodoroTimerProvider); // Watch timer state
+  ref.watch(settingsRepositoryProvider); // Watch settings
+
   return GetTimerTypesAllowedToSwitchToUseCase(
     timer: ref.watch(pomodoroTimerProvider.notifier),
     settings: ref.read(settingsRepositoryProvider),
