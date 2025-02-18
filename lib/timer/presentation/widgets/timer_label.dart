@@ -3,16 +3,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/time_formatter.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
+import 'package:pomodoro_app2/timer/application/timer_state/timer_notifier.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
-import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
-
 class TimerLabel extends ConsumerWidget {
   const TimerLabel({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final timerState = ref.watch(timerStateProvider);
+    final timerStateAsync = ref.watch(pomodoroTimerProvider);
 
+    return timerStateAsync.when(
+        data: (timerState) => _buildComponent(timerState),
+        error: (error, _) => _buildTextReplacement("Error: $error"),
+        loading: () => _buildTextReplacement("Loading..."));
+  }
+
+  Widget _buildTextReplacement(String message) {
+    return SizedBox(
+      width: 200,
+      height: 200,
+      child: Center(
+        child: Text(message, style: const TextStyle(fontSize: 24)),
+      ),
+    );
+  }
+
+  Widget _buildComponent(TimerState timerState) {
     final remaining = timerState.remainingTime;
     final total = timerState.timerDuration;
     final progress =

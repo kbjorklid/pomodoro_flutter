@@ -1,31 +1,40 @@
-import 'package:pomodoro_app2/timer/application/timer_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:pomodoro_app2/timer/application/timer_state/timer_notifier.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../domain/timer_state.dart';
 
-/// Use case for toggling timer state between running and paused
-class ToggleTimerUseCase {
-  final TimerService _timerService;
+part 'toggle_timer_use_case.g.dart';
 
-  ToggleTimerUseCase(this._timerService);
+class ToggleTimerUseCase {
+  final PomodoroTimer _timer;
+
+  ToggleTimerUseCase(this._timer);
 
   /// Executes the use case to toggle timer state
   ///
   /// If timer is running, pauses it
   /// If timer is paused, resumes it
-  /// If timer is ended or not started, starts it
+  /// If timer is ended or not started, starts it with default duration
   void execute() {
-    final state = _timerService.state;
-    switch (state.status) {
+    switch (_timer.getCurrentStatus()) {
       case TimerStatus.running:
-        _timerService.pause();
+        _timer.pauseTimer();
         break;
       case TimerStatus.paused:
-        _timerService.resume();
+        _timer.resumeTimer();
         break;
       case TimerStatus.ended:
       case TimerStatus.notStarted:
-        _timerService.startFromBeginning();
+        // You might want to get these values from settings
+        _timer.startTimer(
+            _timer.getCurrentTimerType(), const Duration(minutes: 25));
         break;
     }
   }
+}
+
+@riverpod
+ToggleTimerUseCase toggleTimerUseCase(Ref ref) {
+  return ToggleTimerUseCase(ref.watch(pomodoroTimerProvider.notifier));
 }

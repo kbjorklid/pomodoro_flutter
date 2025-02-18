@@ -1,15 +1,22 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_query.dart';
 import 'package:pomodoro_app2/history/domain/timer_session_repository_port.dart';
-import 'package:pomodoro_app2/timer/application/timer_service.dart';
+import 'package:pomodoro_app2/history/presentation/providers/timer_session_repository_provider.dart';
+import 'package:pomodoro_app2/timer/application/timer_state/timer_notifier.dart';
+import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'get_todays_timer_sessions_use_case.g.dart';
 
 class GetTodaysTimerSessionsUseCase {
+  final PomodoroTimer _timer;
+
   final TimerSessionRepositoryPort _repository;
-  final TimerService _timerService;
 
   final DateTime Function() _getCurrentTime;
   List<ClosedTimerSession> _historyOfTimerSessionsForToday = [];
@@ -17,8 +24,7 @@ class GetTodaysTimerSessionsUseCase {
 
   StreamSubscription? _historyEventSubscription;
 
-  GetTodaysTimerSessionsUseCase(
-    this._timerService,
+  GetTodaysTimerSessionsUseCase(this._timer,
     this._repository, {
     DateTime Function() getCurrentTime = DateTime.now,
   }) : _getCurrentTime = getCurrentTime {
@@ -46,11 +52,12 @@ class GetTodaysTimerSessionsUseCase {
   Future<List<ClosedTimerSession>> getTodaysSessions([DateTime? now]) async {
     now ??= _getCurrentTime();
     await _initializationFuture;
-    RunningTimerSession? runningSession = _timerService.getRunningSession();
     _removeYesterdaysSessions(now);
-    if (runningSession == null) {
+    if (_timer.getCurrentStatus() == TimerStatus.notStarted) {
       return _historyOfTimerSessionsForToday;
     }
+
+    RunningTimerSession runningSession = _timer.getCurrentSession();
     ClosedTimerSession runningSessionSnapshot = TimerSessionSnapshot(
         runningTimerSession: runningSession, timerRangeEnd: now);
     return _historyOfTimerSessionsForToday
@@ -77,4 +84,11 @@ class GetTodaysTimerSessionsUseCase {
     now ??= _getCurrentTime();
     return DateTime(now.year, now.month, now.day);
   }
+}
+
+@riverpod
+GetTodaysTimerSessionsUseCase getTodaysTimerSessionsUseCase(Ref ref) {
+  return GetTodaysTimerSessionsUseCase(
+      ref.watch(pomodoroTimerProvider.notifier),
+      ref.read(timerSessionRepositoryProvider));
 }

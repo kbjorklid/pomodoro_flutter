@@ -1,6 +1,7 @@
 // timer_notifier.dart
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
@@ -220,4 +221,18 @@ class PomodoroTimer extends _$PomodoroTimer {
   TimerType getCurrentTimerType() {
     return state.value?.timerType ?? TimerType.work;
   }
+
+  Duration getRemainingTime() {
+    return state.value?.remainingTime ?? Duration.zero;
+  }
+
+  TimerState? getCurrentState() {
+    return state.value;
+  }
+}
+
+// timer_provider.dart
+@riverpod
+Stream<TimerEvent> timerEvents(Ref ref) {
+  return ref.watch(pomodoroTimerProvider.notifier).events;
 }

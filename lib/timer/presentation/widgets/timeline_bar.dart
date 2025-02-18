@@ -16,7 +16,6 @@ import 'package:pomodoro_app2/settings/presentation/providers/settings_repositor
 import 'package:pomodoro_app2/timer/application/get_todays_timer_sessions_use_case.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
-import 'package:pomodoro_app2/timer/presentation/providers/get_todays_timer_sessions_use_case_provider.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timer_details_dialog.dart';
 
 // Constants should be declared before the class.
@@ -42,22 +41,17 @@ class TimelineBar extends ConsumerStatefulWidget {
 class _TimelineBarState extends ConsumerState<TimelineBar> {
   StreamSubscription? _timerHistorySubscription;
   StreamSubscription? _timerRuntimeSubscription;
-  late final GetTodaysTimerSessionsUseCase _todaysTimerSessionsUseCase;
   Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    _todaysTimerSessionsUseCase = ref.read(todaysTimerSessionsUseCaseProvider);
 
-    // Only subscribe to events if we're showing today's timeline.
     if (widget.targetDate == null) {
       _timerHistorySubscription = DomainEventBus.of<TimerHistoryUpdatedEvent>()
           .listen(_onTimerHistoryUpdated);
       _timerRuntimeSubscription =
           DomainEventBus.of<TimerRuntimeEvent>().listen(_onTimerRuntimeEvent);
-
-      // Add periodic refresh timer only for today's timeline
       _refreshTimer =
           Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
     }
@@ -325,6 +319,8 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     final settings = ref.read(settingsRepositoryProvider);
     final DateTime targetDate = widget.targetDate ?? DateTime.now();
     final List<ClosedTimerSession>? timerSessions = widget.timerSessions;
+    final todaysSessionsUseCase =
+        ref.read(getTodaysTimerSessionsUseCaseProvider);
 
     List<dynamic> results;
 
@@ -341,7 +337,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       results = await Future.wait([
         settings.getTypicalWorkDayStart(),
         settings.getTypicalWorkDayLength(),
-        _todaysTimerSessionsUseCase.getTodaysSessions(targetDate),
+        todaysSessionsUseCase.getTodaysSessions(targetDate),
         settings.isAlwaysShowWorkdayTimespanInTimeline(),
       ]);
     }

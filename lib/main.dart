@@ -1,42 +1,39 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pomodoro_app2/core/presentation/app_theme.dart';
 import 'package:pomodoro_app2/core/presentation/providers/common_providers.dart';
-import 'package:pomodoro_app2/history/presentation/providers/timer_session_repository_provider.dart';
 import 'package:pomodoro_app2/navigation_view.dart';
-import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
-import 'package:pomodoro_app2/timer/presentation/providers/timer_provider.dart';
+import 'package:pomodoro_app2/session_saver_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'main.g.dart';
+
+// Provider to initialize all app-level services
+@riverpod
+void appInitializer(Ref ref) {
+  // Initialize session saver
+  ref.watch(sessionSaverProvider);
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
   final scope = ProviderScope(
-    child: MyApp(),
+    child: Consumer(
+      builder: (context, ref, child) {
+        // Initialize app-level services
+        ref.watch(appInitializerProvider);
+        return const MyApp();
+      },
+    ),
   );
 
   runApp(scope);
 }
-
-/// Provider to initialize session saving
-final _sessionSaverProvider = Provider<void>((ref) {
-  final timerService = ref.read(timerProvider);
-  final repository = ref.read(timerSessionRepositoryProvider);
-
-  void saveSession(EndedTimerSession session) async {
-    await repository.save(session);
-  }
-
-  timerService.addSessionListener(saveSession);
-
-  ref.onDispose(() async {
-    timerService.removeSessionListener(saveSession);
-  });
-});
 
 class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
@@ -55,7 +52,6 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    ref.read(_sessionSaverProvider);
     _initializeDailyResetTimer(ref);
     _startDailyResetTimer(); // Start the timer after initialization
   }
@@ -68,26 +64,10 @@ class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   }
 
   @override
-  Future<AppExitResponse> didRequestAppExit() async {
-    _finalizeAndSaveSessionIfRunning();
-    return super.didRequestAppExit();
-  }
-
-  @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _checkForDailyReset(ref);
-    }
-  }
-
-  void _finalizeAndSaveSessionIfRunning() {
-    final timerService = ref.read(timerProvider);
-    final repository = ref.read(timerSessionRepositoryProvider);
-
-    final session = timerService.finalizeSessionIfStarted();
-    if (session != null) {
-      repository.save(session);
     }
   }
 
