@@ -15,25 +15,43 @@ part 'get_todays_timer_sessions_use_case.g.dart';
 
 class GetTodaysTimerSessionsUseCase {
   final PomodoroTimer _timer;
-
   final TimerSessionRepositoryPort _repository;
-
   final DateTime Function() _getCurrentTime;
   List<ClosedTimerSession> _historyOfTimerSessionsForToday = [];
   late final Future<void> _initializationFuture;
 
   StreamSubscription? _historyEventSubscription;
+  StreamSubscription? _timerEventSubscription;
 
-  GetTodaysTimerSessionsUseCase(this._timer,
+  GetTodaysTimerSessionsUseCase(
+    this._timer,
     this._repository, {
     DateTime Function() getCurrentTime = DateTime.now,
   }) : _getCurrentTime = getCurrentTime {
     _initializationFuture = _refreshFromDataStore();
     unawaited(_initializationFuture);
+
+    // Subscribe to history updates
     _historyEventSubscription =
         DomainEventBus.of<TimerHistoryUpdatedEvent>().listen((event) {
       unawaited(_refreshFromDataStore());
     });
+
+    // Subscribe to timer events
+    _timerEventSubscription = _timer.events.listen(_handleTimerEvent);
+  }
+
+  void _handleTimerEvent(TimerEvent event) {
+    switch (event) {
+      case TimerStartedEvent():
+      case TimerPausedEvent():
+      case TimerResumedEvent():
+      case TimerCompletedEvent():
+      case TimerStoppedEvent():
+        unawaited(_refreshFromDataStore());
+      case TimerTickEvent():
+        break;
+    }
   }
 
   Future<void> _refreshFromDataStore() async {
@@ -66,7 +84,9 @@ class GetTodaysTimerSessionsUseCase {
 
   void dispose() {
     _historyEventSubscription?.cancel();
+    _timerEventSubscription?.cancel();
     _historyEventSubscription = null;
+    _timerEventSubscription = null;
   }
 
   void _removeYesterdaysSessions(DateTime? now) {

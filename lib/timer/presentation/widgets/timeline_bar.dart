@@ -7,13 +7,14 @@ import 'package:logger/logger.dart';
 import 'package:pomodoro_app2/core/domain/date_time_range_builder.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
-import 'package:pomodoro_app2/core/domain/events/timer_running_events.dart';
 import 'package:pomodoro_app2/core/domain/time_formatter.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
 import 'package:pomodoro_app2/history/presentation/providers/timer_session_repository_provider.dart';
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/timer/application/get_todays_timer_sessions_use_case.dart';
+import 'package:pomodoro_app2/timer/application/timer_state/timer_notifier.dart';
+import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timer_details_dialog.dart';
@@ -40,7 +41,7 @@ class TimelineBar extends ConsumerStatefulWidget {
 
 class _TimelineBarState extends ConsumerState<TimelineBar> {
   StreamSubscription? _timerHistorySubscription;
-  StreamSubscription? _timerRuntimeSubscription;
+  StreamSubscription? _timerEventSubscription;
   Timer? _refreshTimer;
 
   @override
@@ -50,21 +51,51 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     if (widget.targetDate == null) {
       _timerHistorySubscription = DomainEventBus.of<TimerHistoryUpdatedEvent>()
           .listen(_onTimerHistoryUpdated);
-      _timerRuntimeSubscription =
-          DomainEventBus.of<TimerRuntimeEvent>().listen(_onTimerRuntimeEvent);
-      _refreshTimer =
-          Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
+
+      _timerEventSubscription =
+          ref.read(pomodoroTimerProvider.notifier).events.listen(_onTimerEvent);
+
+      _startRefreshTimer();
     }
   }
 
-  // extracted event handler methods
+  void _startRefreshTimer() {
+    _refreshTimer =
+        Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
+  }
+
+  void _stopRefreshTimer() {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+  }
+
+  void _onTimerEvent(TimerEvent event) {
+    switch (event) {
+      case TimerTickEvent():
+        // Only refresh on ticks if we have an active session
+        if (ref.read(pomodoroTimerProvider).value?.status ==
+            TimerStatus.running) {
+          _stopRefreshTimer();
+          _refresh();
+        }
+        break;
+      case TimerStartedEvent():
+      case TimerResumedEvent():
+        _refresh();
+        _stopRefreshTimer();
+        break;
+      case TimerCompletedEvent():
+      case TimerPausedEvent():
+      case TimerStoppedEvent():
+        _startRefreshTimer();
+        _refresh();
+    }
+  }
+
   void _onTimerHistoryUpdated(TimerHistoryUpdatedEvent event) {
     _refresh();
   }
 
-  void _onTimerRuntimeEvent(TimerRuntimeEvent event) {
-    _refresh();
-  }
 
   void _refresh() {
     setState(() {});
@@ -75,7 +106,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     _refreshTimer?.cancel();
     _refreshTimer = null;
     _timerHistorySubscription?.cancel();
-    _timerRuntimeSubscription?.cancel();
+    _timerEventSubscription?.cancel();
     super.dispose();
   }
 
@@ -320,7 +351,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     final DateTime targetDate = widget.targetDate ?? DateTime.now();
     final List<ClosedTimerSession>? timerSessions = widget.timerSessions;
     final todaysSessionsUseCase =
-        ref.read(getTodaysTimerSessionsUseCaseProvider);
+        ref.watch(getTodaysTimerSessionsUseCaseProvider);
 
     List<dynamic> results;
 
