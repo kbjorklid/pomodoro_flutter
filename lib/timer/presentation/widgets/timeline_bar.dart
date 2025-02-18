@@ -3,7 +3,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logger/logger.dart';
 import 'package:pomodoro_app2/core/domain/date_time_range_builder.dart';
 import 'package:pomodoro_app2/core/domain/events/event_bus.dart';
 import 'package:pomodoro_app2/core/domain/events/timer_history_updated_event.dart';
@@ -21,7 +20,6 @@ import 'package:pomodoro_app2/timer/presentation/widgets/timer_details_dialog.da
 
 // Constants should be declared before the class.
 final BorderRadius _borderRadius = BorderRadius.circular(1);
-final Logger _logger = Logger();
 
 class TimelineBar extends ConsumerStatefulWidget {
   const TimelineBar({
@@ -238,8 +236,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   Widget _buildTimelineSegments(_TimelineData timelineData,
       DateTimeRange timeBarRange, double timelineWidth) {
-    _logger.d(
-        "TimeBarRange Start: ${timeBarRange.start}, End: ${timeBarRange.end}");
     return Stack(
       children:
           _buildTimelineChildren(timelineData, timeBarRange, timelineWidth),
@@ -271,8 +267,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
       if (segmentPosition.isEmpty) continue;
 
-      _logger.d("Session: $session\n    SegmentPosition: $segmentPosition");
-
       final onTap = session.isEnded
           ? () {
               _showTimerDetailsPopup(context, session);
@@ -294,7 +288,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
             timeBarRange: timeBarRange,
             timelinePixelWidth: timelineWidth);
 
-        _logger.d("Pause: $pause\n    SegmentPosition: $segmentPosition");
         children.add(_PauseSegment(
           segmentPosition: segmentPosition,
           pause: pause,

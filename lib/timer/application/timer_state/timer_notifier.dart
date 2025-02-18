@@ -75,6 +75,7 @@ class PomodoroTimer extends _$PomodoroTimer {
       pausedAt: null,
     ));
 
+    print('Emitting TimerStartedEvent');
     _eventController?.add(TimerStartedEvent(timerType, duration));
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -162,6 +163,7 @@ class PomodoroTimer extends _$PomodoroTimer {
       pausedAt: null,
     ));
 
+    print('Emitting TimerStoppedEvent');
     _eventController?.add(const TimerStoppedEvent());
   }
 

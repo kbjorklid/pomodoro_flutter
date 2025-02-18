@@ -7,26 +7,32 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'session_saver_provider.g.dart';
 
 /// Provider that listens to timer events and saves completed sessions to the repository
+// In session_saver_provider.dart
 @Riverpod(keepAlive: true)
 void sessionSaver(Ref ref) {
   final timer = ref.watch(pomodoroTimerProvider.notifier);
   final repository = ref.read(timerSessionRepositoryProvider);
 
   ref.listen(timerEventsProvider, (previous, next) async {
-    if (next is TimerStoppedEvent || next is TimerCompletedEvent) {
-      // Get the current session and create an EndedTimerSession
-      final currentSession = timer.getCurrentSession();
-      final now = DateTime.now();
+    // Handle the AsyncValue wrapper
+    next.whenData((event) async {
+      print('Timer event received: $event');
+      if (event is TimerStoppedEvent || event is TimerCompletedEvent) {
+        print('Saving session...');
+        // Get the current session and create an EndedTimerSession
+        final currentSession = timer.getCurrentSession();
+        final now = DateTime.now();
 
-      final endedSession = EndedTimerSession(
-        sessionType: currentSession.sessionType,
-        startedAt: currentSession.startedAt,
-        endedAt: now,
-        pauses: currentSession.pauses,
-        totalDuration: currentSession.totalDuration,
-      );
+        final endedSession = EndedTimerSession(
+          sessionType: currentSession.sessionType,
+          startedAt: currentSession.startedAt,
+          endedAt: now,
+          pauses: currentSession.pauses,
+          totalDuration: currentSession.totalDuration,
+        );
 
-      await repository.save(endedSession);
-    }
+        await repository.save(endedSession);
+      }
+    });
   });
 }
