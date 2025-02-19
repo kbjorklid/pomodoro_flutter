@@ -14,9 +14,7 @@ part 'main.g.dart';
 // Provider to initialize all app-level services
 @riverpod
 void appInitializer(Ref ref) {
-  print('AppInitializer running');
   ref.watch(sessionSaverProvider);
-  print('Session saver initialized');
 }
 
 void main() async {

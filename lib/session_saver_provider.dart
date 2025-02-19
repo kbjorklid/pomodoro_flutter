@@ -16,9 +16,7 @@ void sessionSaver(Ref ref) {
   ref.listen(timerEventsProvider, (previous, next) async {
     // Handle the AsyncValue wrapper
     next.whenData((event) async {
-      print('Timer event received: $event');
       if (event is TimerStoppedEvent || event is TimerCompletedEvent) {
-        print('Saving session...');
         // Get the current session and create an EndedTimerSession
         final currentSession = timer.getCurrentSession();
         final now = DateTime.now();
