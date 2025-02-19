@@ -44,6 +44,7 @@ class TimerStoppedEvent extends TimerEvent {
 class PomodoroTimer extends _$PomodoroTimer {
   Timer? _timer;
   StreamController<TimerEvent>? _eventController;
+  final _DurationsOfTimerTypes _durations = _DurationsOfTimerTypes();
 
   @override
   FutureOr<TimerState> build() {
@@ -57,14 +58,16 @@ class PomodoroTimer extends _$PomodoroTimer {
 
   Stream<TimerEvent> get events => _eventController!.stream;
 
-  void startTimer(TimerType timerType, Duration duration) async {
+  void startTimer([TimerType? timerType]) async {
     if (state.value?.status == TimerStatus.running) {
       return;
     }
+    timerType ??= getCurrentTimerType();
 
     _timer?.cancel();
 
     final now = DateTime.now();
+    final Duration duration = _durations.getDuration(timerType);
     state = AsyncData(TimerState(
       timerType: timerType,
       status: TimerStatus.running,
@@ -80,6 +83,30 @@ class PomodoroTimer extends _$PomodoroTimer {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _handleTick();
     });
+  }
+
+  void resetTimer([TimerType? timerType]) {
+    timerType ??= getCurrentTimerType();
+    if (state.value?.status == TimerStatus.notStarted &&
+        timerType == getCurrentTimerType()) {
+      return;
+    }
+
+    _timer?.cancel();
+
+    final TimerState? oldState = state.value;
+    if (oldState != null) {
+      final duration = _durations.getDuration(timerType);
+      state = AsyncData(TimerState(
+        timerType: timerType,
+        status: TimerStatus.notStarted,
+        timerDuration: duration,
+        remainingTime: duration,
+        startedAt: null,
+        pauses: [],
+        pausedAt: null,
+      ));
+    }
   }
 
   void pauseTimer() {
@@ -109,7 +136,6 @@ class PomodoroTimer extends _$PomodoroTimer {
     }
 
     final now = DateTime.now();
-    final pauseDuration = now.difference(state.value!.pausedAt!);
 
     state = AsyncData(TimerState(
       timerType: state.value!.timerType,
@@ -228,6 +254,25 @@ class PomodoroTimer extends _$PomodoroTimer {
 
   TimerState? getCurrentState() {
     return state.value;
+  }
+}
+
+class _DurationsOfTimerTypes {
+  static const Duration _defaultWorkDuration = Duration(minutes: 25);
+  static const Duration _defaultShortRestDuration = Duration(minutes: 5);
+  static const Duration _defaultLongRestDuration = Duration(minutes: 15);
+  Map<TimerType, Duration> durations = {
+    TimerType.work: _defaultWorkDuration,
+    TimerType.shortRest: _defaultShortRestDuration,
+    TimerType.longRest: _defaultLongRestDuration,
+  };
+
+  Duration getDuration(TimerType timerType) {
+    return durations[timerType]!;
+  }
+
+  void setDuration(TimerType timerType, Duration duration) {
+    durations[timerType] = duration;
   }
 }
 

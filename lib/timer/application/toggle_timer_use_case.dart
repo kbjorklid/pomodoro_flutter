@@ -26,9 +26,7 @@ class ToggleTimerUseCase {
         break;
       case TimerStatus.ended:
       case TimerStatus.notStarted:
-        // You might want to get these values from settings
-        _timer.startTimer(
-            _timer.getCurrentTimerType(), const Duration(minutes: 25));
+        _timer.startTimer();
         break;
     }
   }

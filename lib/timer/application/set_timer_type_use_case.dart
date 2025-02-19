@@ -41,15 +41,14 @@ class SetTimerTypeUseCase {
 
         // Only continue if there's still time remaining in target duration
         if (targetRemainingTime.inMilliseconds > 0) {
-          await _startTimerWithType(targetType, targetRemainingTime);
+          await _startTimerWithType(targetType);
           return;
         }
       }
     }
     // In all other cases, stop current timer and start new one
     _timer.stopTimer();
-    final newDuration = await _getDurationForType(targetType);
-    await _startTimerWithType(targetType, newDuration);
+    await _startTimerWithType(targetType);
   }
 
   bool _isRestTypeTransition(TimerType current, TimerType target) {
@@ -68,8 +67,8 @@ class SetTimerTypeUseCase {
     }
   }
 
-  Future<void> _startTimerWithType(TimerType type, Duration duration) async {
-    _timer.startTimer(type, duration);
+  Future<void> _startTimerWithType(TimerType type) async {
+    _timer.resetTimer(type);
   }
 }
 
