@@ -46,6 +46,8 @@ class GetTodaysTimerSessionsUseCase {
       case TimerStartedEvent():
       case TimerPausedEvent():
       case TimerResumedEvent():
+        unawaited(_refreshFromDataStore());
+        break;
       case TimerCompletedEvent():
       case TimerStoppedEvent():
         unawaited(_refreshFromDataStore());
@@ -71,7 +73,8 @@ class GetTodaysTimerSessionsUseCase {
     now ??= _getCurrentTime();
     await _initializationFuture;
     _removeYesterdaysSessions(now);
-    if (_timer.getCurrentStatus() == TimerStatus.notStarted) {
+    if (_timer.getCurrentStatus() != TimerStatus.paused &&
+        _timer.getCurrentStatus() != TimerStatus.running) {
       return _historyOfTimerSessionsForToday;
     }
 
