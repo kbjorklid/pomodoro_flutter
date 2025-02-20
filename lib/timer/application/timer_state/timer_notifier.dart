@@ -3,7 +3,9 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
 import 'package:pomodoro_app2/settings/domain/timer_durations.dart';
+import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
@@ -45,15 +47,29 @@ class TimerStoppedEvent extends TimerEvent {
 class PomodoroTimer extends _$PomodoroTimer {
   Timer? _timer;
   StreamController<TimerEvent>? _eventController;
+  late SettingsRepositoryPort _settingsRepository;
   TimerDurations _durations = TimerDurations.initial();
 
   @override
-  FutureOr<TimerState> build() {
+  FutureOr<TimerState> build() async {
     _eventController = StreamController<TimerEvent>.broadcast();
     ref.onDispose(() {
       _timer?.cancel();
       _eventController?.close();
     });
+
+    _settingsRepository = ref.read(settingsRepositoryProvider);
+    _durations = await _settingsRepository.getTimerDurations();
+
+    ref.listen(timerDurationsStreamProvider, (previous, next) {
+      next.whenData((value) async {
+        _durations = await _settingsRepository.getTimerDurations();
+        if (state.value != null) {
+          resetTimer();
+        }
+      });
+    });
+
     return TimerState.initial();
   }
 
@@ -69,6 +85,7 @@ class PomodoroTimer extends _$PomodoroTimer {
 
     final now = DateTime.now();
     final Duration duration = _durations.getDuration(timerType);
+
     state = AsyncData(TimerState(
       timerType: timerType,
       status: TimerStatus.running,
