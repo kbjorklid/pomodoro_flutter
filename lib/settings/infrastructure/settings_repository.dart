@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
 import 'package:pomodoro_app2/settings/domain/timer_durations.dart';
@@ -23,6 +25,8 @@ class SettingsRepository implements SettingsRepositoryPort {
   static final _defaultTypicalWorkDayLength = Duration(hours: 8);
   static const bool _defaultAlwaysShowWorkdayTimespanInTimeline = false;
 
+  final _timerDurationsChangedController = StreamController<TimerDurations>.broadcast();
+
   static final SettingsRepository _instance = SettingsRepository._();
 
   SettingsRepository._();
@@ -30,6 +34,8 @@ class SettingsRepository implements SettingsRepositoryPort {
   factory SettingsRepository() {
     return _instance;
   }
+
+  Stream<TimerDurations> get timerDurationsChangedStream => _timerDurationsChangedController.stream;
 
   final List<SettingsChangedCallback> _listeners = [];
 
@@ -74,14 +80,13 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setTimerEndSound(NotificationSound sound) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_selectedSoundKey, sound.name);
-    _notifySettingsChange();
   }
 
   @override
   Future<void> setWorkDuration(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_workDurationKey, duration.inSeconds);
-    _notifySettingsChange();
+    _timerDurationsChangedController.add(await getTimerDurations());
   }
 
   @override
@@ -95,7 +100,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setShortRestDuration(Duration duration) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_shortRestDurationKey, duration.inSeconds);
-    _notifySettingsChange();
+    _timerDurationsChangedController.add(await getTimerDurations());
   }
 
   @override
@@ -112,6 +117,7 @@ class SettingsRepository implements SettingsRepositoryPort {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_longRestDurationKey, duration.inSeconds);
     _notifySettingsChange();
+    _timerDurationsChangedController.add(await getTimerDurations());
   }
 
   @override
@@ -197,6 +203,8 @@ class SettingsRepository implements SettingsRepositoryPort {
 
   @override
   Future<TimerDurations> getTimerDurations() async {
+    //We don't want to listen to this stream when getting the timer durations
+    //because it will cause an infinite loop.
     final durations = await Future.wait([
       getWorkDuration(),
       getShortRestDuration(),

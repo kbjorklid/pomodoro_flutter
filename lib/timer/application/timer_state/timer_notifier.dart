@@ -3,6 +3,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/core/domain/timer_type.dart';
+import 'package:pomodoro_app2/settings/domain/timer_durations.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/pause_record.dart';
 import 'package:pomodoro_app2/timer/domain/timersession/timer_session.dart';
@@ -44,7 +45,7 @@ class TimerStoppedEvent extends TimerEvent {
 class PomodoroTimer extends _$PomodoroTimer {
   Timer? _timer;
   StreamController<TimerEvent>? _eventController;
-  final _DurationsOfTimerTypes _durations = _DurationsOfTimerTypes();
+  TimerDurations _durations = TimerDurations.initial();
 
   @override
   FutureOr<TimerState> build() {
@@ -254,25 +255,6 @@ class PomodoroTimer extends _$PomodoroTimer {
 
   TimerState? getCurrentState() {
     return state.value;
-  }
-}
-
-class _DurationsOfTimerTypes {
-  static const Duration _defaultWorkDuration = Duration(minutes: 25);
-  static const Duration _defaultShortRestDuration = Duration(minutes: 5);
-  static const Duration _defaultLongRestDuration = Duration(minutes: 15);
-  Map<TimerType, Duration> durations = {
-    TimerType.work: _defaultWorkDuration,
-    TimerType.shortRest: _defaultShortRestDuration,
-    TimerType.longRest: _defaultLongRestDuration,
-  };
-
-  Duration getDuration(TimerType timerType) {
-    return durations[timerType]!;
-  }
-
-  void setDuration(TimerType timerType, Duration duration) {
-    durations[timerType] = duration;
   }
 }
 
