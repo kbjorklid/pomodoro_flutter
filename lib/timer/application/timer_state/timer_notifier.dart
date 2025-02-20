@@ -13,34 +13,33 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'timer_notifier.g.dart';
 sealed class TimerEvent {
-  const TimerEvent();
+  final TimerState timerState;
+
+  const TimerEvent({required this.timerState});
 }
 
 class TimerTickEvent extends TimerEvent {
-  final Duration remainingTime;
-  const TimerTickEvent(this.remainingTime);
+  const TimerTickEvent({required super.timerState});
 }
 
 class TimerStartedEvent extends TimerEvent {
-  final TimerType timerType;
-  final Duration duration;
-  const TimerStartedEvent(this.timerType, this.duration);
+  const TimerStartedEvent({required super.timerState});
 }
 
 class TimerPausedEvent extends TimerEvent {
-  const TimerPausedEvent();
+  const TimerPausedEvent({required super.timerState});
 }
 
 class TimerResumedEvent extends TimerEvent {
-  const TimerResumedEvent();
+  const TimerResumedEvent({required super.timerState});
 }
 
 class TimerCompletedEvent extends TimerEvent {
-  const TimerCompletedEvent();
+  const TimerCompletedEvent({required super.timerState});
 }
 
 class TimerStoppedEvent extends TimerEvent {
-  const TimerStoppedEvent();
+  const TimerStoppedEvent({required super.timerState});
 }
 
 @riverpod
@@ -96,7 +95,7 @@ class PomodoroTimer extends _$PomodoroTimer {
       pausedAt: null,
     ));
 
-    _eventController?.add(TimerStartedEvent(timerType, duration));
+    _eventController?.add(TimerStartedEvent(timerState: state.value!));
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _handleTick();
@@ -145,7 +144,7 @@ class PomodoroTimer extends _$PomodoroTimer {
       pausedAt: now,
     ));
 
-    _eventController?.add(const TimerPausedEvent());
+    _eventController?.add(TimerPausedEvent(timerState: state.value!));
   }
 
   void resumeTimer() {
@@ -171,7 +170,7 @@ class PomodoroTimer extends _$PomodoroTimer {
       pausedAt: null,
     ));
 
-    _eventController?.add(const TimerResumedEvent());
+    _eventController?.add(TimerResumedEvent(timerState: state.value!));
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _handleTick();
@@ -206,7 +205,7 @@ class PomodoroTimer extends _$PomodoroTimer {
       pausedAt: null,
     ));
 
-    _eventController?.add(const TimerStoppedEvent());
+    _eventController?.add(TimerStoppedEvent(timerState: state.value!));
   }
 
   void _handleTick() {
@@ -228,7 +227,7 @@ class PomodoroTimer extends _$PomodoroTimer {
         pauses: currentState.pauses,
         pausedAt: null,
       ));
-      _eventController?.add(const TimerCompletedEvent());
+      _eventController?.add(TimerCompletedEvent(timerState: state.value!));
     } else {
       state = AsyncData(TimerState(
         timerType: currentState.timerType,
@@ -239,7 +238,7 @@ class PomodoroTimer extends _$PomodoroTimer {
         pauses: currentState.pauses,
         pausedAt: currentState.pausedAt,
       ));
-      _eventController?.add(TimerTickEvent(newRemainingTime));
+      _eventController?.add(TimerTickEvent(timerState: state.value!));
     }
   }
 
@@ -278,5 +277,5 @@ class PomodoroTimer extends _$PomodoroTimer {
 // timer_provider.dart
 @riverpod
 Stream<TimerEvent> timerEvents(Ref ref) {
-  return ref.watch(pomodoroTimerProvider.notifier).events;
+  return ref.watch(pomodoroTimerProvider.notifier)._eventController!.stream;
 }
