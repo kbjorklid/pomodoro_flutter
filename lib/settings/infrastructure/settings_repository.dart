@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
+import 'package:pomodoro_app2/settings/domain/timer_durations.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -192,5 +193,20 @@ class SettingsRepository implements SettingsRepositoryPort {
       await prefs.setInt(_dailyPomodoroGoalKey, goal);
     }
     _notifySettingsChange();
+  }
+
+  @override
+  Future<TimerDurations> getTimerDurations() async {
+    final durations = await Future.wait([
+      getWorkDuration(),
+      getShortRestDuration(),
+      getLongRestDuration(),
+    ]);
+
+    return TimerDurations(
+      work: durations[0],
+      shortRest: durations[1],
+      longRest: durations[2],
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
+import 'timer_durations.dart';
 
 typedef SettingsChangedCallback = void Function();
 
@@ -36,4 +37,6 @@ abstract class SettingsRepositoryPort {
 
   Future<int?> getDailyPomodoroGoal();
   Future<void> setDailyPomodoroGoal(int? goal);
+
+  Future<TimerDurations> getTimerDurations();
 }
