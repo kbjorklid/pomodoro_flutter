@@ -42,12 +42,16 @@ class TimerStoppedEvent extends TimerEvent {
   const TimerStoppedEvent({required super.timerState});
 }
 
+class TimerResetEvent extends TimerEvent {
+  const TimerResetEvent({required super.timerState});
+}
+
 @riverpod
 class PomodoroTimer extends _$PomodoroTimer {
   Timer? _timer;
   StreamController<TimerEvent>? _eventController;
   late SettingsRepositoryPort _settingsRepository;
-  TimerDurations _durations = TimerDurations.initial();
+  late TimerDurations _durations;
 
   @override
   FutureOr<TimerState> build() async {
@@ -63,13 +67,14 @@ class PomodoroTimer extends _$PomodoroTimer {
     ref.listen(timerDurationsStreamProvider, (previous, next) {
       next.whenData((value) async {
         _durations = await _settingsRepository.getTimerDurations();
-        if (state.value != null) {
+        if (state.value?.status == TimerStatus.notStarted) {
           resetTimer();
         }
       });
     });
 
-    return TimerState.initial();
+    return TimerState.initial(
+        TimerType.work, _durations.getDuration(TimerType.work));
   }
 
   Stream<TimerEvent> get events => _eventController!.stream;
@@ -104,26 +109,18 @@ class PomodoroTimer extends _$PomodoroTimer {
 
   void resetTimer([TimerType? timerType]) {
     timerType ??= getCurrentTimerType();
-    if (state.value?.status == TimerStatus.notStarted &&
-        timerType == getCurrentTimerType()) {
-      return;
-    }
-
     _timer?.cancel();
-
-    final TimerState? oldState = state.value;
-    if (oldState != null) {
-      final duration = _durations.getDuration(timerType);
-      state = AsyncData(TimerState(
-        timerType: timerType,
-        status: TimerStatus.notStarted,
-        timerDuration: duration,
-        remainingTime: duration,
-        startedAt: null,
-        pauses: [],
-        pausedAt: null,
-      ));
-    }
+    final duration = _durations.getDuration(timerType);
+    state = AsyncData(TimerState(
+      timerType: timerType,
+      status: TimerStatus.notStarted,
+      timerDuration: duration,
+      remainingTime: duration,
+      startedAt: null,
+      pauses: [],
+      pausedAt: null,
+    ));
+    _eventController?.add(TimerResetEvent(timerState: state.requireValue));
   }
 
   void pauseTimer() {

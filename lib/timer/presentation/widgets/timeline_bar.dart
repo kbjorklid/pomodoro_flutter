@@ -58,6 +58,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
   }
 
   void _startRefreshTimer() {
+    if (_refreshTimer != null) return;
     _refreshTimer =
         Timer.periodic(const Duration(seconds: 10), (_) => _refresh());
   }
@@ -85,8 +86,10 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       case TimerCompletedEvent():
       case TimerPausedEvent():
       case TimerStoppedEvent():
+      case TimerResetEvent():
         _startRefreshTimer();
         _refresh();
+        break;
     }
   }
 

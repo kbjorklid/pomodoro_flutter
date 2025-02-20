@@ -36,12 +36,14 @@ class TimerState {
     required this.pausedAt,
   });
 
-  TimerState.initial()
+  TimerState.initial(
+      [TimerType timerType = TimerType.work,
+      Duration timerDuration = const Duration(minutes: 25)])
       : this(
-          timerType: TimerType.work,
+          timerType: timerType,
           status: TimerStatus.notStarted,
-          timerDuration: Duration(minutes: 25),
-          remainingTime: Duration(minutes: 25),
+          timerDuration: timerDuration,
+          remainingTime: timerDuration,
           startedAt: null,
           pauses: [],
           pausedAt: null,
