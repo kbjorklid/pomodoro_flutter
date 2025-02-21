@@ -20,50 +20,38 @@ class GetTimerTypesAllowedToSwitchToUseCase {
 
   Future<Set<TimerType>> query() async {
     final currentState = _timer.getCurrentState();
-    final currentTimerType = currentState?.timerType;
-    final currentStatus = currentState?.status ?? TimerStatus.notStarted;
+    if (currentState == null) {
+      return <TimerType>{};
+    }
+    final currentTimerType = currentState.timerType;
+    final currentStatus = currentState.status;
 
     if (currentStatus == TimerStatus.notStarted ||
         currentStatus == TimerStatus.ended) {
       return TimerType.values.toSet();
+    } else if (currentTimerType.isWork) {
+      return <TimerType>{TimerType.work};
     }
 
-    final allowedTimerTypes = <TimerType>{};
-
-    // Work and current type are always allowed
-    allowedTimerTypes.add(TimerType.work);
-    allowedTimerTypes.add(currentTimerType!);
-
-    if (currentTimerType.isWork) {
-      return allowedTimerTypes;
-    }
-
+    final allowedTimerTypes = <TimerType>{currentTimerType, TimerType.work};
     // For rest timers, check if switching to other rest type is allowed
-    if (currentState != null && currentStatus == TimerStatus.running) {
+    if (currentStatus == TimerStatus.running ||
+        currentStatus == TimerStatus.paused) {
       DateTime now = DateTime.now();
-      final elapsedTime = currentState.getElapsedTimeIgnoringPauses(now);
-      final currentDuration = currentState.timerDuration;
-
-      // Calculate elapsed proportion
-      final elapsedProportion =
-          elapsedTime.inMilliseconds / currentDuration.inMilliseconds;
+      final elapsedTime =
+          currentState.getElapsedTimeIgnoringPauses(now).inSeconds;
 
       if (currentTimerType == TimerType.shortRest) {
-        final longRestDuration = await _settings.getLongRestDuration();
-        final targetElapsedTime = Duration(
-            milliseconds:
-                (longRestDuration.inMilliseconds * elapsedProportion).round());
-
-        if (targetElapsedTime < longRestDuration) {
+        final longRestDuration =
+            (await _settings.getLongRestDuration()).inSeconds;
+        if (elapsedTime < longRestDuration) {
           allowedTimerTypes.add(TimerType.longRest);
         }
       } else if (currentTimerType == TimerType.longRest) {
-        final shortRestDuration = await _settings.getShortRestDuration();
-        final targetElapsedTime = Duration(
-            milliseconds:
-                (shortRestDuration.inMilliseconds * elapsedProportion).round());
+        final shortRestDuration =
+            (await _settings.getShortRestDuration()).inSeconds;
 
-        if (targetElapsedTime < shortRestDuration) {
+        if (elapsedTime < shortRestDuration) {
           allowedTimerTypes.add(TimerType.shortRest);
         }
       }

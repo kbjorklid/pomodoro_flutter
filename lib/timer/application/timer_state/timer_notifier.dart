@@ -332,6 +332,31 @@ class PomodoroTimer extends _$PomodoroTimer {
   TimerState? getCurrentState() {
     return state.value;
   }
+
+  bool changeTimerTypeOnTheFly(TimerType newType) {
+    final currentState = state.value!;
+    final currentType = currentState.timerType;
+
+    if (newType == currentType) {
+      return false;
+    }
+
+    final Duration newDuration = _durations.getDuration(newType);
+    if (newDuration <=
+        currentState.getElapsedTimeIgnoringPauses(DateTime.now())) {
+      return false;
+    }
+    final TimerState newState = TimerState(
+      timerType: newType,
+      status: currentState.status,
+      timerDuration: newDuration,
+      startedAt: currentState.startedAt,
+      pauses: currentState.pauses,
+      pausedAt: currentState.pausedAt,
+    );
+    state = AsyncData(newState);
+    return true;
+  }
 }
 
 // timer_provider.dart

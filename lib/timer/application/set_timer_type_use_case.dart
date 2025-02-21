@@ -18,7 +18,6 @@ class SetTimerTypeUseCase {
     final currentStatus = _timer.getCurrentStatus();
     final currentType = _timer.getCurrentTimerType();
 
-    // If target type is same as current, do nothing
     if (targetType == currentType) {
       return;
     }
@@ -29,25 +28,17 @@ class SetTimerTypeUseCase {
       if (currentState != null) {
         DateTime now = DateTime.now();
         final elapsedTime = currentState.getElapsedTimeIgnoringPauses(now);
-        final currentTypeDuration = currentState.timerDuration;
         final targetTypeDuration = await _getDurationForType(targetType);
 
-        // Calculate elapsed proportion and apply to target duration
-        final elapsedProportion = elapsedTime.inMilliseconds / currentTypeDuration.inMilliseconds;
-        final targetElapsedTime = Duration(milliseconds:
-        (targetTypeDuration.inMilliseconds * elapsedProportion).round());
-        final targetRemainingTime = targetTypeDuration - targetElapsedTime;
-
-        // Only continue if there's still time remaining in target duration
-        if (targetRemainingTime.inMilliseconds > 0) {
-          await _startTimerWithType(targetType);
-          return;
+        if (elapsedTime < targetTypeDuration) {
+          final successfullyChanged = _changeTimerTypeOnTheFly(targetType);
+          if (successfullyChanged) return;
         }
       }
     }
     // In all other cases, stop current timer and start new one
     _timer.stopTimer();
-    await _startTimerWithType(targetType);
+    _startTimerWithType(targetType);
   }
 
   bool _isRestTypeTransition(TimerType current, TimerType target) {
@@ -66,8 +57,12 @@ class SetTimerTypeUseCase {
     }
   }
 
-  Future<void> _startTimerWithType(TimerType type) async {
+  _startTimerWithType(TimerType type) {
     _timer.resetTimer(type);
+  }
+
+  bool _changeTimerTypeOnTheFly(TimerType type) {
+    return _timer.changeTimerTypeOnTheFly(type);
   }
 }
 
