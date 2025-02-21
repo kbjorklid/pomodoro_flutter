@@ -7,7 +7,7 @@ part of 'get_timer_types_allowed_to_switch_to_use_case.dart';
 // **************************************************************************
 
 String _$timerTypesAllowedToSwitchToHash() =>
-    r'2bd57a70bde06ab0b53d2ba0400f69f1373a0846';
+    r'b2055c8abcc13abe82e3ee868b5f2237cda36020';
 
 /// See also [timerTypesAllowedToSwitchTo].
 @ProviderFor(timerTypesAllowedToSwitchTo)
@@ -27,7 +27,7 @@ final timerTypesAllowedToSwitchToProvider =
 typedef TimerTypesAllowedToSwitchToRef
     = AutoDisposeFutureProviderRef<Set<TimerType>>;
 String _$getTimerTypesAllowedToSwitchToUseCaseHash() =>
-    r'e182e8c8a31ac548c752e383bb9a1cdb75fb86a0';
+    r'd0c0dcaaaedb8732eafb54c220125bfeb5bede5f';
 
 /// See also [getTimerTypesAllowedToSwitchToUseCase].
 @ProviderFor(getTimerTypesAllowedToSwitchToUseCase)

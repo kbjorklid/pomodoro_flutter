@@ -40,7 +40,8 @@ class GetTimerTypesAllowedToSwitchToUseCase {
 
     // For rest timers, check if switching to other rest type is allowed
     if (currentState != null && currentStatus == TimerStatus.running) {
-      final elapsedTime = currentState.elapsedTime;
+      DateTime now = DateTime.now();
+      final elapsedTime = currentState.getElapsedTimeIgnoringPauses(now);
       final currentDuration = currentState.timerDuration;
 
       // Calculate elapsed proportion

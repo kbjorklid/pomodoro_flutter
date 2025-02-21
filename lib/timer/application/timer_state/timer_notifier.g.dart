@@ -6,7 +6,7 @@ part of 'timer_notifier.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$timerEventsHash() => r'4d26591bd25234f2687f7d946bd4fbf7a9926ad3';
+String _$timerEventsHash() => r'abedc5048656ccdc914c6a7b3bc983b427eb8549';
 
 /// See also [timerEvents].
 @ProviderFor(timerEvents)
@@ -22,7 +22,7 @@ final timerEventsProvider = AutoDisposeStreamProvider<TimerEvent>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TimerEventsRef = AutoDisposeStreamProviderRef<TimerEvent>;
-String _$pomodoroTimerHash() => r'8aaecc9fdef1a86d1a38bff26c9d95a96678c2ab';
+String _$pomodoroTimerHash() => r'f32db76a2c8bb07b1faf50fdb2781ee1058a0da2';
 
 /// See also [PomodoroTimer].
 @ProviderFor(PomodoroTimer)

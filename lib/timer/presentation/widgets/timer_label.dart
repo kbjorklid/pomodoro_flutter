@@ -29,7 +29,8 @@ class TimerLabel extends ConsumerWidget {
   }
 
   Widget _buildComponent(TimerState timerState) {
-    final remaining = timerState.remainingTime;
+    final DateTime now = DateTime.now();
+    final remaining = timerState.getRemainingTime(now);
     final total = timerState.timerDuration;
     final progress =
         total.inSeconds > 0 ? remaining.inSeconds / total.inSeconds : 0.0;

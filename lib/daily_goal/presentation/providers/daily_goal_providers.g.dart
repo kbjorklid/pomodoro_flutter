@@ -6,7 +6,7 @@ part of 'daily_goal_providers.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dailyPomodoroGoalHash() => r'af929df6580677e174350ba8f00d78f54b8ed328';
+String _$dailyPomodoroGoalHash() => r'de76bb2a948065a53a9b2fc0f0bb7eb67bba0f75';
 
 /// See also [dailyPomodoroGoal].
 @ProviderFor(dailyPomodoroGoal)
@@ -24,7 +24,7 @@ final dailyPomodoroGoalProvider = AutoDisposeFutureProvider<int?>.internal(
 // ignore: unused_element
 typedef DailyPomodoroGoalRef = AutoDisposeFutureProviderRef<int?>;
 String _$todaysPomodoroCountHash() =>
-    r'febedfedf23941723bd907bc10f045bf4b8c16ac';
+    r'15a1d0040f3e8fb149248aff16087867d43358d9';
 
 /// See also [todaysPomodoroCount].
 @ProviderFor(todaysPomodoroCount)

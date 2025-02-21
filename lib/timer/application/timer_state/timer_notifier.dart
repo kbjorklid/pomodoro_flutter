@@ -18,28 +18,56 @@ sealed class TimerEvent {
   const TimerEvent({required this.timerState});
 }
 
-class TimerTickEvent extends TimerEvent {
-  const TimerTickEvent({required super.timerState});
+sealed class TimerRuntimeEvent extends TimerEvent {
+  final Duration remainingTime;
+  final Duration elapsedTime;
+
+  const TimerRuntimeEvent(
+      {required super.timerState,
+      required this.remainingTime,
+      required this.elapsedTime});
 }
 
-class TimerStartedEvent extends TimerEvent {
-  const TimerStartedEvent({required super.timerState});
+class TimerTickEvent extends TimerRuntimeEvent {
+  const TimerTickEvent(
+      {required super.timerState,
+      required super.remainingTime,
+      required super.elapsedTime});
 }
 
-class TimerPausedEvent extends TimerEvent {
-  const TimerPausedEvent({required super.timerState});
+class TimerStartedEvent extends TimerRuntimeEvent {
+  const TimerStartedEvent(
+      {required super.timerState,
+      required super.remainingTime,
+      super.elapsedTime = Duration.zero});
 }
 
-class TimerResumedEvent extends TimerEvent {
-  const TimerResumedEvent({required super.timerState});
+class TimerPausedEvent extends TimerRuntimeEvent {
+  const TimerPausedEvent(
+      {required super.timerState,
+      required super.remainingTime,
+      required super.elapsedTime});
 }
 
-class TimerCompletedEvent extends TimerEvent {
-  const TimerCompletedEvent({required super.timerState});
+class TimerResumedEvent extends TimerRuntimeEvent {
+  const TimerResumedEvent(
+      {required super.timerState,
+      required super.remainingTime,
+      required super.elapsedTime});
 }
 
-class TimerStoppedEvent extends TimerEvent {
-  const TimerStoppedEvent({required super.timerState});
+class TimerCompletedEvent extends TimerRuntimeEvent {
+  const TimerCompletedEvent(
+      {required super.timerState,
+      super.remainingTime = Duration.zero,
+      required super.elapsedTime});
+}
+
+class TimerStoppedEvent extends TimerRuntimeEvent {
+  const TimerStoppedEvent(
+      {required super.timerState,
+      required super.remainingTime,
+      required super.elapsedTime});
 }
 
 class TimerResetEvent extends TimerEvent {
@@ -52,6 +80,7 @@ class PomodoroTimer extends _$PomodoroTimer {
   StreamController<TimerEvent>? _eventController;
   late SettingsRepositoryPort _settingsRepository;
   late TimerDurations _durations;
+  Duration? _targetDurationOfStartedTimer;
 
   @override
   FutureOr<TimerState> build() async {
@@ -89,18 +118,23 @@ class PomodoroTimer extends _$PomodoroTimer {
 
     final now = DateTime.now();
     final Duration duration = _durations.getDuration(timerType);
+    _targetDurationOfStartedTimer = duration;
 
-    state = AsyncData(TimerState(
+    final timerState = TimerState(
       timerType: timerType,
       status: TimerStatus.running,
       timerDuration: duration,
-      remainingTime: duration,
       startedAt: now,
       pauses: [],
       pausedAt: null,
-    ));
+    );
 
-    _eventController?.add(TimerStartedEvent(timerState: state.value!));
+    state = AsyncData(timerState);
+
+    _eventController?.add(TimerStartedEvent(
+        timerState: timerState,
+        remainingTime: duration,
+        elapsedTime: Duration.zero));
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _handleTick();
@@ -115,7 +149,6 @@ class PomodoroTimer extends _$PomodoroTimer {
       timerType: timerType,
       status: TimerStatus.notStarted,
       timerDuration: duration,
-      remainingTime: duration,
       startedAt: null,
       pauses: [],
       pausedAt: null,
@@ -131,17 +164,21 @@ class PomodoroTimer extends _$PomodoroTimer {
     _timer?.cancel();
     final now = DateTime.now();
 
-    state = AsyncData(TimerState(
+    final timerState = TimerState(
       timerType: state.value!.timerType,
       status: TimerStatus.paused,
       timerDuration: state.value!.timerDuration,
-      remainingTime: state.value!.remainingTime,
       startedAt: state.value!.startedAt,
       pauses: [...state.value!.pauses],
       pausedAt: now,
-    ));
+    );
 
-    _eventController?.add(TimerPausedEvent(timerState: state.value!));
+    state = AsyncData(timerState);
+
+    _eventController?.add(TimerPausedEvent(
+        timerState: timerState,
+        remainingTime: timerState.getRemainingTime(now),
+        elapsedTime: timerState.getElapsedTimeIgnoringPauses(now)));
   }
 
   void resumeTimer() {
@@ -151,23 +188,28 @@ class PomodoroTimer extends _$PomodoroTimer {
 
     final now = DateTime.now();
 
-    state = AsyncData(TimerState(
-      timerType: state.value!.timerType,
+    final oldState = state.value!;
+    final newState = TimerState(
+      timerType: oldState.timerType,
       status: TimerStatus.running,
-      timerDuration: state.value!.timerDuration,
-      remainingTime: state.value!.remainingTime,
-      startedAt: state.value!.startedAt,
+      timerDuration: oldState.timerDuration,
+      startedAt: oldState.startedAt,
       pauses: [
-        ...state.value!.pauses,
+        ...oldState.pauses,
         PauseRecord(
-          pausedAt: state.value!.pausedAt!,
+          pausedAt: oldState.pausedAt!,
           resumedAt: now,
         ),
       ],
       pausedAt: null,
-    ));
+    );
 
-    _eventController?.add(TimerResumedEvent(timerState: state.value!));
+    state = AsyncData(newState);
+
+    _eventController?.add(TimerResumedEvent(
+        timerState: newState,
+        remainingTime: newState.getRemainingTime(now),
+        elapsedTime: newState.getElapsedTimeIgnoringPauses(now)));
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _handleTick();
@@ -192,17 +234,23 @@ class PomodoroTimer extends _$PomodoroTimer {
       ));
     }
 
-    state = AsyncData(TimerState(
+    final newState = TimerState(
       timerType: currentState.timerType,
       status: TimerStatus.ended,
       timerDuration: currentState.timerDuration,
-      remainingTime: currentState.remainingTime,
       startedAt: currentState.startedAt,
       pauses: finalPauses,
       pausedAt: null,
-    ));
+    );
 
-    _eventController?.add(TimerStoppedEvent(timerState: state.value!));
+    state = AsyncData(newState);
+
+    final Duration remaining;
+    final Duration elapsed;
+    (remaining, elapsed) = newState.getRemainingAndElapsedTime(now);
+
+    _eventController?.add(TimerStoppedEvent(
+        timerState: newState, remainingTime: remaining, elapsedTime: elapsed));
   }
 
   void _handleTick() {
@@ -210,33 +258,48 @@ class PomodoroTimer extends _$PomodoroTimer {
       return;
     }
 
-    final currentState = state.value!;
-    final newRemainingTime = currentState.remainingTime - const Duration(seconds: 1);
+    DateTime now = DateTime.now();
 
-    if (newRemainingTime <= Duration.zero) {
-      _timer?.cancel();
-      state = AsyncData(TimerState(
-        timerType: currentState.timerType,
-        status: TimerStatus.ended,
-        timerDuration: currentState.timerDuration,
-        remainingTime: Duration.zero,
-        startedAt: currentState.startedAt,
-        pauses: currentState.pauses,
-        pausedAt: null,
-      ));
-      _eventController?.add(TimerCompletedEvent(timerState: state.value!));
+    final currentState = state.value!;
+
+    final Duration remainingTime;
+    final Duration elapsedTime;
+    (remainingTime, elapsedTime) = currentState.getRemainingAndElapsedTime(now);
+
+    if (remainingTime <= Duration.zero) {
+      _onTimerCompleted();
     } else {
       state = AsyncData(TimerState(
         timerType: currentState.timerType,
         status: currentState.status,
         timerDuration: currentState.timerDuration,
-        remainingTime: newRemainingTime,
         startedAt: currentState.startedAt,
         pauses: currentState.pauses,
         pausedAt: currentState.pausedAt,
       ));
-      _eventController?.add(TimerTickEvent(timerState: state.value!));
+      _eventController?.add(TimerTickEvent(
+          timerState: state.value!,
+          remainingTime: remainingTime,
+          elapsedTime: elapsedTime));
     }
+  }
+
+  void _onTimerCompleted() {
+    final currentState = state.value!;
+    _timer?.cancel();
+
+    final newState = TimerState(
+      timerType: currentState.timerType,
+      status: TimerStatus.ended,
+      timerDuration: currentState.timerDuration,
+      startedAt: currentState.startedAt,
+      pauses: currentState.pauses,
+      pausedAt: null,
+    );
+
+    state = AsyncData(newState);
+    _eventController?.add(TimerCompletedEvent(
+        timerState: newState, elapsedTime: newState.timerDuration));
   }
 
   RunningTimerSession getCurrentSession() {
@@ -263,7 +326,7 @@ class PomodoroTimer extends _$PomodoroTimer {
   }
 
   Duration getRemainingTime() {
-    return state.value?.remainingTime ?? Duration.zero;
+    return state.value?.getRemainingTime(DateTime.now()) ?? Duration.zero;
   }
 
   TimerState? getCurrentState() {

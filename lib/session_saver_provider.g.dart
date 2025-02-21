@@ -6,7 +6,7 @@ part of 'session_saver_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$sessionSaverHash() => r'a14c395dca01ddf4d7857414735b85bbe5c11e06';
+String _$sessionSaverHash() => r'5070492e786ed4bee317fa96eefaad175d063297';
 
 /// Provider that listens to timer events and saves completed sessions to the repository
 ///

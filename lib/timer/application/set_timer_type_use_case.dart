@@ -23,13 +23,12 @@ class SetTimerTypeUseCase {
       return;
     }
 
-    // Handle rest type transitions
-    // Handle rest type transitions
     if (_isRestTypeTransition(currentType, targetType) &&
         currentStatus == TimerStatus.running) {
       final currentState = _timer.getCurrentState();
       if (currentState != null) {
-        final elapsedTime = currentState.elapsedTime;
+        DateTime now = DateTime.now();
+        final elapsedTime = currentState.getElapsedTimeIgnoringPauses(now);
         final currentTypeDuration = currentState.timerDuration;
         final targetTypeDuration = await _getDurationForType(targetType);
 
