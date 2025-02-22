@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/debug_tools/presentation/debug_tools_screen.dart';
 import 'package:pomodoro_app2/settings/presentation/settings_screen.dart';
-import 'package:pomodoro_app2/timer/presentation/widgets/timer_display.dart';
+import 'package:pomodoro_app2/timer/presentation/timer_display.dart';
 
 class NavigationView extends ConsumerStatefulWidget {
   const NavigationView({super.key});

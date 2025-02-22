@@ -5,7 +5,7 @@ import 'package:pomodoro_app2/timer/presentation/widgets/timer_label.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timer_type_toggle.dart';
 import 'package:pomodoro_app2/timer/presentation/widgets/timercontrols/timer_controls.dart';
 
-import 'daily_goal_display.dart';
+import 'widgets/daily_goal_display.dart';
 
 class TimerDisplay extends ConsumerWidget {
   const TimerDisplay({super.key});

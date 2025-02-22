@@ -50,6 +50,15 @@ class TimerLabel extends ConsumerWidget {
             width: 200,
             height: 200,
             child: CircularProgressIndicator(
+              value: 1.0,
+              strokeWidth: 8,
+              color: Colors.grey.shade300,
+            ),
+          ),
+          SizedBox(
+            width: 200,
+            height: 200,
+            child: CircularProgressIndicator(
               value: progress,
               strokeWidth: 8,
               color: color,
