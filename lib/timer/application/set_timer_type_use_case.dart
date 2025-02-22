@@ -22,7 +22,8 @@ class SetTimerTypeUseCase {
       return;
     }
 
-    if (_isRestTypeTransition(currentType, targetType) &&
+    if (currentType.isRest &&
+        targetType.isRest &&
         currentStatus == TimerStatus.running) {
       final currentState = _timer.getCurrentState();
       if (currentState != null) {
@@ -36,14 +37,8 @@ class SetTimerTypeUseCase {
         }
       }
     }
-    // In all other cases, stop current timer and start new one
     _timer.stopTimer();
-    _startTimerWithType(targetType);
-  }
-
-  bool _isRestTypeTransition(TimerType current, TimerType target) {
-    return (current == TimerType.shortRest && target == TimerType.longRest) ||
-        (current == TimerType.longRest && target == TimerType.shortRest);
+    _timer.resetTimer(targetType);
   }
 
   Future<Duration> _getDurationForType(TimerType type) async {
@@ -55,10 +50,6 @@ class SetTimerTypeUseCase {
       case TimerType.longRest:
         return await _settings.getLongRestDuration();
     }
-  }
-
-  _startTimerWithType(TimerType type) {
-    _timer.resetTimer(type);
   }
 
   bool _changeTimerTypeOnTheFly(TimerType type) {
