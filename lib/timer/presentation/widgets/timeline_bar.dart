@@ -83,9 +83,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
         _refresh();
         _stopRefreshTimer();
         break;
-      case TimerCompletedEvent():
-      case TimerPausedEvent():
-      case TimerStoppedEvent():
+      case TimerRuntimeEvent():
       case TimerResetEvent():
         _startRefreshTimer();
         _refresh();

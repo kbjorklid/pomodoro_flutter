@@ -43,12 +43,11 @@ class GetTodaysTimerSessionsUseCase {
 
   void _handleTimerEvent(TimerEvent event) {
     switch (event) {
-      case TimerStoppedEvent():
+      case TimerEndedEvent():
         unawaited(_refreshFromDataStore());
       case TimerStartedEvent():
       case TimerPausedEvent():
       case TimerResumedEvent():
-      case TimerCompletedEvent():
       case TimerTickEvent():
       case TimerResetEvent():
         break;
