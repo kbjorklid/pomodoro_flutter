@@ -11,7 +11,7 @@ abstract class SettingsRepositoryPort {
 
   Future<Duration> getWorkDuration();
   Future<void> setWorkDuration(Duration duration);
-  
+
   Future<Duration> getShortRestDuration();
   Future<void> setShortRestDuration(Duration duration);
 
@@ -39,4 +39,7 @@ abstract class SettingsRepositoryPort {
   Future<void> setDailyPomodoroGoal(int? goal);
 
   Future<TimerDurations> getTimerDurations();
+
+  Future<bool> getAutoSwitchTimer();
+  Future<void> setAutoSwitchTimer(bool enabled);
 }

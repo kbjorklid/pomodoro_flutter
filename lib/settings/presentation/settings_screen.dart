@@ -8,7 +8,6 @@ import 'package:pomodoro_app2/settings/presentation/widgets/sound_selector.dart'
 import 'package:pomodoro_app2/settings/presentation/widgets/workday_timespan_slider.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 
-
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
@@ -42,8 +41,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final loadedSelectedSound = await repository.getTimerEndSound();
     final loadedPauseEnabled = await repository.isPauseEnabled();
     final loadedTypicalWorkDayStart = await repository.getTypicalWorkDayStart();
-    final loadedTypicalWorkDayLength = await repository.getTypicalWorkDayLength();
-    final loadedAlwaysShowWorkdayTimespanInTimeline = await repository.isAlwaysShowWorkdayTimespanInTimeline();
+    final loadedTypicalWorkDayLength =
+        await repository.getTypicalWorkDayLength();
+    final loadedAlwaysShowWorkdayTimespanInTimeline =
+        await repository.isAlwaysShowWorkdayTimespanInTimeline();
     final loadedDailyPomodoroGoal = await repository.getDailyPomodoroGoal();
 
     setState(() {
@@ -54,7 +55,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       pauseEnabled = loadedPauseEnabled;
       typicalWorkDayStart = loadedTypicalWorkDayStart;
       typicalWorkDayLength = loadedTypicalWorkDayLength;
-      alwaysShowWorkdayTimespanInTimeline = loadedAlwaysShowWorkdayTimespanInTimeline;
+      alwaysShowWorkdayTimespanInTimeline =
+          loadedAlwaysShowWorkdayTimespanInTimeline;
       dailyPomodoroGoal = loadedDailyPomodoroGoal;
       isLoading = false;
     });
@@ -111,9 +113,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await repository.setTypicalWorkDayLength(duration);
     setState(() {
       typicalWorkDayLength = duration;
-   });
-   ref.invalidate(settingsRepositoryProvider);
- }
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
 
   Future<void> _saveDailyPomodoroGoal(int? goal) async {
     final repository = ref.read(settingsRepositoryProvider);
@@ -126,28 +128,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _savePauseEnabled(bool enabled) async {
     final repository = ref.read(settingsRepositoryProvider);
-   await repository.setPauseEnabled(enabled);
-   setState(() {
-     pauseEnabled = enabled;
-   });
-   ref.invalidate(settingsRepositoryProvider);
- }
+    await repository.setPauseEnabled(enabled);
+    setState(() {
+      pauseEnabled = enabled;
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
 
- Future<void> _saveAlwaysShowWorkdayTimespanInTimeline(bool alwaysShow) async {
-   final repository = ref.read(settingsRepositoryProvider);
-   await repository.setAlwaysShowWorkdayTimespanInTimeline(alwaysShow);
-   setState(() {
-     alwaysShowWorkdayTimespanInTimeline = alwaysShow;
-   });
-   ref.invalidate(settingsRepositoryProvider);
- }
+  Future<void> _saveAlwaysShowWorkdayTimespanInTimeline(bool alwaysShow) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setAlwaysShowWorkdayTimespanInTimeline(alwaysShow);
+    setState(() {
+      alwaysShowWorkdayTimespanInTimeline = alwaysShow;
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
 
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
-     child: Text(
-       title,
-       style: Theme.of(context).textTheme.titleLarge?.copyWith(
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
       ),
@@ -225,6 +227,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onChanged: _savePauseEnabled,
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  SettingsListTile(
+                    title: 'Auto-switch timer',
+                    subtitle:
+                        'Automatically switch between work and rest timers when the current timer is completed.',
+                    trailing: Switch(
+                      value: true, // Default value
+                      onChanged: _saveAutoSwitchTimer,
+                    ),
+                  ),
                 ],
               ),
               _buildCard(
@@ -274,5 +286,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _saveAutoSwitchTimer(bool enabled) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setAutoSwitchTimer(enabled);
+    setState(() {
+      // No need to update local state, as it's not displayed directly
+    });
+    ref.invalidate(settingsRepositoryProvider);
   }
 }

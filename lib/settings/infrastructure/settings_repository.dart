@@ -14,8 +14,10 @@ class SettingsRepository implements SettingsRepositoryPort {
   static const _pauseEnabledKey = 'pause_enabled';
   static const _typicalWorkDayStartKey = 'typical_workday_start';
   static const _typicalWorkDayLengthKey = 'typical_workday_length';
-  static const _alwaysShowWorkdayTimespanInTimelineKey = 'always_show_workday_timespan_in_timeline';
+  static const _alwaysShowWorkdayTimespanInTimelineKey =
+      'always_show_workday_timespan_in_timeline';
   static const _dailyPomodoroGoalKey = 'daily_pomodoro_goal';
+  static const _autoSwitchTimerKey = 'auto_switch_timer';
 
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultShortRestDuration = Duration(minutes: 5);
@@ -24,8 +26,10 @@ class SettingsRepository implements SettingsRepositoryPort {
   static final _defaultTypicalWorkDayStart = TimeOfDay(hour: 8, minute: 0);
   static final _defaultTypicalWorkDayLength = Duration(hours: 8);
   static const bool _defaultAlwaysShowWorkdayTimespanInTimeline = false;
+  static const bool _defaultAutoSwitchTimer = true;
 
-  final _timerDurationsChangedController = StreamController<TimerDurations>.broadcast();
+  final _timerDurationsChangedController =
+      StreamController<TimerDurations>.broadcast();
 
   static final SettingsRepository _instance = SettingsRepository._();
 
@@ -35,7 +39,8 @@ class SettingsRepository implements SettingsRepositoryPort {
     return _instance;
   }
 
-  Stream<TimerDurations> get timerDurationsChangedStream => _timerDurationsChangedController.stream;
+  Stream<TimerDurations> get timerDurationsChangedStream =>
+      _timerDurationsChangedController.stream;
 
   final List<SettingsChangedCallback> _listeners = [];
 
@@ -61,9 +66,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<Duration> getWorkDuration() async {
     final prefs = await SharedPreferences.getInstance();
     final seconds = prefs.getInt(_workDurationKey);
-    return seconds != null 
-        ? Duration(seconds: seconds)
-        : _defaultWorkDuration;
+    return seconds != null ? Duration(seconds: seconds) : _defaultWorkDuration;
   }
 
   @override
@@ -93,7 +96,9 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<Duration> getShortRestDuration() async {
     final prefs = await SharedPreferences.getInstance();
     final seconds = prefs.getInt(_shortRestDurationKey);
-    return seconds != null ? Duration(seconds: seconds) : _defaultShortRestDuration;
+    return seconds != null
+        ? Duration(seconds: seconds)
+        : _defaultShortRestDuration;
   }
 
   @override
@@ -174,7 +179,8 @@ class SettingsRepository implements SettingsRepositoryPort {
   @override
   Future<bool> isAlwaysShowWorkdayTimespanInTimeline() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_alwaysShowWorkdayTimespanInTimelineKey) ?? _defaultAlwaysShowWorkdayTimespanInTimeline;
+    return prefs.getBool(_alwaysShowWorkdayTimespanInTimelineKey) ??
+        _defaultAlwaysShowWorkdayTimespanInTimeline;
   }
 
   @override
@@ -216,5 +222,18 @@ class SettingsRepository implements SettingsRepositoryPort {
       shortRest: durations[1],
       longRest: durations[2],
     );
+  }
+
+  @override
+  Future<bool> getAutoSwitchTimer() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoSwitchTimerKey) ?? _defaultAutoSwitchTimer;
+  }
+
+  @override
+  Future<void> setAutoSwitchTimer(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoSwitchTimerKey, enabled);
+    _notifySettingsChange();
   }
 }
