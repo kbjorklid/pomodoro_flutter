@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:pomodoro_app2/core/presentation/app_theme.dart';
 import 'package:pomodoro_app2/core/presentation/providers/common_providers.dart';
+import 'package:pomodoro_app2/history/presentation/providers/session_saver_provider.dart';
 import 'package:pomodoro_app2/navigation_view.dart';
-import 'package:pomodoro_app2/session_saver_provider.dart';
 import 'package:pomodoro_app2/sound/presentation/providers/session_end_sound_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
