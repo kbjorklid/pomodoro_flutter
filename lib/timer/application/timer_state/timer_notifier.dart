@@ -92,7 +92,6 @@ class PomodoroTimer extends _$PomodoroTimer {
   StreamController<TimerEvent>? _eventController;
   late SettingsRepositoryPort _settingsRepository;
   late TimerDurations _durations;
-  Duration? _targetDurationOfStartedTimer;
 
   @override
   FutureOr<TimerState> build() async {
@@ -130,7 +129,6 @@ class PomodoroTimer extends _$PomodoroTimer {
 
     final now = DateTime.now();
     final Duration duration = _durations.getDuration(timerType);
-    _targetDurationOfStartedTimer = duration;
 
     final timerState = TimerState(
       timerType: timerType,
