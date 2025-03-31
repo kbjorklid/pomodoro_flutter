@@ -100,8 +100,9 @@ class TimerSessionSnapshot extends ClosedTimerSession {
 
   @override
   List<PauseRecord> get pauses {
-    if (_runningTimerSession.pausedAt == null)
+    if (_runningTimerSession.pausedAt == null) {
       return _runningTimerSession.pauses;
+    }
     return _runningTimerSession.pauses +
         [
           PauseRecord(

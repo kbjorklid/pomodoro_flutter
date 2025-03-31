@@ -93,7 +93,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   @override
   Future<void> delete(TimerSessionKey key) async {
     await _initialized;
-    _logger.d('Attempting to delete session with key: ${key}'); // Add th
+    _logger.d('Attempting to delete session with key: $key'); // Add th
 
     _logger.d('Soft deleting session with key ${key.toString()}');
     final dto = _get(key);

@@ -129,8 +129,8 @@ class _AsyncValueWidget<T> extends StatelessWidget {
     required this.value,
     required this.data,
     required this.loadingWidget, // Kept for consistency, even though unused now.
-    Key? key, // Use Key, not super.key
-  }) : super(key: key);
+    super.key, // Use Key, not super.key
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -140,7 +140,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 18, right: 18),
-          child: Container(
+          child: SizedBox(
               height: 15,
               child:
                   _buildAnnotationsAboveTimeline(timelineData, timeBarRange)),
@@ -156,7 +156,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
                 ),
                 height: 30,
                 child: _buildMainTimeline(timelineData, timeBarRange))),
-        Container(
+        SizedBox(
             height: 20,
             child: _buildAnnotationsBelowTimeline(timelineData, timeBarRange)),
       ],
@@ -417,7 +417,7 @@ class _TimelineData {
 }
 
 class _WorkDaySegment extends _TimelineSegment {
-  _WorkDaySegment._internal({required super.segmentPosition});
+  const _WorkDaySegment._internal({required super.segmentPosition});
 
   factory _WorkDaySegment({
     required TimeOfDay workdayStart,
@@ -486,11 +486,10 @@ class _SessionSegment extends _TimelineSegment {
   _SessionSegment({
     required super.segmentPosition,
     required ClosedTimerSession session,
-    VoidCallback? onTap,
+    super.onTap,
   })  : _timerType = session.sessionType,
         _isCompleted = session.isCompleted,
-        _isRunning = !session.isEnded,
-        super(onTap: onTap);
+        _isRunning = !session.isEnded;
 
   @override
   Color get color {
@@ -509,8 +508,8 @@ class _PauseSegment extends _TimelineSegment {
   const _PauseSegment({
     required super.segmentPosition,
     required this.pause,
-    VoidCallback? onTap,
-  }) : super(onTap: onTap);
+    super.onTap,
+  });
 
   @override
   Color get color => const Color(0x88ffffff);

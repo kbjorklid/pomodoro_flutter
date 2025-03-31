@@ -120,7 +120,7 @@ class PomodoroGoalSelector extends TomatoDisplayBase {
       borderRadius: BorderRadius.circular(30),
       child: Container(
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceVariant,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
           ),
           child: tomatoList),
     );
