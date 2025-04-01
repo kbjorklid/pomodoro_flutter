@@ -58,13 +58,13 @@ class MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeDailyResetTimer(ref);
-    _startDailyResetTimer(); // Start the timer after initialization
+    _startDailyResetTimer();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _dailyResetTimer?.cancel(); // Cancel the timer when the widget is disposed
+    _dailyResetTimer?.cancel();
     super.dispose();
   }
 
