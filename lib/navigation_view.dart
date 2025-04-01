@@ -18,9 +18,6 @@ class _TimerScreenState extends ConsumerState<NavigationView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pomodoro Timer'),
-      ),
       body: Row(
         children: [
           NavigationRail(
@@ -67,9 +64,11 @@ class _TimerScreenState extends ConsumerState<NavigationView> {
       case 1:
         return const SettingsScreen();
       case 2:
-        return kDebugMode ? const DebugToolsScreen() : const SizedBox.shrink(); // Or some error view
+        return kDebugMode
+            ? const DebugToolsScreen()
+            : const SizedBox.shrink();
       default:
-        return const TimerDisplay(); // Default to timer view
+        return const TimerDisplay();
     }
   }
 }

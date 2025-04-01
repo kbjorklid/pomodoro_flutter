@@ -44,10 +44,10 @@ class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
-  _MyAppState createState() => _MyAppState();
+  MyAppState createState() => MyAppState();
 }
 
-class _MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
+class MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
   static const _dayChangeCheckInterval = Duration(minutes: 1);
   static const _lastCheckedDateKey = 'lastCheckedDate';
 
