@@ -42,4 +42,7 @@ abstract class SettingsRepositoryPort {
 
   Future<bool> getAutoSwitchTimer();
   Future<void> setAutoSwitchTimer(bool enabled);
+
+  Future<bool> isAutoStartAfterSwitchEnabled();
+  Future<void> setAutoStartAfterSwitch(bool enabled);
 }

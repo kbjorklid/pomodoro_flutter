@@ -8,6 +8,7 @@ import 'package:pomodoro_app2/core/presentation/providers/common_providers.dart'
 import 'package:pomodoro_app2/history/presentation/providers/session_saver_provider.dart';
 import 'package:pomodoro_app2/navigation_view.dart';
 import 'package:pomodoro_app2/sound/presentation/providers/session_end_sound_provider.dart';
+import 'package:pomodoro_app2/timer/application/auto_start_timer_provider.dart'; // Import the new provider
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pomodoro_app2/timer/application/auto_switch_timer_provider.dart';
 
@@ -18,7 +19,8 @@ part 'main.g.dart';
 void appInitializer(Ref ref) {
   ref.watch(sessionSaverProvider);
   ref.watch(sessionEndSoundNotifierProvider);
-  ref.watch(autoSwitchTimerProvider);
+  ref.watch(autoSwitchTimerProvider); // Watch auto-switch first
+  ref.watch(autoStartTimerProvider); // Then watch auto-start
 }
 
 void main() async {

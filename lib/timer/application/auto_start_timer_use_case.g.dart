@@ -1,27 +1,30 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'main.dart';
+part of 'auto_start_timer_use_case.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appInitializerHash() => r'65f4df8b71e154434a421217de7e7c29f941fd6b';
+String _$autoStartTimerUseCaseHash() =>
+    r'7f4c4c0c8afe83d4ed8c23536f9f75b9e3bc85eb';
 
-/// See also [appInitializer].
-@ProviderFor(appInitializer)
-final appInitializerProvider = AutoDisposeProvider<void>.internal(
-  appInitializer,
-  name: r'appInitializerProvider',
+/// See also [autoStartTimerUseCase].
+@ProviderFor(autoStartTimerUseCase)
+final autoStartTimerUseCaseProvider =
+    AutoDisposeProvider<AutoStartTimerUseCase>.internal(
+  autoStartTimerUseCase,
+  name: r'autoStartTimerUseCaseProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$appInitializerHash,
+      : _$autoStartTimerUseCaseHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef AppInitializerRef = AutoDisposeProviderRef<void>;
+typedef AutoStartTimerUseCaseRef
+    = AutoDisposeProviderRef<AutoStartTimerUseCase>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

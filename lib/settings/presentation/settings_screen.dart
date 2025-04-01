@@ -26,6 +26,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool isLoading = true;
   bool alwaysShowWorkdayTimespanInTimeline = false;
   int? dailyPomodoroGoal;
+  bool autoSwitchTimerEnabled = true; // Add state for auto-switch
+  bool autoStartAfterSwitchEnabled = false; // Add state for auto-start
 
   @override
   void initState() {
@@ -46,6 +48,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final loadedAlwaysShowWorkdayTimespanInTimeline =
         await repository.isAlwaysShowWorkdayTimespanInTimeline();
     final loadedDailyPomodoroGoal = await repository.getDailyPomodoroGoal();
+    final loadedAutoSwitchTimer = await repository.getAutoSwitchTimer(); // Load auto-switch
+    final loadedAutoStartAfterSwitch =
+        await repository.isAutoStartAfterSwitchEnabled(); // Load auto-start
 
     setState(() {
       workDuration = loadedWorkDuration;
@@ -58,6 +63,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       alwaysShowWorkdayTimespanInTimeline =
           loadedAlwaysShowWorkdayTimespanInTimeline;
       dailyPomodoroGoal = loadedDailyPomodoroGoal;
+      autoSwitchTimerEnabled = loadedAutoSwitchTimer; // Set state
+      autoStartAfterSwitchEnabled = loadedAutoStartAfterSwitch; // Set state
       isLoading = false;
     });
   }
@@ -233,8 +240,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitle:
                         'Automatically switch between work and rest timers when the current timer is completed.',
                     trailing: Switch(
-                      value: true, // Default value
+                      value: autoSwitchTimerEnabled, // Use state variable
                       onChanged: _saveAutoSwitchTimer,
+                    ),
+                  ),
+                  const SizedBox(height: 16), // Add spacing
+                  SettingsListTile(
+                    title: 'Auto-start after switch',
+                    subtitle:
+                        'Automatically start the next timer after auto-switching.',
+                    trailing: Switch(
+                      value: autoStartAfterSwitchEnabled,
+                      // Disable the switch if auto-switch is off
+                      onChanged:
+                          autoSwitchTimerEnabled ? _saveAutoStartAfterSwitch : null,
                     ),
                   ),
                 ],
@@ -292,7 +311,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.setAutoSwitchTimer(enabled);
     setState(() {
-      // No need to update local state, as it's not displayed directly
+      autoSwitchTimerEnabled = enabled; // Update state
+      // If disabling auto-switch, also disable auto-start
+      if (!enabled) {
+        autoStartAfterSwitchEnabled = false;
+        // Save the disabled auto-start state as well
+        // No need to await here, can run in background
+        repository.setAutoStartAfterSwitch(false);
+      }
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
+
+  Future<void> _saveAutoStartAfterSwitch(bool enabled) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setAutoStartAfterSwitch(enabled);
+    setState(() {
+      autoStartAfterSwitchEnabled = enabled;
     });
     ref.invalidate(settingsRepositoryProvider);
   }

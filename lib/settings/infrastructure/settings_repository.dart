@@ -18,6 +18,7 @@ class SettingsRepository implements SettingsRepositoryPort {
       'always_show_workday_timespan_in_timeline';
   static const _dailyPomodoroGoalKey = 'daily_pomodoro_goal';
   static const _autoSwitchTimerKey = 'auto_switch_timer';
+  static const _autoStartAfterSwitchKey = 'auto_start_after_switch'; // Add new key
 
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultShortRestDuration = Duration(minutes: 5);
@@ -27,6 +28,7 @@ class SettingsRepository implements SettingsRepositoryPort {
   static final _defaultTypicalWorkDayLength = Duration(hours: 8);
   static const bool _defaultAlwaysShowWorkdayTimespanInTimeline = false;
   static const bool _defaultAutoSwitchTimer = true;
+  static const bool _defaultAutoStartAfterSwitch = false; // Add default value
 
   final _timerDurationsChangedController =
       StreamController<TimerDurations>.broadcast();
@@ -234,6 +236,19 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setAutoSwitchTimer(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_autoSwitchTimerKey, enabled);
+    _notifySettingsChange();
+  }
+
+  @override
+  Future<bool> isAutoStartAfterSwitchEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoStartAfterSwitchKey) ?? _defaultAutoStartAfterSwitch;
+  }
+
+  @override
+  Future<void> setAutoStartAfterSwitch(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoStartAfterSwitchKey, enabled);
     _notifySettingsChange();
   }
 }

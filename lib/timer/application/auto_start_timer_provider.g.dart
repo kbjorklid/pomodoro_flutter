@@ -1,27 +1,27 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'main.dart';
+part of 'auto_start_timer_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appInitializerHash() => r'65f4df8b71e154434a421217de7e7c29f941fd6b';
+String _$autoStartTimerHash() => r'1fe86fb08321e250745d617b2bb0df4df8374973';
 
-/// See also [appInitializer].
-@ProviderFor(appInitializer)
-final appInitializerProvider = AutoDisposeProvider<void>.internal(
-  appInitializer,
-  name: r'appInitializerProvider',
+/// See also [autoStartTimer].
+@ProviderFor(autoStartTimer)
+final autoStartTimerProvider = Provider<void>.internal(
+  autoStartTimer,
+  name: r'autoStartTimerProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$appInitializerHash,
+      : _$autoStartTimerHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
-typedef AppInitializerRef = AutoDisposeProviderRef<void>;
+typedef AutoStartTimerRef = ProviderRef<void>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
