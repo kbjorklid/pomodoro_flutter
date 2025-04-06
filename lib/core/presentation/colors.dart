@@ -17,8 +17,11 @@ class AppColors {
   static const rest = green;
   static const restPaused = lightGreen;
   static const workIncomplete = mediumGrey;
-  
-  static const timelineWorkdayBackground = Color(0xFFFAEEE5);
+
+  static Color timelineWorkdayBackground(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return isDarkMode ? Colors.grey[700]! : const Color(0xFFFAEEE5);
+  }
 
   static Color timerTypeColor(TimerType type) {
     if (type == TimerType.work) {

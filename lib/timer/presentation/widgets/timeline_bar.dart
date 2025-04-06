@@ -135,6 +135,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   Widget _buildTimelineContainer(
       DateTimeRange timeBarRange, _TimelineData timelineData) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Column(
       mainAxisSize: MainAxisSize.max,
       children: [
@@ -151,8 +152,9 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: _borderRadius,
-                  color: Colors.grey[200],
-                  border: Border.all(color: Colors.grey[350]!),
+                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  border: Border.all(
+                      color: isDarkMode ? Colors.grey[600]! : Colors.grey[350]!),
                 ),
                 height: 30,
                 child: _buildMainTimeline(timelineData, timeBarRange))),
@@ -447,13 +449,12 @@ class _WorkDaySegment extends _TimelineSegment {
     return _WorkDaySegment._internal(segmentPosition: pos);
   }
 
-  @override
-  Color get color => AppColors.timelineWorkdayBackground;
+  // Removed the color override here
 }
 
 abstract class _TimelineSegment extends StatelessWidget {
   final _SegmentPosition segmentPosition;
-  abstract final Color color;
+  // Removed abstract final Color color;
   final VoidCallback? onTap;
 
   const _TimelineSegment({required this.segmentPosition, this.onTap});
@@ -462,6 +463,20 @@ abstract class _TimelineSegment extends StatelessWidget {
   Widget build(BuildContext context) {
     if (segmentPosition.isEmpty) return const SizedBox.shrink();
 
+    // Determine the color within the build method where context is available
+    Color segmentColor;
+    if (this is _WorkDaySegment) {
+      segmentColor = AppColors.timelineWorkdayBackground(context);
+    } else if (this is _SessionSegment) {
+      segmentColor = (this as _SessionSegment)._calculateColor();
+    } else if (this is _PauseSegment) {
+      segmentColor = (this as _PauseSegment)._calculateColor();
+    } else {
+      // Fallback or handle other segment types if necessary
+      segmentColor = Colors.transparent; 
+    }
+
+
     return Padding(
       padding: EdgeInsets.only(left: segmentPosition.left),
       child: InkWell(
@@ -469,7 +484,7 @@ abstract class _TimelineSegment extends StatelessWidget {
         child: Container(
           width: max(1, segmentPosition.width),
           decoration: BoxDecoration(
-            color: color,
+            color: segmentColor, // Use the determined color
             borderRadius: _borderRadius,
           ),
         ),
@@ -491,8 +506,8 @@ class _SessionSegment extends _TimelineSegment {
         _isCompleted = session.isCompleted,
         _isRunning = !session.isEnded;
 
-  @override
-  Color get color {
+  // Renamed 'color' getter to avoid conflict and clarify purpose
+  Color _calculateColor() {
     if (_timerType == TimerType.work) {
       return _isCompleted || _isRunning
           ? AppColors.work
@@ -511,8 +526,8 @@ class _PauseSegment extends _TimelineSegment {
     super.onTap,
   });
 
-  @override
-  Color get color => const Color(0x88ffffff);
+  // Renamed 'color' getter to avoid conflict and clarify purpose
+  Color _calculateColor() => const Color(0x88ffffff); 
 }
 
 class _SegmentPosition {
