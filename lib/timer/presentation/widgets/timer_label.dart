@@ -13,7 +13,7 @@ class TimerLabel extends ConsumerWidget {
     final timerStateAsync = ref.watch(pomodoroTimerProvider);
 
     return timerStateAsync.when(
-        data: (timerState) => _buildComponent(timerState),
+        data: (timerState) => _buildComponent(timerState, context),
         error: (error, _) => _buildTextReplacement("Error: $error"),
         loading: () => _buildTextReplacement("Loading..."));
   }
@@ -28,7 +28,7 @@ class TimerLabel extends ConsumerWidget {
     );
   }
 
-  Widget _buildComponent(TimerState timerState) {
+  Widget _buildComponent(TimerState timerState, BuildContext context) {
     final DateTime now = DateTime.now();
     final remaining = timerState.getRemainingTime(now);
     final total = timerState.timerDuration;
@@ -52,7 +52,7 @@ class TimerLabel extends ConsumerWidget {
             child: CircularProgressIndicator(
               value: 1.0,
               strokeWidth: 8,
-              color: Colors.grey.shade300,
+              color: _getProgressIndicatorBackgroundColor(context),
             ),
           ),
           SizedBox(
@@ -78,6 +78,13 @@ class TimerLabel extends ConsumerWidget {
       case TimerType.shortRest:
       case TimerType.longRest:
         return paused ? AppColors.restPaused : AppColors.rest;
+    }
+  }
+  Color _getProgressIndicatorBackgroundColor(BuildContext context) {
+    if (Theme.of(context).brightness == Brightness.dark) {
+      return Colors.grey[800]!;
+    } else {
+      return Colors.grey[300]!;
     }
   }
 }
