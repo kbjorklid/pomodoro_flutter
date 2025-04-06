@@ -7,7 +7,7 @@ part of 'auto_start_timer_use_case.dart';
 // **************************************************************************
 
 String _$autoStartTimerUseCaseHash() =>
-    r'7f4c4c0c8afe83d4ed8c23536f9f75b9e3bc85eb';
+    r'9617e97572d741492027d647c65421d8e8913729';
 
 /// See also [autoStartTimerUseCase].
 @ProviderFor(autoStartTimerUseCase)

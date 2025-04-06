@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pomodoro_app2/settings/domain/app_theme_mode.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
 import 'timer_durations.dart';
 
@@ -45,4 +46,7 @@ abstract class SettingsRepositoryPort {
 
   Future<bool> isAutoStartAfterSwitchEnabled();
   Future<void> setAutoStartAfterSwitch(bool enabled);
+
+  Future<AppThemeMode> getThemeMode();
+  Future<void> setThemeMode(AppThemeMode mode);
 }

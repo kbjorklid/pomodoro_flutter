@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:pomodoro_app2/settings/domain/app_theme_mode.dart'; // Add import
 import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart';
 import 'package:pomodoro_app2/settings/domain/timer_durations.dart';
 import 'package:pomodoro_app2/sound/domain/notification_sound.dart';
@@ -18,7 +19,8 @@ class SettingsRepository implements SettingsRepositoryPort {
       'always_show_workday_timespan_in_timeline';
   static const _dailyPomodoroGoalKey = 'daily_pomodoro_goal';
   static const _autoSwitchTimerKey = 'auto_switch_timer';
-  static const _autoStartAfterSwitchKey = 'auto_start_after_switch'; // Add new key
+  static const _autoStartAfterSwitchKey = 'auto_start_after_switch';
+  static const _appThemeModeKey = 'app_theme_mode'; // Add theme key
 
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultShortRestDuration = Duration(minutes: 5);
@@ -28,7 +30,8 @@ class SettingsRepository implements SettingsRepositoryPort {
   static final _defaultTypicalWorkDayLength = Duration(hours: 8);
   static const bool _defaultAlwaysShowWorkdayTimespanInTimeline = false;
   static const bool _defaultAutoSwitchTimer = true;
-  static const bool _defaultAutoStartAfterSwitch = false; // Add default value
+  static const bool _defaultAutoStartAfterSwitch = false;
+  static const AppThemeMode _defaultAppThemeMode = AppThemeMode.dark; // Add theme default
 
   final _timerDurationsChangedController =
       StreamController<TimerDurations>.broadcast();
@@ -249,6 +252,28 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setAutoStartAfterSwitch(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_autoStartAfterSwitchKey, enabled);
+    _notifySettingsChange();
+  }
+
+  @override
+  Future<AppThemeMode> getThemeMode() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeName = prefs.getString(_appThemeModeKey);
+    if (themeName == null) {
+      return _defaultAppThemeMode;
+    }
+    try {
+      return AppThemeMode.values.firstWhere((e) => e.name == themeName);
+    } catch (e) {
+      // Handle case where stored value is invalid
+      return _defaultAppThemeMode;
+    }
+  }
+
+  @override
+  Future<void> setThemeMode(AppThemeMode mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_appThemeModeKey, mode.name);
     _notifySettingsChange();
   }
 }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/daily_goal/presentation/daily_goal_widgets.dart';
+import 'package:pomodoro_app2/settings/domain/app_theme_mode.dart'; // Import theme mode
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
+import 'package:pomodoro_app2/settings/presentation/providers/theme_providers.dart'; // Import theme provider
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/sound_selector.dart';
@@ -26,8 +28,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool isLoading = true;
   bool alwaysShowWorkdayTimespanInTimeline = false;
   int? dailyPomodoroGoal;
-  bool autoSwitchTimerEnabled = true; // Add state for auto-switch
-  bool autoStartAfterSwitchEnabled = false; // Add state for auto-start
+  bool autoSwitchTimerEnabled = true;
+  bool autoStartAfterSwitchEnabled = false;
+  AppThemeMode selectedThemeMode = AppThemeMode.dark; // Add theme state
 
   @override
   void initState() {
@@ -50,7 +53,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final loadedDailyPomodoroGoal = await repository.getDailyPomodoroGoal();
     final loadedAutoSwitchTimer = await repository.getAutoSwitchTimer(); // Load auto-switch
     final loadedAutoStartAfterSwitch =
-        await repository.isAutoStartAfterSwitchEnabled(); // Load auto-start
+        await repository.isAutoStartAfterSwitchEnabled();
+    // Load theme mode using the provider (initial load)
+    final loadedThemeMode = await ref.read(themeModeNotifierProvider.future);
 
     setState(() {
       workDuration = loadedWorkDuration;
@@ -63,8 +68,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       alwaysShowWorkdayTimespanInTimeline =
           loadedAlwaysShowWorkdayTimespanInTimeline;
       dailyPomodoroGoal = loadedDailyPomodoroGoal;
-      autoSwitchTimerEnabled = loadedAutoSwitchTimer; // Set state
-      autoStartAfterSwitchEnabled = loadedAutoStartAfterSwitch; // Set state
+      autoSwitchTimerEnabled = loadedAutoSwitchTimer;
+      autoStartAfterSwitchEnabled = loadedAutoStartAfterSwitch;
+      selectedThemeMode = loadedThemeMode; // Set theme state
       isLoading = false;
     });
   }
@@ -149,6 +155,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       alwaysShowWorkdayTimespanInTimeline = alwaysShow;
     });
     ref.invalidate(settingsRepositoryProvider);
+  }
+
+  // Save theme mode
+  Future<void> _saveThemeMode(AppThemeMode? mode) async {
+    if (mode == null) return;
+    // Use the provider's method to update the theme
+    await ref.read(themeModeNotifierProvider.notifier).updateThemeMode(mode);
+    setState(() {
+      selectedThemeMode = mode;
+    });
+    // No need to invalidate settingsRepositoryProvider here as the theme provider handles it
   }
 
   Widget _buildSectionTitle(String title) {
@@ -287,6 +304,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     trailing: Switch(
                       value: alwaysShowWorkdayTimespanInTimeline,
                       onChanged: _saveAlwaysShowWorkdayTimespanInTimeline,
+                    ),
+                  ),
+                ],
+              ),
+              _buildCard( // Add Appearance Card
+                title: 'Appearance',
+                children: [
+                  SettingsListTile(
+                    title: 'Theme',
+                    trailing: SegmentedButton<AppThemeMode>(
+                      segments: const [
+                        ButtonSegment(
+                            value: AppThemeMode.system,
+                            label: Text('System'),
+                            icon: Icon(Icons.brightness_auto)),
+                        ButtonSegment(
+                            value: AppThemeMode.light,
+                            label: Text('Light'),
+                            icon: Icon(Icons.brightness_5)),
+                        ButtonSegment(
+                            value: AppThemeMode.dark,
+                            label: Text('Dark'),
+                            icon: Icon(Icons.brightness_4)),
+                      ],
+                      selected: {selectedThemeMode},
+                      onSelectionChanged: (Set<AppThemeMode> newSelection) {
+                        _saveThemeMode(newSelection.first);
+                      },
+                      showSelectedIcon: false, // Optional: hide icon in selected segment
                     ),
                   ),
                 ],

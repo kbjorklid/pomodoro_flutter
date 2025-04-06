@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -7,8 +9,10 @@ import 'package:pomodoro_app2/core/presentation/app_theme.dart';
 import 'package:pomodoro_app2/core/presentation/providers/common_providers.dart';
 import 'package:pomodoro_app2/history/presentation/providers/session_saver_provider.dart';
 import 'package:pomodoro_app2/navigation_view.dart';
+import 'package:pomodoro_app2/settings/domain/app_theme_mode.dart'; // Import theme mode
+import 'package:pomodoro_app2/settings/presentation/providers/theme_providers.dart'; // Import theme provider
 import 'package:pomodoro_app2/sound/presentation/providers/session_end_sound_provider.dart';
-import 'package:pomodoro_app2/timer/application/auto_start_timer_provider.dart'; // Import the new provider
+import 'package:pomodoro_app2/timer/application/auto_start_timer_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pomodoro_app2/timer/application/auto_switch_timer_provider.dart';
 
@@ -20,7 +24,8 @@ void appInitializer(Ref ref) {
   ref.watch(sessionSaverProvider);
   ref.watch(sessionEndSoundNotifierProvider);
   ref.watch(autoSwitchTimerProvider); // Watch auto-switch first
-  ref.watch(autoStartTimerProvider); // Then watch auto-start
+  ref.watch(autoStartTimerProvider);
+  ref.watch(themeModeNotifierProvider); // Initialize theme provider
 }
 
 void main() async {
@@ -110,12 +115,42 @@ class MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
     }
   }
 
+  // Helper to map AppThemeMode to Flutter's ThemeMode
+  ThemeMode _mapAppThemeModeToThemeMode(AppThemeMode mode) {
+    switch (mode) {
+      case AppThemeMode.light:
+        return ThemeMode.light;
+      case AppThemeMode.dark:
+        return ThemeMode.dark;
+      case AppThemeMode.system:
+      default:
+        return ThemeMode.system;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pomodoro Timer',
-      theme: AppTheme.light,
-      home: const NavigationView(),
+    // Watch the theme provider state
+    final themeModeAsyncValue = ref.watch(themeModeNotifierProvider);
+
+    return themeModeAsyncValue.when(
+      data: (themeMode) => MaterialApp(
+        title: 'Pomodoro Timer',
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: _mapAppThemeModeToThemeMode(themeMode),
+        home: const NavigationView(),
+      ),
+      // Show loading indicator while theme is loading
+      loading: () => const MaterialApp(
+        home: Scaffold(body: Center(child: CircularProgressIndicator())),
+      ),
+      // Show error message if theme loading fails
+      error: (err, stack) => MaterialApp(
+        home: Scaffold(
+          body: Center(child: Text('Error loading theme: $err')),
+        ),
+      ),
     );
   }
 }
