@@ -29,7 +29,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool alwaysShowWorkdayTimespanInTimeline = false;
   int? dailyPomodoroGoal;
   bool autoSwitchTimerEnabled = true;
-  bool autoStartAfterSwitchEnabled = false;
+  bool autoStartRestEnabled = false; // New setting
+  bool autoStartWorkEnabled = false; // New setting
   AppThemeMode selectedThemeMode = AppThemeMode.dark; // Add theme state
 
   @override
@@ -51,9 +52,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final loadedAlwaysShowWorkdayTimespanInTimeline =
         await repository.isAlwaysShowWorkdayTimespanInTimeline();
     final loadedDailyPomodoroGoal = await repository.getDailyPomodoroGoal();
-    final loadedAutoSwitchTimer = await repository.getAutoSwitchTimer(); // Load auto-switch
-    final loadedAutoStartAfterSwitch =
-        await repository.isAutoStartAfterSwitchEnabled();
+    final loadedAutoSwitchTimer = await repository.getAutoSwitchTimer();
+    final loadedAutoStartRest = await repository.isAutoStartRestEnabled(); // Load new setting
+    final loadedAutoStartWork = await repository.isAutoStartWorkEnabled(); // Load new setting
     // Load theme mode using the provider (initial load)
     final loadedThemeMode = await ref.read(themeModeNotifierProvider.future);
 
@@ -69,7 +70,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           loadedAlwaysShowWorkdayTimespanInTimeline;
       dailyPomodoroGoal = loadedDailyPomodoroGoal;
       autoSwitchTimerEnabled = loadedAutoSwitchTimer;
-      autoStartAfterSwitchEnabled = loadedAutoStartAfterSwitch;
+      autoStartRestEnabled = loadedAutoStartRest; // Set new state
+      autoStartWorkEnabled = loadedAutoStartWork; // Set new state
       selectedThemeMode = loadedThemeMode; // Set theme state
       isLoading = false;
     });
@@ -261,16 +263,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onChanged: _saveAutoSwitchTimer,
                     ),
                   ),
-                  const SizedBox(height: 16), // Add spacing
+                  const SizedBox(height: 16),
                   SettingsListTile(
-                    title: 'Auto-start after switch',
+                    title: 'Auto-start Rest Timer',
                     subtitle:
-                        'Automatically start the next timer after auto-switching.',
+                        'Automatically start rest timer after work timer completes.',
                     trailing: Switch(
-                      value: autoStartAfterSwitchEnabled,
-                      // Disable the switch if auto-switch is off
+                      value: autoStartRestEnabled,
                       onChanged:
-                          autoSwitchTimerEnabled ? _saveAutoStartAfterSwitch : null,
+                          autoSwitchTimerEnabled ? _saveAutoStartRest : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SettingsListTile(
+                    title: 'Auto-start Work Timer',
+                    subtitle:
+                        'Automatically start work timer after rest timer completes.',
+                    trailing: Switch(
+                      value: autoStartWorkEnabled,
+                      onChanged:
+                          autoSwitchTimerEnabled ? _saveAutoStartWork : null,
                     ),
                   ),
                 ],
@@ -358,22 +370,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await repository.setAutoSwitchTimer(enabled);
     setState(() {
       autoSwitchTimerEnabled = enabled; // Update state
-      // If disabling auto-switch, also disable auto-start
+      // If disabling auto-switch, also disable both auto-start options
       if (!enabled) {
-        autoStartAfterSwitchEnabled = false;
-        // Save the disabled auto-start state as well
+        autoStartRestEnabled = false;
+        autoStartWorkEnabled = false;
+        // Save the disabled auto-start states as well
         // No need to await here, can run in background
-        repository.setAutoStartAfterSwitch(false);
+        repository.setAutoStartRest(false);
+        repository.setAutoStartWork(false);
       }
     });
     ref.invalidate(settingsRepositoryProvider);
   }
 
-  Future<void> _saveAutoStartAfterSwitch(bool enabled) async {
+  // New save method for auto-start rest
+  Future<void> _saveAutoStartRest(bool enabled) async {
     final repository = ref.read(settingsRepositoryProvider);
-    await repository.setAutoStartAfterSwitch(enabled);
+    await repository.setAutoStartRest(enabled);
     setState(() {
-      autoStartAfterSwitchEnabled = enabled;
+      autoStartRestEnabled = enabled;
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
+
+  // New save method for auto-start work
+  Future<void> _saveAutoStartWork(bool enabled) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setAutoStartWork(enabled);
+    setState(() {
+      autoStartWorkEnabled = enabled;
     });
     ref.invalidate(settingsRepositoryProvider);
   }

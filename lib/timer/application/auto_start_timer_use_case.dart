@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/settings/domain/settings_repository_port.dart'; // Import the port
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
 import 'package:pomodoro_app2/timer/application/timer_state/timer_notifier.dart';
+import 'package:pomodoro_app2/core/domain/timer_type.dart'; // Added import
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -23,15 +24,28 @@ class AutoStartTimerUseCase {
 
   Future<void> execute() async {
     final autoSwitchEnabled = await _settingsRepository.getAutoSwitchTimer();
-    final autoStartEnabled =
-        await _settingsRepository.isAutoStartAfterSwitchEnabled();
+    if (!autoSwitchEnabled) {
+      return; // Don't proceed if auto-switch is disabled
+    }
 
-    if (autoSwitchEnabled && autoStartEnabled) {
-      final currentState = _timerNotifier.getCurrentState();
-      if (currentState != null &&
-          currentState.status == TimerStatus.notStarted) {
-        _timerNotifier.startTimer();
-      }
+    final currentState = _timerNotifier.getCurrentState();
+    // Only proceed if there's a current state and it's ready to be started
+    if (currentState == null || currentState.status != TimerStatus.notStarted) {
+      return;
+    }
+
+    bool shouldAutoStart = false;
+    // Check which setting to use based on the type of the *next* timer
+    if (currentState.timerType == TimerType.shortRest ||
+        currentState.timerType == TimerType.longRest) {
+      shouldAutoStart = await _settingsRepository.isAutoStartRestEnabled();
+    } else if (currentState.timerType == TimerType.work) {
+      shouldAutoStart = await _settingsRepository.isAutoStartWorkEnabled();
+    }
+
+    // Start the timer only if the relevant auto-start setting is enabled
+    if (shouldAutoStart) {
+      _timerNotifier.startTimer();
     }
   }
 }
