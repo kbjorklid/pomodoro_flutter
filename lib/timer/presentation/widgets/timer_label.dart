@@ -37,6 +37,7 @@ class TimerLabel extends ConsumerWidget {
     final timeLabel = TimeFormatter.toMinutesAndSeconds(remaining);
 
     final bool paused = timerState.status == TimerStatus.paused;
+    final bool isOvertime = timerState.isOvertime(now);
 
     final Color color = _getColor(timerState.timerType, paused);
 
@@ -64,7 +65,18 @@ class TimerLabel extends ConsumerWidget {
               color: color,
             ),
           ),
-          Text(timeLabel, style: const TextStyle(fontSize: 48)),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(timeLabel, style: const TextStyle(fontSize: 48)),
+              if (isOvertime)
+                const Text(
+                  "Overtime!",
+                  style: TextStyle(fontSize: 16, color: Colors.red),
+                ),
+            ],
+          ),
         ],
       ),
     );
