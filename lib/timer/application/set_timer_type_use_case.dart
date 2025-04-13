@@ -38,7 +38,7 @@ class SetTimerTypeUseCase {
       }
     }
     _timer.stopTimer();
-    _timer.resetTimer(targetType);
+    await _timer.resetTimer(targetType);
   }
 
   Future<Duration> _getDurationForType(TimerType type) async {

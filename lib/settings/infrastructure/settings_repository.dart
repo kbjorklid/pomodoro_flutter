@@ -21,7 +21,8 @@ class SettingsRepository implements SettingsRepositoryPort {
   static const _autoSwitchTimerKey = 'auto_switch_timer';
   static const _autoStartRestKey = 'auto_start_rest';
   static const _autoStartWorkKey = 'auto_start_work';
-  static const _appThemeModeKey = 'app_theme_mode'; // Add theme key
+  static const _appThemeModeKey = 'app_theme_mode'; 
+  static const _allowOvertimeKey = 'allow_overtime';
 
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultShortRestDuration = Duration(minutes: 5);
@@ -33,11 +34,11 @@ class SettingsRepository implements SettingsRepositoryPort {
   static const bool _defaultAutoSwitchTimer = true;
   static const bool _defaultAutoStartRest = false;
   static const bool _defaultAutoStartWork = false;
-  static const AppThemeMode _defaultAppThemeMode = AppThemeMode.dark; // Add theme default
+  static const AppThemeMode _defaultAppThemeMode = AppThemeMode.dark;
+  static const bool _defaultAllowOvertime = false; 
 
   final _timerDurationsChangedController =
       StreamController<TimerDurations>.broadcast();
-
   static final SettingsRepository _instance = SettingsRepository._();
 
   SettingsRepository._();
@@ -267,6 +268,19 @@ class SettingsRepository implements SettingsRepositoryPort {
   Future<void> setAutoStartWork(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_autoStartWorkKey, enabled);
+    _notifySettingsChange();
+  }
+
+  @override
+  Future<bool> isAllowOvertimeEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_allowOvertimeKey) ?? _defaultAllowOvertime;
+  }
+
+  @override
+  Future<void> setAllowOvertime(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_allowOvertimeKey, enabled);
     _notifySettingsChange();
   }
 

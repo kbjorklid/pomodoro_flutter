@@ -45,11 +45,7 @@ class GetTodaysTimerSessionsUseCase {
     switch (event) {
       case TimerEndedEvent():
         unawaited(_refreshFromDataStore());
-      case TimerStartedEvent():
-      case TimerPausedEvent():
-      case TimerResumedEvent():
-      case TimerTickEvent():
-      case TimerResetEvent():
+      default:
         break;
     }
   }

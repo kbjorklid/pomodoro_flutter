@@ -1,7 +1,4 @@
 import 'dart:async';
-
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -123,7 +120,6 @@ class MyAppState extends ConsumerState<MyApp> with WidgetsBindingObserver {
       case AppThemeMode.dark:
         return ThemeMode.dark;
       case AppThemeMode.system:
-      default:
         return ThemeMode.system;
     }
   }

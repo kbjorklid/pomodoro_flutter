@@ -15,6 +15,7 @@ class TimerState {
   final DateTime? startedAt;
   final List<PauseRecord> pauses;
   final DateTime? pausedAt;
+  final bool overtimeEnabled;
 
   bool get isStarted => startedAt != null;
 
@@ -27,7 +28,7 @@ class TimerState {
     for (PauseRecord pause in pauses) {
       elapsedTime -= pause.duration;
     }
-    if (elapsedTime > timerDuration) {
+    if (!overtimeEnabled && elapsedTime > timerDuration) {
       elapsedTime = timerDuration;
     }
     return elapsedTime;
@@ -40,7 +41,7 @@ class TimerState {
 
   Duration _calculateRemainingTime(Duration elapsedTime) {
     Duration remainingTime = timerDuration - elapsedTime;
-    if (remainingTime < Duration.zero) {
+    if (!overtimeEnabled && remainingTime < Duration.zero) {
       remainingTime = Duration.zero;
     }
     return remainingTime;
@@ -70,11 +71,34 @@ class TimerState {
     required this.startedAt,
     required this.pauses,
     required this.pausedAt,
+    required this.overtimeEnabled,
   });
+
+  factory TimerState.fromPrevious(
+    TimerState previous, {
+    TimerType? timerType,
+    TimerStatus? status,
+    Duration? timerDuration,
+    DateTime? startedAt,
+    List<PauseRecord>? pauses,
+    DateTime? pausedAt,
+    bool? overtimeEnabled,
+  }) {
+    return TimerState(
+      timerType: timerType ?? previous.timerType,
+      status: status ?? previous.status,
+      timerDuration: timerDuration ?? previous.timerDuration,
+      startedAt: startedAt ?? previous.startedAt,
+      pauses: pauses ?? previous.pauses,
+      pausedAt: pausedAt ?? previous.pausedAt,
+      overtimeEnabled: overtimeEnabled ?? previous.overtimeEnabled,
+    );
+  }
 
   TimerState.initial(
       [TimerType timerType = TimerType.work,
-      Duration timerDuration = const Duration(minutes: 25)])
+      Duration timerDuration = const Duration(minutes: 25),
+      bool overtimeEnabled = true])
       : this(
           timerType: timerType,
           status: TimerStatus.notStarted,
@@ -82,5 +106,6 @@ class TimerState {
           startedAt: null,
           pauses: [],
           pausedAt: null,
+          overtimeEnabled: overtimeEnabled,
         );
 }

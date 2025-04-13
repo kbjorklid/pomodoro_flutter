@@ -9,9 +9,10 @@ class TimeFormatter {
 
   /// Formats a [Duration] into "mm:ss" format (e.g., "59:30").
   static String toMinutesAndSeconds(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds.remainder(60);
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
+    final minutes = duration.inMinutes.abs();
+    final seconds = duration.inSeconds.abs().remainder(60);
+    final prefix = duration.isNegative ? '-' : '';
+    return '$prefix$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   /// Formats a [Duration] into a human-readable string.

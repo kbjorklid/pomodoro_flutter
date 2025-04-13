@@ -50,6 +50,9 @@ abstract class SettingsRepositoryPort {
   Future<bool> isAutoStartWorkEnabled();
   Future<void> setAutoStartWork(bool enabled);
 
+  Future<bool> isAllowOvertimeEnabled();
+  Future<void> setAllowOvertime(bool enabled);
+
   Future<AppThemeMode> getThemeMode();
   Future<void> setThemeMode(AppThemeMode mode);
 }
