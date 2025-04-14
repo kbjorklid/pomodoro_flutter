@@ -164,14 +164,14 @@ class PomodoroTimer extends _$PomodoroTimer {
         timerState: timerState,
         remainingTime: duration,
         elapsedTime: Duration.zero));
-    _startTicks();
+    _startTicks(now);
   }
 
-  void _startTicks() {
+  void _startTicks([DateTime? now]) {
     _logger.d("Starting ticks");
     _stopTicks(log: false);
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _handleTick();
+      _handleTick(now);
     });
   }
 
@@ -182,12 +182,12 @@ class PomodoroTimer extends _$PomodoroTimer {
     _timer?.cancel();
   }
 
-  void _handleTick() {
+  void _handleTick([DateTime? now]) {
     if (state.value?.status != TimerStatus.running) {
       _logger.d("handleTick: timer is not running, so doing nothing.");
       return;
     }
-    DateTime now = DateTime.now();
+    now ??= DateTime.now();
     final currentState = state.value!;
     _logger.d("handleTick: $currentState");
 
@@ -199,7 +199,7 @@ class PomodoroTimer extends _$PomodoroTimer {
       if (!currentState.overtimeEnabled) {
         _onTimerCompleted();
       } else if (!_overtimeStarted) {
-        _onTimerOvertimeStart();
+        _onTimerOvertimeStart(now);
       }
     }
     if (currentState.overtimeEnabled || remainingTime > Duration.zero) {
@@ -323,19 +323,21 @@ class PomodoroTimer extends _$PomodoroTimer {
 
   DateTime _getStopAtTime(TimerState? timerState, [DateTime? now]) {
     now ??= DateTime.now();
-    if (timerState == null) {
+    if (timerState == null || timerState.overtimeEnabled) {
       return now;
     }
     final DateTime? estimatedEndTime = timerState.estimatedEndTime;
+    // If the device is hibernated/sleeping while session should have ended,
+    // this should correct it.
     if (estimatedEndTime != null && estimatedEndTime.isBefore(now)) {
       return estimatedEndTime;
     }
     return now;
   }
 
-  void _onTimerOvertimeStart() {
+  void _onTimerOvertimeStart([DateTime? now]) {
     _overtimeStarted = true;
-    DateTime now = DateTime.now();
+    now ??= DateTime.now();
     final currentState = state.value!;
 
     final Duration remainingTime;

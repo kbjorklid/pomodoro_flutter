@@ -7,11 +7,11 @@ part 'pause_record.freezed.dart';
 @freezed
 class PauseRecord with _$PauseRecord {
   const PauseRecord._();
-  
+
   const factory PauseRecord({
     /// When the timer was paused
     required DateTime pausedAt,
-    
+
     /// When the timer was resumed
     required DateTime resumedAt,
   }) = _PauseRecord;
@@ -20,4 +20,9 @@ class PauseRecord with _$PauseRecord {
   Duration get duration => resumedAt.difference(pausedAt);
 
   DateTimeRange get range => DateTimeRange(start: pausedAt, end: resumedAt);
+
+  @override
+  String toString() {
+    return 'PauseRecord(pausedAt: $pausedAt, resumedAt: $resumedAt)';
+  }
 }

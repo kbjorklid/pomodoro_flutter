@@ -10,6 +10,7 @@ enum TimerStatus {
 }
 
 final _logger = Logger();
+
 class TimerState {
   final TimerType timerType;
   final TimerStatus status;
@@ -25,19 +26,17 @@ class TimerState {
     if (startedAt == null) {
       return Duration.zero;
     }
-    DateTime rangeEnd = pausedAt ?? now ?? DateTime.now();
+    now ??= DateTime.now();
+    DateTime rangeEnd = pausedAt ?? now;
     Duration elapsedTime = rangeEnd.difference(startedAt!);
     Duration timeSpentInPauses = Duration.zero;
     for (PauseRecord pause in pauses) {
       timeSpentInPauses += pause.duration;
     }
     elapsedTime -= timeSpentInPauses;
-    if (!overtimeEnabled && elapsedTime > timerDuration) {
-      elapsedTime = timerDuration;
-    }
     _logger.d('getElapsedTimeIgnoringPauses: Elapsed time: $elapsedTime, '
-      'pausedAt: $pausedAt, now: $now, rangeEnd: $rangeEnd, '
-      'startedAt: $startedAt, timeSpentInPauses: $timeSpentInPauses');
+        'pausedAt: $pausedAt, now: $now, rangeEnd: $rangeEnd, '
+        'startedAt: $startedAt, timeSpentInPauses: $timeSpentInPauses');
     return elapsedTime;
   }
 
@@ -55,9 +54,6 @@ class TimerState {
 
   Duration _calculateRemainingTime(Duration elapsedTime) {
     Duration remainingTime = timerDuration - elapsedTime;
-    if (!overtimeEnabled && remainingTime < Duration.zero) {
-      remainingTime = Duration.zero;
-    }
     return remainingTime;
   }
 
@@ -198,4 +194,3 @@ class TimerStateBuilder {
     );
   }
 }
-
