@@ -5,6 +5,7 @@ import 'package:pomodoro_app2/core/domain/timer_type.dart';
 import 'package:pomodoro_app2/core/presentation/colors.dart';
 import 'package:pomodoro_app2/timer/application/timer_state/timer_notifier.dart';
 import 'package:pomodoro_app2/timer/domain/timer_state.dart';
+
 class TimerLabel extends ConsumerWidget {
   const TimerLabel({super.key});
 
@@ -39,7 +40,7 @@ class TimerLabel extends ConsumerWidget {
     final bool paused = timerState.status == TimerStatus.paused;
     final bool isOvertime = timerState.isOvertime(now);
 
-    final Color color = _getColor(timerState.timerType, paused);
+    final Color color = _getProgressIndicatorColor(timerState);
 
     return SizedBox(
       width: 200,
@@ -82,8 +83,13 @@ class TimerLabel extends ConsumerWidget {
     );
   }
 
-  // Helper function to determine the color based on timer type and paused state
-  Color _getColor(TimerType timerType, bool paused) {
+  Color _getProgressIndicatorColor(TimerState timerState) {
+    final stopped = timerState.status == TimerStatus.ended;
+    if (stopped) {
+      return AppColors.workStopped;
+    }
+    final timerType = timerState.timerType;
+    final paused = timerState.status == TimerStatus.paused;
     switch (timerType) {
       case TimerType.work:
         return paused ? AppColors.workPaused : AppColors.work;
@@ -92,6 +98,7 @@ class TimerLabel extends ConsumerWidget {
         return paused ? AppColors.restPaused : AppColors.rest;
     }
   }
+
   Color _getProgressIndicatorBackgroundColor(BuildContext context) {
     if (Theme.of(context).brightness == Brightness.dark) {
       return Colors.grey[800]!;

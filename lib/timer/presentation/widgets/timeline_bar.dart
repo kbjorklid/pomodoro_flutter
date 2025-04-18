@@ -151,7 +151,7 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   borderRadius: _borderRadius,
-                  color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  color: AppColors.timelineBackground(context),
                   border: Border.all(
                       color:
                           isDarkMode ? Colors.grey[600]! : Colors.grey[350]!),

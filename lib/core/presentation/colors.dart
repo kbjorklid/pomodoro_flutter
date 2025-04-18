@@ -10,17 +10,26 @@ class AppColors {
   static const lightGreen = Color(0xFFA9DEB8);
   static const blue = Color(0xFF9DB3E1);
   static const mediumGrey = Color(0xFFBEBEBE);
+  static const lightMediumGrey = Color.fromARGB(255, 222, 222, 222);
+  static const darkGrey = Color(0xFF666666);
+  static const darkerGrey = Color(0xFF333333);
   static const lightGrey = Color(0xFFEEEEEE);
 
   static const work = peach;
   static const workPaused = lightPeach;
+  static const workStopped = mediumGrey;
   static const rest = green;
   static const restPaused = lightGreen;
   static const workIncomplete = mediumGrey;
 
   static Color timelineWorkdayBackground(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return isDarkMode ? Colors.grey[700]! : const Color(0xFFFAEEE5);
+    return isDarkMode ? darkGrey : lightGrey;
+  }
+
+  static Color timelineBackground(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    return isDarkMode ? darkerGrey : lightMediumGrey;
   }
 
   static Color timerTypeColor(TimerType type) {
