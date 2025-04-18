@@ -72,8 +72,8 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
     switch (event) {
       case TimerTickEvent():
         // Only refresh on ticks if we have an active session
-        if (ref.read(pomodoroTimerProvider).value?.status ==
-            TimerStatus.running) {
+        TimerStatus? status = ref.read(pomodoroTimerProvider).value?.status;
+        if (status == TimerStatus.running) {
           _stopRefreshTimer();
           _refresh();
         }
@@ -94,7 +94,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
   void _onTimerHistoryUpdated(TimerHistoryUpdatedEvent event) {
     _refresh();
   }
-
 
   void _refresh() {
     setState(() {});
@@ -154,7 +153,8 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
                   borderRadius: _borderRadius,
                   color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                   border: Border.all(
-                      color: isDarkMode ? Colors.grey[600]! : Colors.grey[350]!),
+                      color:
+                          isDarkMode ? Colors.grey[600]! : Colors.grey[350]!),
                 ),
                 height: 30,
                 child: _buildMainTimeline(timelineData, timeBarRange))),
@@ -473,9 +473,8 @@ abstract class _TimelineSegment extends StatelessWidget {
       segmentColor = (this as _PauseSegment)._calculateColor();
     } else {
       // Fallback or handle other segment types if necessary
-      segmentColor = Colors.transparent; 
+      segmentColor = Colors.transparent;
     }
-
 
     return Padding(
       padding: EdgeInsets.only(left: segmentPosition.left),
@@ -527,7 +526,7 @@ class _PauseSegment extends _TimelineSegment {
   });
 
   // Renamed 'color' getter to avoid conflict and clarify purpose
-  Color _calculateColor() => const Color(0x88ffffff); 
+  Color _calculateColor() => const Color(0x88ffffff);
 }
 
 class _SegmentPosition {

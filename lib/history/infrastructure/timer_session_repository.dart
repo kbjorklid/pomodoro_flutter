@@ -35,10 +35,7 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
 
   @override
   Future<void> save(EndedTimerSession session) async {
-    _logger.d('Saving timer session with key: ${session.key}');
-
-    _logger.d('Saving timer session: ${session.sessionType} '
-        'started at ${session.startedAt}, pauses: ${session.pauses}');
+    _logger.d('Saving timer session (key: ${session.key}): $session');
     var dto = TimerSessionDTO.fromDomain(session);
     await _initialized;
     await _put(session.key, dto);
@@ -93,8 +90,6 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
   @override
   Future<void> delete(TimerSessionKey key) async {
     await _initialized;
-    _logger.d('Attempting to delete session with key: $key'); // Add th
-
     _logger.d('Soft deleting session with key ${key.toString()}');
     final dto = _get(key);
     _logger.d('Found DTO: $dto');
@@ -111,7 +106,8 @@ class TimerSessionRepository implements TimerSessionRepositoryPort {
       _sendEventForHistoryUpdate();
       _logger.d('Session soft deleted successfully');
     } else {
-      _logger.w('Session not found for soft deletion');
+      _logger
+          .w('Session not found for soft deletion for key ${key.toString()}');
     }
   }
 

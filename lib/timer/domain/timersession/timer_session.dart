@@ -3,27 +3,6 @@ import 'package:pomodoro_app2/core/domain/timer_type.dart';
 
 import 'pause_record.dart';
 
-abstract class TimerSession {
-  TimerType get sessionType;
-
-  DateTime get startedAt;
-
-  List<PauseRecord> get pauses;
-
-  Duration get totalDuration;
-
-  bool get isEnded;
-
-  late final TimerSessionKey key = TimerSessionKey(startedAt);
-
-  @override
-  String toString() {
-    return 'TimerSession(sessionType: $sessionType, '
-        'startedAt: ${startedAt.toString().split('.').first}, '
-        'totalDuration: $totalDuration)';
-  }
-}
-
 class TimerSessionKey {
   final DateTime startedAt;
 
@@ -50,6 +29,31 @@ class TimerSessionKey {
   }
 }
 
+abstract class TimerSession {
+  TimerType get sessionType;
+
+  DateTime get startedAt;
+
+  List<PauseRecord> get pauses;
+
+  Duration get totalDuration;
+
+  bool get isEnded;
+
+  late final TimerSessionKey key = TimerSessionKey(startedAt);
+
+  @override
+  String toString() {
+    return _ToStringBuilder(this)
+        .add('sessionType', sessionType)
+        .add('startedAt', startedAt)
+        .add('pauses', pauses)
+        .add('targetDuration', totalDuration)
+        .add('isEnded', isEnded)
+        .toString();
+  }
+}
+
 class RunningTimerSession extends TimerSession {
   @override
   final TimerType sessionType;
@@ -70,6 +74,18 @@ class RunningTimerSession extends TimerSession {
       required Iterable<PauseRecord> pauses,
       required this.totalDuration})
       : pauses = List.unmodifiable(pauses);
+
+  @override
+  String toString() {
+    return _ToStringBuilder(this)
+        .add('sessionType', sessionType)
+        .add('startedAt', startedAt)
+        .add('pausedAt', pausedAt)
+        .add('pauses', pauses)
+        .add('targetDuration', totalDuration)
+        .add('isEnded', isEnded)
+        .toString();
+  }
 }
 
 abstract class ClosedTimerSession extends TimerSession {
@@ -121,6 +137,19 @@ class TimerSessionSnapshot extends ClosedTimerSession {
   }) : _runningTimerSession = runningTimerSession;
 
   final RunningTimerSession _runningTimerSession;
+
+  @override
+  String toString() {
+    return _ToStringBuilder(this)
+        .add('sessionType', sessionType)
+        .add('startedAt', startedAt)
+        .add('timerRanngeEnd', timerRangeEnd)
+        .add('pauses', pauses)
+        .add('targetDuration', totalDuration)
+        .add('isEnded', isEnded)
+        .add('durationWithoutPauseTime', durationWithoutPauseTime)
+        .toString();
+  }
 }
 
 class EndedTimerSession extends ClosedTimerSession {
@@ -145,4 +174,53 @@ class EndedTimerSession extends ClosedTimerSession {
       required this.totalDuration})
       : timerRangeEnd = endedAt,
         pauses = List.unmodifiable(pauses);
+
+  @override
+  String toString() {
+    return _ToStringBuilder(this)
+        .add('sessionType', sessionType)
+        .add('startedAt', startedAt)
+        .add('timerRangeEnd', timerRangeEnd)
+        .add('pauses', pauses)
+        .add('targetDuration', totalDuration)
+        .add('isEnded', isEnded)
+        .add('durationWithoutPauseTime', durationWithoutPauseTime)
+        .toString();
+  }
+}
+
+class _ToStringBuilder {
+  final StringBuffer _buffer = StringBuffer();
+
+  _ToStringBuilder(Object theObject) {
+    _buffer.write(theObject.runtimeType.toString());
+    _buffer.write('(');
+  }
+
+  _ToStringBuilder add(String key, dynamic value) {
+    if (value == null) {
+      _buffer.write('$key: [null]; ');
+      return this;
+    }
+    String valueStr;
+    switch (value.runtimeType) {
+      case DateTime _:
+        valueStr = (value as DateTime).toIso8601String();
+        break;
+      case Iterable _:
+        valueStr = (value as Iterable).join(', ');
+        break;
+      default:
+        valueStr = value.toString();
+    }
+
+    _buffer.write('$key: $valueStr; ');
+    return this;
+  }
+
+  @override
+  String toString() {
+    _buffer.write(')');
+    return _buffer.toString();
+  }
 }

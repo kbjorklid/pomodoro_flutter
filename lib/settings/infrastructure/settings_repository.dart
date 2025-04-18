@@ -19,8 +19,10 @@ class SettingsRepository implements SettingsRepositoryPort {
       'always_show_workday_timespan_in_timeline';
   static const _dailyPomodoroGoalKey = 'daily_pomodoro_goal';
   static const _autoSwitchTimerKey = 'auto_switch_timer';
-  static const _autoStartAfterSwitchKey = 'auto_start_after_switch';
-  static const _appThemeModeKey = 'app_theme_mode'; // Add theme key
+  static const _autoStartRestKey = 'auto_start_rest';
+  static const _autoStartWorkKey = 'auto_start_work';
+  static const _appThemeModeKey = 'app_theme_mode'; 
+  static const _allowOvertimeKey = 'allow_overtime';
 
   static const _defaultWorkDuration = Duration(minutes: 25);
   static const _defaultShortRestDuration = Duration(minutes: 5);
@@ -30,12 +32,13 @@ class SettingsRepository implements SettingsRepositoryPort {
   static final _defaultTypicalWorkDayLength = Duration(hours: 8);
   static const bool _defaultAlwaysShowWorkdayTimespanInTimeline = false;
   static const bool _defaultAutoSwitchTimer = true;
-  static const bool _defaultAutoStartAfterSwitch = false;
-  static const AppThemeMode _defaultAppThemeMode = AppThemeMode.dark; // Add theme default
+  static const bool _defaultAutoStartRest = false;
+  static const bool _defaultAutoStartWork = false;
+  static const AppThemeMode _defaultAppThemeMode = AppThemeMode.dark;
+  static const bool _defaultAllowOvertime = false; 
 
   final _timerDurationsChangedController =
       StreamController<TimerDurations>.broadcast();
-
   static final SettingsRepository _instance = SettingsRepository._();
 
   SettingsRepository._();
@@ -243,15 +246,41 @@ class SettingsRepository implements SettingsRepositoryPort {
   }
 
   @override
-  Future<bool> isAutoStartAfterSwitchEnabled() async {
+  Future<bool> isAutoStartRestEnabled() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_autoStartAfterSwitchKey) ?? _defaultAutoStartAfterSwitch;
+    return prefs.getBool(_autoStartRestKey) ?? _defaultAutoStartRest;
   }
 
   @override
-  Future<void> setAutoStartAfterSwitch(bool enabled) async {
+  Future<void> setAutoStartRest(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_autoStartAfterSwitchKey, enabled);
+    await prefs.setBool(_autoStartRestKey, enabled);
+    _notifySettingsChange();
+  }
+
+  @override
+  Future<bool> isAutoStartWorkEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_autoStartWorkKey) ?? _defaultAutoStartWork;
+  }
+
+  @override
+  Future<void> setAutoStartWork(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoStartWorkKey, enabled);
+    _notifySettingsChange();
+  }
+
+  @override
+  Future<bool> isAllowOvertimeEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_allowOvertimeKey) ?? _defaultAllowOvertime;
+  }
+
+  @override
+  Future<void> setAllowOvertime(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_allowOvertimeKey, enabled);
     _notifySettingsChange();
   }
 

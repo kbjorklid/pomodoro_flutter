@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodoro_app2/daily_goal/presentation/daily_goal_widgets.dart';
-import 'package:pomodoro_app2/settings/domain/app_theme_mode.dart'; // Import theme mode
+import 'package:pomodoro_app2/settings/domain/app_theme_mode.dart'; 
 import 'package:pomodoro_app2/settings/presentation/providers/settings_repository_provider.dart';
-import 'package:pomodoro_app2/settings/presentation/providers/theme_providers.dart'; // Import theme provider
+import 'package:pomodoro_app2/settings/presentation/providers/theme_providers.dart'; 
 import 'package:pomodoro_app2/settings/presentation/widgets/duration_slider.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/settings_list_tile.dart';
 import 'package:pomodoro_app2/settings/presentation/widgets/sound_selector.dart';
@@ -29,9 +29,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool alwaysShowWorkdayTimespanInTimeline = false;
   int? dailyPomodoroGoal;
   bool autoSwitchTimerEnabled = true;
-  bool autoStartAfterSwitchEnabled = false;
-  AppThemeMode selectedThemeMode = AppThemeMode.dark; // Add theme state
-
+  bool autoStartRestEnabled = false;
+  bool autoStartWorkEnabled = false;
+  bool allowOvertimeEnabled = false; 
+  AppThemeMode selectedThemeMode = AppThemeMode.dark; 
   @override
   void initState() {
     super.initState();
@@ -51,12 +52,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final loadedAlwaysShowWorkdayTimespanInTimeline =
         await repository.isAlwaysShowWorkdayTimespanInTimeline();
     final loadedDailyPomodoroGoal = await repository.getDailyPomodoroGoal();
-    final loadedAutoSwitchTimer = await repository.getAutoSwitchTimer(); // Load auto-switch
-    final loadedAutoStartAfterSwitch =
-        await repository.isAutoStartAfterSwitchEnabled();
-    // Load theme mode using the provider (initial load)
+    final loadedAutoSwitchTimer = await repository.getAutoSwitchTimer();
+    final loadedAutoStartRest = await repository.isAutoStartRestEnabled();
+    final loadedAutoStartWork = await repository.isAutoStartWorkEnabled();
+    final loadedAllowOvertime = await repository.isAllowOvertimeEnabled(); 
+    
     final loadedThemeMode = await ref.read(themeModeNotifierProvider.future);
-
     setState(() {
       workDuration = loadedWorkDuration;
       shortRestDuration = loadedShortRestDuration;
@@ -69,8 +70,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           loadedAlwaysShowWorkdayTimespanInTimeline;
       dailyPomodoroGoal = loadedDailyPomodoroGoal;
       autoSwitchTimerEnabled = loadedAutoSwitchTimer;
-      autoStartAfterSwitchEnabled = loadedAutoStartAfterSwitch;
-      selectedThemeMode = loadedThemeMode; // Set theme state
+      autoStartRestEnabled = loadedAutoStartRest;
+      autoStartWorkEnabled = loadedAutoStartWork;
+      allowOvertimeEnabled = loadedAllowOvertime; 
+      selectedThemeMode = loadedThemeMode;
       isLoading = false;
     });
   }
@@ -253,24 +256,45 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
                   SettingsListTile(
+                    title: 'Allow overtime for work timer',
+                    subtitle: 'Timer continues after work duration ends',
+                    trailing: Switch(
+                      value: allowOvertimeEnabled,
+                      onChanged: _saveAllowOvertime,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SettingsListTile(
                     title: 'Auto-switch timer',
                     subtitle:
                         'Automatically switch between work and rest timers when the current timer is completed.',
                     trailing: Switch(
-                      value: autoSwitchTimerEnabled, // Use state variable
+                      value: autoSwitchTimerEnabled,
                       onChanged: _saveAutoSwitchTimer,
                     ),
                   ),
-                  const SizedBox(height: 16), // Add spacing
+                  const SizedBox(height: 16),
                   SettingsListTile(
-                    title: 'Auto-start after switch',
+                    title: 'Auto-start Rest Timer',
                     subtitle:
-                        'Automatically start the next timer after auto-switching.',
+                        'Automatically start rest timer after work timer completes.',
                     trailing: Switch(
-                      value: autoStartAfterSwitchEnabled,
-                      // Disable the switch if auto-switch is off
+                      value: autoStartRestEnabled,
+                      // Disable if auto-switch is off OR if allow overtime is on
+                      onChanged: (autoSwitchTimerEnabled && !allowOvertimeEnabled)
+                          ? _saveAutoStartRest
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SettingsListTile(
+                    title: 'Auto-start Work Timer',
+                    subtitle:
+                        'Automatically start work timer after rest timer completes.',
+                    trailing: Switch(
+                      value: autoStartWorkEnabled,
                       onChanged:
-                          autoSwitchTimerEnabled ? _saveAutoStartAfterSwitch : null,
+                          autoSwitchTimerEnabled ? _saveAutoStartWork : null,
                     ),
                   ),
                 ],
@@ -332,7 +356,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onSelectionChanged: (Set<AppThemeMode> newSelection) {
                         _saveThemeMode(newSelection.first);
                       },
-                      showSelectedIcon: false, // Optional: hide icon in selected segment
+                      showSelectedIcon: false, 
                     ),
                   ),
                 ],
@@ -358,23 +382,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     await repository.setAutoSwitchTimer(enabled);
     setState(() {
       autoSwitchTimerEnabled = enabled; // Update state
-      // If disabling auto-switch, also disable auto-start
+      // If disabling auto-switch, also disable both auto-start options
       if (!enabled) {
-        autoStartAfterSwitchEnabled = false;
-        // Save the disabled auto-start state as well
+        autoStartRestEnabled = false;
+        autoStartWorkEnabled = false;
+        // Save the disabled auto-start states as well
         // No need to await here, can run in background
-        repository.setAutoStartAfterSwitch(false);
+        repository.setAutoStartRest(false);
+        repository.setAutoStartWork(false);
       }
     });
     ref.invalidate(settingsRepositoryProvider);
   }
 
-  Future<void> _saveAutoStartAfterSwitch(bool enabled) async {
+  // New save method for auto-start rest
+  Future<void> _saveAutoStartRest(bool enabled) async {
     final repository = ref.read(settingsRepositoryProvider);
-    await repository.setAutoStartAfterSwitch(enabled);
+    await repository.setAutoStartRest(enabled);
     setState(() {
-      autoStartAfterSwitchEnabled = enabled;
+      autoStartRestEnabled = enabled;
     });
     ref.invalidate(settingsRepositoryProvider);
+  }
+
+  // New save method for auto-start work
+  Future<void> _saveAutoStartWork(bool enabled) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setAutoStartWork(enabled);
+    setState(() {
+      autoStartWorkEnabled = enabled;
+    });
+    ref.invalidate(settingsRepositoryProvider);
+  }
+
+  // Add save method for the new setting
+  Future<void> _saveAllowOvertime(bool enabled) async {
+    final repository = ref.read(settingsRepositoryProvider);
+    await repository.setAllowOvertime(enabled);
+    setState(() {
+      allowOvertimeEnabled = enabled;
+      // If overtime is enabled, disable auto-start rest
+      if (enabled) {
+        autoStartRestEnabled = false;
+        // Save the disabled auto-start rest state as well
+        // No need to await here, can run in background
+        repository.setAutoStartRest(false);
+      }
+    });
+    ref.invalidate(settingsRepositoryProvider); // Invalidate to potentially update dependent providers
   }
 }

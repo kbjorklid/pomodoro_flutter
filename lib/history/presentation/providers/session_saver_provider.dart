@@ -23,7 +23,7 @@ void sessionSaver(Ref ref) {
           pauses: state.pauses,
           totalDuration: state.timerDuration,
         );
-
+        
         await repository.save(endedSession);
       }
     });

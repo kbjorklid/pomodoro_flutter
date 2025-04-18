@@ -9,9 +9,20 @@ final settingsRepositoryProvider = Provider<SettingsRepositoryPort>((ref) {
 
 final timerDurationsStreamProvider = StreamProvider<TimerDurations>((ref) {
   final settingsRepository = ref.watch(settingsRepositoryProvider);
+  ref.keepAlive();
   return (settingsRepository as SettingsRepository).timerDurationsChangedStream;
 });
 
 final timerDurationsProvider = FutureProvider<TimerDurations>((ref) {
-  return ref.watch(settingsRepositoryProvider).getTimerDurations();
+  Future<TimerDurations> durations =
+      ref.watch(settingsRepositoryProvider).getTimerDurations();
+  ref.keepAlive();
+  return durations;
+});
+
+final allowOvertimeProvider = FutureProvider<bool>((ref) {
+  final repository = ref.watch(settingsRepositoryProvider);
+  final isEnabled = repository.isAllowOvertimeEnabled();
+  ref.keepAlive();
+  return isEnabled;
 });
