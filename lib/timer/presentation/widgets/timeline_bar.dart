@@ -247,7 +247,6 @@ class _TimelineBarState extends ConsumerState<TimelineBar> {
 
   List<Widget> _buildTimelineChildren(_TimelineData timelineData,
       DateTimeRange timeBarRange, double timelineWidth) {
-    final now = DateTime.now();
     final children = <Widget>[];
 
     if (timelineData.typicalWorkDayStart != null &&
@@ -522,7 +521,6 @@ class _PauseSegment extends _TimelineSegment {
   const _PauseSegment({
     required super.segmentPosition,
     required this.pause,
-    super.onTap,
   });
 
   // Renamed 'color' getter to avoid conflict and clarify purpose

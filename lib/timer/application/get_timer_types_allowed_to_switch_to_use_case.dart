@@ -64,7 +64,7 @@ class GetTimerTypesAllowedToSwitchToUseCase {
 @riverpod
 Future<Set<TimerType>> timerTypesAllowedToSwitchTo(Ref ref) async {
   // Watch the timer state to react to changes
-  final timerState = ref.watch(pomodoroTimerProvider);
+  ref.watch(pomodoroTimerProvider);
 
   // Watch settings changes
   ref.watch(settingsRepositoryProvider);
