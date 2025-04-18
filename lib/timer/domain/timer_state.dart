@@ -18,6 +18,7 @@ class TimerState {
   final DateTime? startedAt;
   final List<PauseRecord> pauses;
   final DateTime? pausedAt;
+  final DateTime? stoppedAt;
   final bool overtimeEnabled;
 
   bool get isStarted => startedAt != null;
@@ -27,7 +28,7 @@ class TimerState {
       return Duration.zero;
     }
     now ??= DateTime.now();
-    DateTime rangeEnd = pausedAt ?? now;
+    DateTime rangeEnd = pausedAt ?? stoppedAt ?? now;
     Duration elapsedTime = rangeEnd.difference(startedAt!);
     Duration timeSpentInPauses = Duration.zero;
     for (PauseRecord pause in pauses) {
@@ -64,7 +65,7 @@ class TimerState {
   }
 
   DateTime? get estimatedEndTime {
-    if (startedAt == null || pausedAt != null) {
+    if (startedAt == null || pausedAt != null || stoppedAt != null) {
       return null;
     }
     var result = startedAt!.add(timerDuration);
@@ -81,6 +82,7 @@ class TimerState {
     required this.startedAt,
     required this.pauses,
     required this.pausedAt,
+    required this.stoppedAt,
     required this.overtimeEnabled,
   });
 
@@ -95,6 +97,7 @@ class TimerState {
           startedAt: null,
           pauses: [],
           pausedAt: null,
+          stoppedAt: null,
           overtimeEnabled: overtimeEnabled,
         );
 }
@@ -106,6 +109,7 @@ class TimerStateBuilder {
   DateTime? _startedAt;
   List<PauseRecord>? _pauses;
   DateTime? _pausedAt;
+  DateTime? _stoppedAt;
   bool? _overtimeEnabled;
 
   TimerStateBuilder([TimerState? initialState]) {
@@ -116,6 +120,7 @@ class TimerStateBuilder {
       _startedAt = initialState.startedAt;
       _pauses = List.from(initialState.pauses);
       _pausedAt = initialState.pausedAt;
+      _stoppedAt = initialState.stoppedAt;
       _overtimeEnabled = initialState.overtimeEnabled;
     } else {
       _pauses = []; // Default to empty list
@@ -149,6 +154,11 @@ class TimerStateBuilder {
 
   TimerStateBuilder withPausedAt(DateTime? pausedAt) {
     _pausedAt = pausedAt;
+    return this;
+  }
+
+  TimerStateBuilder withStoppedAt(DateTime? stoppedAt) {
+    _stoppedAt = stoppedAt;
     return this;
   }
 
@@ -190,6 +200,7 @@ class TimerStateBuilder {
       startedAt: _startedAt,
       pauses: _pauses!,
       pausedAt: _pausedAt,
+      stoppedAt: _stoppedAt,
       overtimeEnabled: _overtimeEnabled!,
     );
   }

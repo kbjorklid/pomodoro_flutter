@@ -156,6 +156,7 @@ class PomodoroTimer extends _$PomodoroTimer {
         startedAt: now,
         pauses: [],
         pausedAt: null,
+        stoppedAt: null,
         overtimeEnabled: await _isOvertimeActive());
 
     state = AsyncData(timerState);
@@ -230,6 +231,7 @@ class PomodoroTimer extends _$PomodoroTimer {
       startedAt: null,
       pauses: [],
       pausedAt: null,
+      stoppedAt: null,
       overtimeEnabled: await _isOvertimeActive(),
     ));
     _eventController?.add(TimerResetEvent(timerState: state.requireValue));
@@ -297,8 +299,10 @@ class PomodoroTimer extends _$PomodoroTimer {
     final now = DateTime.now();
     final previousState = state.value!;
 
+    DateTime stoppedAt = _calculateStoppedAtTime(previousState, now);
     final newStateBuilder = TimerStateBuilder(previousState)
         .withStatus(TimerStatus.ended)
+        .withStoppedAt(stoppedAt)
         .withPausedAt(null);
     if (previousState.pausedAt != null) {
       var pauseRecord = PauseRecord(
@@ -313,7 +317,6 @@ class PomodoroTimer extends _$PomodoroTimer {
     final Duration elapsed;
     (remaining, elapsed) = newState.getRemainingAndElapsedTime(now);
 
-    DateTime stoppedAt = _getStopAtTime(previousState, now);
     _eventController?.add(TimerStoppedEvent(
         timerState: newState,
         remainingTime: remaining,
@@ -321,7 +324,7 @@ class PomodoroTimer extends _$PomodoroTimer {
         endedAt: stoppedAt));
   }
 
-  DateTime _getStopAtTime(TimerState? timerState, [DateTime? now]) {
+  DateTime _calculateStoppedAtTime(TimerState? timerState, [DateTime? now]) {
     now ??= DateTime.now();
     if (timerState == null || timerState.overtimeEnabled) {
       return now;
@@ -364,7 +367,7 @@ class PomodoroTimer extends _$PomodoroTimer {
     _eventController?.add(TimerCompletedEvent(
         timerState: newState,
         elapsedTime: newState.timerDuration,
-        endedAt: _getStopAtTime(previousState)));
+        endedAt: _calculateStoppedAtTime(previousState)));
   }
 
   RunningTimerSession getCurrentSession() {
