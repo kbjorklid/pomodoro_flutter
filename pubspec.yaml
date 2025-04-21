@@ -40,6 +40,7 @@ dependencies:
   logger: ^2.0.0
   msix: ^3.16.8
   riverpod_annotation: ^2.6.1
+  uuid: ^4.4.0 # Added UUID package
 
 dev_dependencies:
   flutter_test:
