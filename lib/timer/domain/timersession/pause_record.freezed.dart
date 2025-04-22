@@ -124,11 +124,6 @@ class _$PauseRecordImpl extends _PauseRecord {
   final DateTime resumedAt;
 
   @override
-  String toString() {
-    return 'PauseRecord(pausedAt: $pausedAt, resumedAt: $resumedAt)';
-  }
-
-  @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&

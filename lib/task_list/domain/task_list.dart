@@ -19,10 +19,11 @@ class TaskList extends AggregateRoot<TaskListId> {
   });
 
   factory TaskList.create({
+    required TaskListId id,
     required String title,
   }) {
     return TaskList(
-      TaskListId(title),
+      id,
       title: title,
       tasks: [],
     );

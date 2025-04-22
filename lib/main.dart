@@ -12,6 +12,9 @@ import 'package:pomodoro_app2/sound/presentation/providers/session_end_sound_pro
 import 'package:pomodoro_app2/timer/application/auto_start_timer_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:pomodoro_app2/timer/application/auto_switch_timer_provider.dart';
+import 'package:pomodoro_app2/task_list/infrastructure/task_list_repository_impl.dart';
+import 'package:pomodoro_app2/task_list/infrastructure/task_list_dtos.dart';
+import 'package:pomodoro_app2/task_list/presentation/providers/task_list_providers.dart';
 
 part 'main.g.dart';
 
@@ -29,17 +32,35 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
-  final scope = ProviderScope(
-    child: Consumer(
-      builder: (context, ref, child) {
-        // Initialize app-level services
-        ref.watch(appInitializerProvider);
-        return const MyApp();
-      },
+  // Register Hive adapters
+  Hive.registerAdapter(TaskListDtoAdapter());
+  Hive.registerAdapter(TaskDtoAdapter());
+
+  runApp(
+    ProviderScope(
+      child: Consumer(
+        builder: (context, ref, child) {
+          // Open Hive box and override the TaskListRepository provider
+          final taskListBoxAsyncValue = ref.watch(taskListBoxProvider);
+
+          return taskListBoxAsyncValue.when(
+            data: (taskListBox) {
+              return ProviderScope(
+                overrides: [
+                  taskListRepositoryProvider.overrideWithValue(
+                    TaskListRepositoryImpl(taskListBox),
+                  ),
+                ],
+                child: const MyApp(),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error: $err')),
+          );
+        },
+      ),
     ),
   );
-
-  runApp(scope);
 }
 
 class MyApp extends ConsumerStatefulWidget {

@@ -7,7 +7,7 @@ part of 'get_timer_types_allowed_to_switch_to_use_case.dart';
 // **************************************************************************
 
 String _$timerTypesAllowedToSwitchToHash() =>
-    r'b2055c8abcc13abe82e3ee868b5f2237cda36020';
+    r'87edd61e6d8de857eca69d8f1d15ad05d3639c16';
 
 /// See also [timerTypesAllowedToSwitchTo].
 @ProviderFor(timerTypesAllowedToSwitchTo)

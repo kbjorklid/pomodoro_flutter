@@ -53,6 +53,8 @@ abstract class EntityId<V> extends ValueObject {
 
   @override
   int get hashCode => _value.hashCode;
+
+  V get value => _value;
 }
 
 abstract class EntityUniqueId extends EntityId<UuidValue> {

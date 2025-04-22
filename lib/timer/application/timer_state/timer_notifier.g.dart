@@ -22,7 +22,7 @@ final timerEventsProvider = AutoDisposeStreamProvider<TimerEvent>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef TimerEventsRef = AutoDisposeStreamProviderRef<TimerEvent>;
-String _$pomodoroTimerHash() => r'da88b3297bfbc0994ee5b93452b7553023956a32';
+String _$pomodoroTimerHash() => r'90dc2aa7209f4650cbe8563c184365b573261d73';
 
 /// See also [PomodoroTimer].
 @ProviderFor(PomodoroTimer)
